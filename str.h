@@ -32,6 +32,8 @@ void reverse_sub_str(string* str, u32 offset, u32 count);
 bool str_begins_with(const string* str, const char* val);
 bool str_ends_with(const string* str, const char* val);
 
+char* create_cstr_from_str(const string* str, allocator* allocator);
+
 u32 cstr_length(const char* cstr);
 
 #ifdef CUTILE_IMPLEM
@@ -110,6 +112,13 @@ bool str_ends_with(const string* str, const char* val)
     if (count > str->count) return false;
     for (u32 i = count - 1; i <= count /* loop until overflow */; --i) if (str->data[i] != val[i]) return false;
     return true;
+}
+
+char* create_cstr_from_str(const string* str, allocator* allocator)
+{
+    char* res = (char*)allocate(allocator, str->count + 1);
+    copy_s8_memory(res, (char*)str->data, str->count);
+    return res;
 }
 
 u32 cstr_length(const char* cstr)
