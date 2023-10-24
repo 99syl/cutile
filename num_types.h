@@ -1,7 +1,7 @@
 #ifndef CUTILE_NUM_TYPES_H
 #define CUTILE_NUM_TYPES_H
 
-#include "cxx.h"
+#include "./cxx.h"
 
 typedef char            s8;
 typedef unsigned char   u8;
@@ -75,5 +75,8 @@ CUTILE_STATIC_ASSERT(sizeof(u64) == 8);
 
 CUTILE_STATIC_ASSERT(sizeof(f32) == 4);
 CUTILE_STATIC_ASSERT(sizeof(f64) == 8);
+
+CUTILE_STATIC_ASSERT(sizeof(bool8) == 1);
+CUTILE_STATIC_ASSERT(sizeof(bool32) == 4);
 
 #endif
