@@ -17,6 +17,19 @@ template <typename T>
 void fill_memory(T* data, u32 count, T value);
 #endif // CUTILE_CPP
 
+void reverse_u8_memory(u8* data, u32 count);
+void reverse_s8_memory(u8* data, u32 count);
+void reverse_u16_memory(u8* data, u32 count);
+void reverse_s16_memory(u8* data, u32 count);
+void reverse_u32_memory(u8* data, u32 count);
+void reverse_s32_memory(u8* data, u32 count);
+void reverse_u64_memory(u8* data, u32 count);
+void reverse_s64_memory(u8* data, u32 count);
+#ifdef CUTILE_CPP
+template <typename T>
+void reverse_memory(T* data, u32 count);
+#endif // CUTILE_CPP
+
 struct allocator
 {
     void*   user;
@@ -38,9 +51,11 @@ void    deallocate(allocator* allocator, T* ptr);
 
 allocator create_basic_heap_allocator();
 
+extern allocator basic_heap_allocator;
+
 #ifdef CUTILE_IMPLEM
 
-#include <stdlib.h>
+#include <stdlib.h> //> malloc, free
 
 void fill_u8_memory(u8* data, u32 count, u8 value)
 {
@@ -74,7 +89,6 @@ void fill_s64_memory(s64* data, u32 count, s64 value)
 {
     for (u32 i = 0; i < count; ++i) data[i] = value;
 }
-
 #ifdef CUTILE_CPP
 template <typename T>
 void fill_memory(T* data, u32 count, T value)
@@ -82,6 +96,109 @@ void fill_memory(T* data, u32 count, T value)
     for (u32 i = 0; i < count; ++i) data[i] = value;
 }
 #endif
+
+void reverse_u8_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_s8_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_u16_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_s16_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_u32_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_s32_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_u64_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+void reverse_s64_memory(u8* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+#ifdef CUTILE_CPP
+template <typename T>
+void reverse_memory(T* data, u32 count)
+{
+    u32 end = count * 0.5;
+    for (u32 i = 0; i < end; ++i) 
+    {
+        u8 dump = data[i];
+        u32 rhs_i = count - 1 - i;
+        data[i] = data[rhs_i];
+        data[rhs_i] = dump;
+    }
+}
+#endif // CUTILE_CPP
 
 void*   allocate(allocator* allocator, u64 size)
 {
@@ -102,7 +219,7 @@ void    deallocate(allocator* allocator, T* ptr)
 {
     return deallocate(allocator, (void*)ptr);
 }
-#endif
+#endif // CUTILE_CPP
 
 void* basic_heap_allocate(void* user, u64 size)
 {
