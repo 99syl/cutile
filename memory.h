@@ -17,6 +17,19 @@ template <typename T>
 void fill_memory(T* data, u32 count, T value);
 #endif // CUTILE_CPP
 
+void copy_u8_memory(u8 *data, const u8* in, u32 count);
+void copy_s8_memory(s8* data, const s8* in, u32 count);
+void copy_u16_memory(u16* data, const u16* in, u32 count);
+void copy_s16_memory(s16* data, const s16* in, u32 count);
+void copy_u32_memory(u32* data, const u32* in, u32 count);
+void copy_s32_memory(s32* data, const s32* in, u32 count);
+void copy_u64_memory(u64* data, const u64* in, u32 count);
+void copy_s64_memory(s64* data, const s64* in, u32 count);
+#ifdef CUTILE_CPP
+template <typename T>
+void copy_memory(T* data, const T* in, u32 count);
+#endif // CUTILE_CPP
+
 void reverse_u8_memory(u8* data, u32 count);
 void reverse_s8_memory(u8* data, u32 count);
 void reverse_u16_memory(u8* data, u32 count);
@@ -96,6 +109,46 @@ void fill_memory(T* data, u32 count, T value)
     for (u32 i = 0; i < count; ++i) data[i] = value;
 }
 #endif
+
+void copy_u8_memory(u8 *data, const u8* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_s8_memory(s8* data, const s8* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_u16_memory(u16* data, const u16* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_s16_memory(s16* data, const s16* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_u32_memory(u32* data, const u32* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_s32_memory(s32* data, const s32* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_u64_memory(u64* data, const u64* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+void copy_s64_memory(s64* data, const s64* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+#ifdef CUTILE_CPP
+template <typename T>
+void copy_memory(T* data, const T* in, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) data[i] = in[i];
+}
+#endif // CUTILE_CPP
 
 void reverse_u8_memory(u8* data, u32 count)
 {
