@@ -31,13 +31,13 @@ void copy_memory(T* data, const T* in, u32 count);
 #endif // CUTILE_CPP
 
 void reverse_u8_memory(u8* data, u32 count);
-void reverse_s8_memory(u8* data, u32 count);
-void reverse_u16_memory(u8* data, u32 count);
-void reverse_s16_memory(u8* data, u32 count);
-void reverse_u32_memory(u8* data, u32 count);
-void reverse_s32_memory(u8* data, u32 count);
-void reverse_u64_memory(u8* data, u32 count);
-void reverse_s64_memory(u8* data, u32 count);
+void reverse_s8_memory(s8* data, u32 count);
+void reverse_u16_memory(u16* data, u32 count);
+void reverse_s16_memory(s16* data, u32 count);
+void reverse_u32_memory(u32* data, u32 count);
+void reverse_s32_memory(s32* data, u32 count);
+void reverse_u64_memory(u64* data, u32 count);
+void reverse_s64_memory(s64* data, u32 count);
 #ifdef CUTILE_CPP
 template <typename T>
 void reverse_memory(T* data, u32 count);
@@ -161,7 +161,7 @@ void reverse_u8_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_s8_memory(u8* data, u32 count)
+void reverse_s8_memory(s8* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -172,7 +172,7 @@ void reverse_s8_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_u16_memory(u8* data, u32 count)
+void reverse_u16_memory(u16* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -183,7 +183,7 @@ void reverse_u16_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_s16_memory(u8* data, u32 count)
+void reverse_s16_memory(s16* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -194,7 +194,7 @@ void reverse_s16_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_u32_memory(u8* data, u32 count)
+void reverse_u32_memory(u32* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -205,7 +205,7 @@ void reverse_u32_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_s32_memory(u8* data, u32 count)
+void reverse_s32_memory(s32* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -216,7 +216,7 @@ void reverse_s32_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_u64_memory(u8* data, u32 count)
+void reverse_u64_memory(u64* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
@@ -227,7 +227,7 @@ void reverse_u64_memory(u8* data, u32 count)
         data[rhs_i] = dump;
     }
 }
-void reverse_s64_memory(u8* data, u32 count)
+void reverse_s64_memory(s64* data, u32 count)
 {
     u32 end = count * 0.5;
     for (u32 i = 0; i < end; ++i) 
