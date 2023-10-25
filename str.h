@@ -36,6 +36,8 @@ char* create_cstr_from_str(const string* str, allocator* allocator);
 
 u32 cstr_length(const char* cstr);
 
+bool8 cstr_equals(const char* lhs, const char* rhs);
+
 #ifdef CUTILE_IMPLEM
 
 #define CUTILE_STR_INCREMENT_COUNT 5
@@ -126,6 +128,16 @@ u32 cstr_length(const char* cstr)
     u32 i = 0;
     while (*(cstr + i)) ++i;
     return i; 
+}
+
+bool8 cstr_equals(const char* lhs, const char* rhs)
+{
+    for (;;)
+    {
+        if (!(*lhs) && !(*rhs)) break;
+        if (*lhs++ != *rhs++) return bool8_false;
+    }
+    return bool8_true;
 }
 
 #endif
