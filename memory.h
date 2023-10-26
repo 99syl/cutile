@@ -294,6 +294,8 @@ allocator create_basic_heap_allocator()
     };
 }
 
+allocator basic_heap_allocator = create_basic_heap_allocator();
+
 #endif // CUTILE_IMPLEM
 
 #endif // !CUTILE_MEMORY_H
