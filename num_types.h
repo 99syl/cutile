@@ -58,11 +58,59 @@ typedef u32 bool32;
 #define U8_MIN 0x00
 #define U8_MAX 0xff
 
+#define S16_MIN ~0x7fff
+#define S16_MAX 0x7fff
+
+#define U16_MIN 0x0000
+#define U16_MAX 0xffff
+
+#define S32_MIN ~0x7fffffff
+#define S32_MAX 0x7fffffff
+
+#define U32_MIN 0x00000000
+#define U32_MAX 0xffffffff
+
+#define S64_MIN ~0x7fffffffffffffff
+#define S64_MAX 0x7fffffffffffffff
+
+#define U64_MIN 0x0000000000000000
+#define U64_MAX 0xffffffffffffffff
+
 #define BOOL8_TRUE  0x01
 #define BOOL8_FALSE 0x00
 
 #define BOOL32_TRUE     0x00000001
 #define BOOL32_FALSE    0x00000000
+
+inline const s8 s8_min = S8_MIN;
+inline const u8 s8_max = S8_MAX;
+
+inline const u8 u8_min = U8_MIN;
+inline const u8 u8_max = U8_MAX;
+
+inline const s16 s16_min = S16_MIN;
+inline const s16 s16_max = S16_MAX;
+
+inline const u16 u16_min = U16_MIN;
+inline const u16 u16_max = U16_MAX;
+
+inline const s32 s32_min = S32_MIN;
+inline const s32 s32_max = S32_MAX;
+
+inline const u32 u32_min = U32_MIN;
+inline const u32 u32_max = U32_MAX;
+
+inline const s64 s64_min = S64_MIN;
+inline const s64 s64_max = S64_MAX;
+
+inline const u64 u64_min = U64_MIN;
+inline const u64 u64_max = U64_MAX;
+
+inline const bool8 bool8_false = BOOL8_FALSE;
+inline const bool8 bool8_true = BOOL8_TRUE;
+
+inline const bool32 bool32_false = BOOL32_FALSE;
+inline const bool32 bool32_true = BOOL32_TRUE;
 
 CUTILE_STATIC_ASSERT(sizeof(s8) == 1);
 CUTILE_STATIC_ASSERT(sizeof(u8) == 1);
