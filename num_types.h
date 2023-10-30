@@ -82,35 +82,67 @@ typedef u32 bool32;
 #define BOOL32_TRUE     0x00000001
 #define BOOL32_FALSE    0x00000000
 
-inline const s8 s8_min = S8_MIN;
-inline const u8 s8_max = S8_MAX;
+extern const s8 s8_min;
+extern const u8 s8_max;
 
-inline const u8 u8_min = U8_MIN;
-inline const u8 u8_max = U8_MAX;
+extern const u8 u8_min;
+extern const u8 u8_max;
 
-inline const s16 s16_min = S16_MIN;
-inline const s16 s16_max = S16_MAX;
+extern const s16 s16_min;
+extern const s16 s16_max;
 
-inline const u16 u16_min = U16_MIN;
-inline const u16 u16_max = U16_MAX;
+extern const u16 u16_min;
+extern const u16 u16_max;
 
-inline const s32 s32_min = S32_MIN;
-inline const s32 s32_max = S32_MAX;
+extern const s32 s32_min;
+extern const s32 s32_max;
 
-inline const u32 u32_min = U32_MIN;
-inline const u32 u32_max = U32_MAX;
+extern const u32 u32_min;
+extern const u32 u32_max;
 
-inline const s64 s64_min = S64_MIN;
-inline const s64 s64_max = S64_MAX;
+extern const s64 s64_min;
+extern const s64 s64_max;
 
-inline const u64 u64_min = U64_MIN;
-inline const u64 u64_max = U64_MAX;
+extern const u64 u64_min;
+extern const u64 u64_max;
 
-inline const bool8 bool8_false = BOOL8_FALSE;
-inline const bool8 bool8_true = BOOL8_TRUE;
+extern const bool8 bool8_false;
+extern const bool8 bool8_true;
 
-inline const bool32 bool32_false = BOOL32_FALSE;
-inline const bool32 bool32_true = BOOL32_TRUE;
+extern const bool32 bool32_false;
+extern const bool32 bool32_true;
+
+#ifdef CUTILE_IMPLEM
+const s8 s8_min = S8_MIN;
+const u8 s8_max = S8_MAX;
+ 
+const u8 u8_min = U8_MIN;
+const u8 u8_max = U8_MAX;
+ 
+const s16 s16_min = S16_MIN;
+const s16 s16_max = S16_MAX;
+ 
+const u16 u16_min = U16_MIN;
+const u16 u16_max = U16_MAX;
+ 
+const s32 s32_min = S32_MIN;
+const s32 s32_max = S32_MAX;
+ 
+const u32 u32_min = U32_MIN;
+const u32 u32_max = U32_MAX;
+ 
+const s64 s64_min = S64_MIN;
+const s64 s64_max = S64_MAX;
+
+const u64 u64_min = U64_MIN;
+const u64 u64_max = U64_MAX;
+ 
+const bool8 bool8_false = BOOL8_FALSE;
+const bool8 bool8_true = BOOL8_TRUE;
+ 
+const bool32 bool32_false = BOOL32_FALSE;
+const bool32 bool32_true = BOOL32_TRUE;
+#endif // CUTILE_IMPLEM
 
 CUTILE_STATIC_ASSERT(sizeof(s8) == 1);
 CUTILE_STATIC_ASSERT(sizeof(u8) == 1);

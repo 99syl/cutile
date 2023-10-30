@@ -43,6 +43,19 @@ template <typename T>
 void reverse_memory(T* data, u32 count);
 #endif // CUTILE_CPP
 
+bool8 u8_memory_equals (const u8*  lhs, const u8*  rhs, u32 count);
+bool8 s8_memory_equals (const s8*  lhs, const s8*  rhs, u32 count);
+bool8 u16_memory_equals(const u16* lhs, const u16* rhs, u32 count);
+bool8 s16_memory_equals(const s16* lhs, const s16* rhs, u32 count);
+bool8 u32_memory_equals(const u32* lhs, const u32* rhs, u32 count);
+bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count);
+bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
+bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
+#ifdef CUTILE_CPP
+template <typename T>
+bool8 memory_equals(const T* lhs, const T* rhs, u32 count);
+#endif // CUTILE_CPP
+
 struct allocator
 {
     void*   user;
@@ -250,6 +263,55 @@ void reverse_memory(T* data, u32 count)
         data[i] = data[rhs_i];
         data[rhs_i] = dump;
     }
+}
+#endif // CUTILE_CPP
+
+bool8 u8_memory_equals (const u8*  lhs, const u8*  rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 s8_memory_equals (const s8*  lhs, const s8*  rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 u16_memory_equals(const u16* lhs, const u16* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 s16_memory_equals(const s16* lhs, const s16* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 u32_memory_equals(const u32* lhs, const u32* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
+}
+#ifdef CUTILE_CPP
+template <typename T>
+bool8 memory_equals(const T* lhs, const T* rhs, u32 count)
+{
+    for (u32 i = 0; i < count; ++i) if (lhs[i] != rhs[i]) return bool8_false;
+    return bool8_true;
 }
 #endif // CUTILE_CPP
 
