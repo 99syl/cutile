@@ -37,60 +37,60 @@ bool8 str_equals_cstr(const string* str, const char* cstr);
 bool8 str_begins_with(const string* str, const char* val);
 bool8 str_ends_with(const string* str, const char* val);
 
-u8              sub_str_to_u8(const string* s, u32 offset, u32 count);
-s8              sub_str_to_s8(const string* s, u32 offset, u32 count);
-u16             sub_str_to_u16(const string* s, u32 offset, u32 count);
-s16             sub_str_to_s16(const string* s, u32 offset, u32 count);
-u32             sub_str_to_u32(const string* s, u32 offset, u32 count);
-s32             sub_str_to_s32(const string* s, u32 offset, u32 count);
-u64             sub_str_to_u64(const string* s, u32 offset, u32 count);
-s64             sub_str_to_s64(const string* s, u32 offset, u32 count);
-u8              str_to_u8(const string* s);
-s8              str_to_s8(const string* s);
-u16             str_to_u16(const string* s);
-s16             str_to_s16(const string* s);
-u32             str_to_u32(const string* s);
-s32             str_to_s32(const string* s);
-u64             str_to_u64(const string* s);
-s64             str_to_s64(const string* s);
+u8 sub_str_to_u8(const string* s, u32 offset, u32 count);
+s8 sub_str_to_s8(const string* s, u32 offset, u32 count);
+u16 sub_str_to_u16(const string* s, u32 offset, u32 count);
+s16 sub_str_to_s16(const string* s, u32 offset, u32 count);
+u32 sub_str_to_u32(const string* s, u32 offset, u32 count);
+s32 sub_str_to_s32(const string* s, u32 offset, u32 count);
+u64 sub_str_to_u64(const string* s, u32 offset, u32 count);
+s64 sub_str_to_s64(const string* s, u32 offset, u32 count);
+u8 str_to_u8(const string* s);
+s8 str_to_s8(const string* s);
+u16 str_to_u16(const string* s);
+s16 str_to_s16(const string* s);
+u32 str_to_u32(const string* s);
+s32 str_to_s32(const string* s);
+u64 str_to_u64(const string* s);
+s64 str_to_s64(const string* s);
 #ifdef CUTILE_CPP
 template <typename IntegerType>
-IntegerType     sub_str_to_nb(const string* s, u32 offset, u32 count);
+IntegerType sub_str_to_nb(const string* s, u32 offset, u32 count);
 template <typename IntegerType>
-IntegerType     str_to_nb(const string* s);
+IntegerType str_to_nb(const string* s);
 #endif // CUTILE_CPP
 
-string u8_to_str        (u8, allocator* allocator);
-string s8_to_str        (s8, allocator* allocator);
-string u16_to_str       (u16, allocator* allocator);
-string s16_to_str       (s16, allocator* allocator);
-string u32_to_str       (u32, allocator* allocator);
-string s32_to_str       (s32, allocator* allocator);
-string u64_to_str       (u64, allocator* allocator);
-string s64_to_str       (s64, allocator* allocator);
-void   u8_into_str      (u8, string* out);
-void   s8_into_str      (s8, string* out);
-void   u16_into_str     (u16, string* out);
-void   s16_into_str     (s16, string* out);
-void   u32_into_str     (u32, string* out);
-void   s32_into_str     (s32, string* out);
-void   u64_into_str     (u64, string* out);
-void   s64_into_str     (s64, string* out);
-void   u8_into_sub_str  (u8, string* out, u32 index);
-void   s8_into_sub_str  (s8, string* out, u32 index);
-void   u16_into_sub_str (u16, string* out, u32 index);
-void   s16_into_sub_str (s16, string* out, u32 index);
-void   u32_into_sub_str (u32, string* out, u32 index);
-void   s32_into_sub_str (s32, string* out, u32 index);
-void   u64_into_sub_str (u64, string* out, u32 index);
-void   s64_into_sub_str (s64, string* out, u32 index);
+string u8_to_str(u8, allocator* allocator);
+string s8_to_str(s8, allocator* allocator);
+string u16_to_str(u16, allocator* allocator);
+string s16_to_str(s16, allocator* allocator);
+string u32_to_str(u32, allocator* allocator);
+string s32_to_str(s32, allocator* allocator);
+string u64_to_str(u64, allocator* allocator);
+string s64_to_str(s64, allocator* allocator);
+void u8_into_str(u8, string* out);                      // nb_into_str: Pushes the number at the end of the string.
+void s8_into_str(s8, string* out);
+void u16_into_str(u16, string* out);
+void s16_into_str(s16, string* out);
+void u32_into_str(u32, string* out);
+void s32_into_str(s32, string* out);
+void u64_into_str(u64, string* out);
+void s64_into_str(s64, string* out);
+void u8_into_sub_str(u8, string* out, u32 index);
+void s8_into_sub_str(s8, string* out, u32 index);
+void u16_into_sub_str(u16, string* out, u32 index);
+void s16_into_sub_str(s16, string* out, u32 index);
+void u32_into_sub_str(u32, string* out, u32 index);
+void s32_into_sub_str(s32, string* out, u32 index);
+void u64_into_sub_str(u64, string* out, u32 index);
+void s64_into_sub_str(s64, string* out, u32 index);
 #ifdef CUTILE_CPP
 template <typename IntegerType>
-string nb_to_str        (IntegerType val, allocator* = &basic_heap_allocator);
+string nb_to_str(IntegerType val, allocator* = &basic_heap_allocator);
 template <typename IntegerType>
-void   nb_into_str      (IntegerType val, string* out);
+void nb_into_str(IntegerType val, string* out);
 template <typename IntegerType>
-void   nb_into_sub_str  (IntegerType val, string* out, u32 offset);
+void nb_into_sub_str(IntegerType val, string* out, u32 offset);
 #endif // CUTILE_CPP
 
 #ifdef CUTILE_CPP
@@ -138,11 +138,13 @@ void destroy_str(string* str)
 void resize_str(string* str, u32 size)
 {
     u8* new_data = (u8*)allocate(str->allocator, size);
-    if (size < str->count) {
+    if (size < str->count)
+    {
         for (u32 i = 0; i < size; ++i) new_data[i] = str->data[i];
         str->count = size;
     }
-    else {
+    else
+    {
         for (u32 i = 0; i < str->count; ++i) new_data[i] = str->data[i];
     }
     deallocate(str->allocator, str->data);
@@ -165,22 +167,28 @@ void str_push_back(string* str, u32 c)
 }
 void str_insert(string* str, u32 index, u32 c)
 {
+    // Insertion range is [0, str->count].
+    
     u32 csize;
     if (c <= 0x007F) csize = 1;
     else if (c <= 0x07FF) csize = 2;
     else if (c <= 0xFFFF) csize = 3;
     else csize = 4;
-    if (str->count + csize == str->size) resize_str(str, str->size + csize + CUTILE_STR_INCREMENT_COUNT);
-    for (u32 i = index; i < str->count; ++i)
+    if (str->count + csize > str->size) resize_str(str, str->size + csize + CUTILE_STR_INCREMENT_COUNT);
+    if (str->count)
     {
-        str->data[i + csize] = data[i];
+        // Right to left copy.
+        for (u32 i = index; i < str->count; ++i)
+        {
+            u32 j = str->count - (i - index) - 1;
+            str->data[j + csize] = str->data[j];
+        }
     }
-    u8* data = str->data + index;
     for (u32 i = 0; i < csize; ++i)
     {
-        data[i] = (c >> (i * 8)) & 0xFF;
-        str->count++;
+        str->data[i + index] = (c >> (i * 8)) & 0xFF;
     }
+    str->count += csize;
 }
 void str_push_back_str(string* str, const string* rhs)
 {
@@ -209,7 +217,7 @@ void reverse_sub_str(string* str, u32 offset, u32 count)
     reverse_u8_memory(str->data + offset, count);
 }
 
-u8   str_at(const string* str, u32 index)
+u8 str_at(const string* str, u32 index)
 {
     return str->data[index];
 }
@@ -340,14 +348,14 @@ string s64_to_str(s64 nb, allocator* allocator)
     s64_into_sub_str(nb, &s, 0);
     return s;
 }
-void u8_into_str(u8 nb, string* out) { return u64_into_sub_str(nb, out, 0); }
-void s8_into_str(s8 nb, string* out) { return s64_into_sub_str(nb, out, 0); }
-void u16_into_str(u16 nb, string* out) { return u64_into_sub_str(nb, out, 0); }
-void s16_into_str(s16 nb, string* out) { return s64_into_sub_str(nb, out, 0); }
-void u32_into_str(u32 nb, string* out) { return u64_into_sub_str(nb, out, 0); }
-void s32_into_str(s32 nb, string* out) { return s64_into_sub_str(nb, out, 0); }
-void u64_into_str(u64 nb, string* out) { return u64_into_sub_str(nb, out, 0); }
-void s64_into_str(s64 nb, string* out) { return s64_into_sub_str(nb, out, 0); }
+void u8_into_str(u8 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
+void s8_into_str(s8 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
+void u16_into_str(u16 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
+void s16_into_str(s16 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
+void u32_into_str(u32 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
+void s32_into_str(s32 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
+void u64_into_str(u64 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
+void s64_into_str(s64 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
 void u8_into_sub_str(u8 nb, string* out, u32 index) { return u64_into_sub_str(nb, out, index); }
 void s8_into_sub_str(s8 nb, string* out, u32 index) { return s64_into_sub_str(nb, out, index); }
 void u16_into_sub_str(u16 nb, string* out, u32 index) { return u64_into_sub_str(nb, out, index); }
@@ -387,7 +395,7 @@ string nb_to_str(IntegerType nb, allocator* allocator)
 template <typename IntegerType>
 void nb_into_str(IntegerType nb, string* out)
 {
-    return nb_into_sub_str(nb, out, 0);
+    return nb_into_sub_str(nb, out, out->count);
 }
 template <typename IntegerType>
 void nb_into_sub_str(IntegerType nb, string* out, u32 index)
@@ -439,7 +447,7 @@ inline string format_str(const char* fmt, Args ...args, allocator* allocator)
     return str;
 }
 template <typename ...Args>
-inline void   format_str(string* out, const char* fmt, Args ...args)
+inline void format_str(string* out, const char* fmt, Args ...args)
 {
     u32 len = cstr_length(fmt);
     u32 i = 0;
