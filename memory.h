@@ -73,7 +73,31 @@ template <typename T>
 T*      allocate(allocator* allocator, u64 count);
 template <typename T>
 void    deallocate(allocator* allocator, T* ptr);
-#endif
+#endif // CUTILE_CPP
+
+#ifdef CUTILE_ALLOCATOR_ANALYZER
+struct allocation_info
+{
+    bool8       available;
+    void*       address;
+    u64         size;
+    u32         line;
+    const char* filename;
+};
+#ifdef CUTILE_C
+typedef struct allocation_info allocation_info;
+#endif // CUTILE_C
+struct allocation_table
+{
+    u64 count;
+    u64 size;
+    allocation_info* data;
+};
+#ifdef CUTILE_C
+typedef struct allocation_table allocation_table;
+#endif // CUTILE_C
+extern allocation_table allocations_info;
+#endif // CUTILE_ALLOCATOR_ANALYZER
 
 allocator create_basic_heap_allocator();
 
@@ -315,7 +339,10 @@ bool8 memory_equals(const T* lhs, const T* rhs, u32 count)
 }
 #endif // CUTILE_CPP
 
-void*   allocate(allocator* allocator, u64 size)
+#ifdef CUTILE_ALLOCATOR_ANALYZER
+allocation_table allocations_info = { 0, 0, nullptr };
+#else // !CUTILE_ALLOCATOR_ANALYZER
+void* allocate(allocator* allocator, u64 size)
 {
     return allocator->allocate(allocator->user, size);
 }
@@ -335,6 +362,7 @@ void deallocate(allocator* allocator, T* ptr)
     deallocate(allocator, (void*)ptr);
 }
 #endif // CUTILE_CPP
+#endif // !CUTILE_ALLOCATOR_ANALYZER
 
 void* basic_heap_allocate(void* user, u64 size)
 {
@@ -357,8 +385,78 @@ allocator create_basic_heap_allocator()
     return res;
 }
 
-allocator basic_heap_allocator = create_basic_heap_allocator();
+allocator basic_heap_allocator =
+{
+    .user = 0,
+    .allocate = &basic_heap_allocate,
+    .deallocate = &basic_heap_deallocate
+};
 
 #endif // CUTILE_IMPLEM
+
+#ifdef CUTILE_ALLOCATOR_ANALYZER
+force_inline void* allocate(allocator* allocator, u64 size)
+{
+    void* data = allocator->allocate(allocator->user, size);
+    allocation_info* elem = allocations_info.data;
+
+    // Search for an available node.
+    for (u32 i = 0; i < allocations_info.count; ++i)
+    {
+        if (allocations_info.data[i].available)
+        {
+            elem = &allocations_info.data[i];
+            break;
+        }
+    }
+
+    // No available node found so add a new one.
+    if (elem == allocations_info.data)
+    {
+        // Increase buffer size if it's full
+        if (allocations_info.count == allocations_info.size)
+        {
+            allocations_info.size += 100;
+            allocation_info* new_data = (allocation_info*) basic_heap_allocate(nullptr, sizeof(allocation_info) * allocations_info.size);
+            copy_u8_memory((u8*)new_data, (u8*)allocations_info.data, sizeof(allocation_info) * allocations_info.count);
+            basic_heap_deallocate(nullptr, allocations_info.data);
+            allocations_info.data = new_data;
+        }
+        elem = &allocations_info.data[allocations_info.count++];
+    }
+    elem->available = bool8_false;
+    elem->address = data;
+    elem->size = size;
+    elem->line = __LINE__;
+    elem->filename = __FILE__;
+
+    return data;
+}
+force_inline void deallocate(allocator* allocator, void* ptr)
+{
+    for (u32 i = 0; i < allocations_info.count; ++i)
+    {
+        if (allocations_info.data[i].address == ptr)
+        {
+            allocations_info.data[i].available = bool8_true;
+            --allocations_info.count;
+            break;
+        }
+    }
+    allocator->deallocate(allocator->user, ptr);
+}
+#ifdef CUTILE_CPP
+template <typename T>
+force_inline T* allocate(allocator* allocator, u64 count)
+{
+    return (T*)(allocate(allocator, sizeof(T) * count));
+}
+template <typename T>
+force_inline void deallocate(allocator* allocator, T* ptr)
+{
+    return deallocate(allocator, (void*)ptr);
+}
+#endif // CUTILE_CPP
+#endif // CUTILE_ALLOCATOR_ANALYZER
 
 #endif // !CUTILE_MEMORY_H
