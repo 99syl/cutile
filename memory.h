@@ -319,20 +319,20 @@ void*   allocate(allocator* allocator, u64 size)
 {
     return allocator->allocate(allocator->user, size);
 }
-void    deallocate(allocator* allocator, void* ptr)
+void deallocate(allocator* allocator, void* ptr)
 {
-    return allocator->deallocate(allocator->user, ptr);
+    allocator->deallocate(allocator->user, ptr);
 }
 #ifdef CUTILE_CPP
 template <typename T>
-T*      allocate(allocator* allocator, u64 count)
+T* allocate(allocator* allocator, u64 count)
 {
     return (T*)(allocate(allocator, sizeof(T) * count));
 }
 template <typename T>
-void    deallocate(allocator* allocator, T* ptr)
+void deallocate(allocator* allocator, T* ptr)
 {
-    return deallocate(allocator, (void*)ptr);
+    deallocate(allocator, (void*)ptr);
 }
 #endif // CUTILE_CPP
 
@@ -348,12 +348,13 @@ void basic_heap_deallocate(void* user, void* ptr)
 
 allocator create_basic_heap_allocator()
 {
-    return 
+    allocator res =
     {
-        0,
-        &basic_heap_allocate,
-        &basic_heap_deallocate
+        .user = 0,
+        .allocate = &basic_heap_allocate,
+        .deallocate = &basic_heap_deallocate
     };
+    return res;
 }
 
 allocator basic_heap_allocator = create_basic_heap_allocator();
