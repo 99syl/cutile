@@ -15,4 +15,16 @@
 #endif // __STDC_VERSION__
 #endif // CUTILE_CPP
 
+#define maybe_inline inline
+
+#ifdef _MSC_VER
+#define force_inline __forceinline
+#else
+#define force_inline inline
+#endif // _MSC_VER
+
+#ifdef CUTILE_C
+#define nullptr 0
 #endif
+
+#endif // !CUTILE_CXX_H
