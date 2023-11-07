@@ -585,7 +585,7 @@ inline void format_next_arg_into_string(const string* fmt, string* out, Arg arg,
 {
     while (*i < fmt->count) 
     {
-        u8 c = fmt[*i];
+        u8 c = fmt->data[*i];
         if (c == '%') 
         {
             format_arg_into_string(out, arg);
