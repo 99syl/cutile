@@ -381,29 +381,29 @@ net_error send_to_net_socket(net_socket dest_socket, u8* data, u64 len)
     u32 total = 0;
     while (total < len)
     {
-        sent = send(dest_socket.handle, (char*)data, len, 0);
-#ifdef _WIN32
-        if (sent == SOCKET_ERROR)
-        {
-            int err = WSAGetLastError();
-            switch (err)
+        sent = send(dest_socket.handle, (char*)data + total, len - total, 0);
+        #ifdef _WIN32
+            if (sent == SOCKET_ERROR)
             {
-            case WSANOTINITIALISED: return net_win32_wsa_not_initialized;
-            case WSAENETDOWN: return net_win32_wsa_network_down;
-            case WSAEACCES: return net_win32_wsa_permission_denied;
-            case WSAEINTR: return net_win32_wsa_interrupted_call;
-            case WSAEINPROGRESS: return net_win32_wsa_busy;
-            case WSAEFAULT: return net_win32_wsa_invalid_data_address;
-            case WSAENETRESET: return net_win32_wsa_drop_conn_on_network_reset;
-            case WSAENOBUFS: return net_win32_wsa_insufficient_buffer_space;
-            case WSAENOTCONN: return net_win32_wsa_socket_not_connected;
-            case WSAENOTSOCK: return net_win32_wsa_not_a_sock;
-            case WSAEWOULDBLOCK: return net_win32_unavailable_resource;
+                int err = WSAGetLastError();
+                switch (err)
+                {
+                case WSANOTINITIALISED: return net_win32_wsa_not_initialized;
+                case WSAENETDOWN: return net_win32_wsa_network_down;
+                case WSAEACCES: return net_win32_wsa_permission_denied;
+                case WSAEINTR: return net_win32_wsa_interrupted_call;
+                case WSAEINPROGRESS: return net_win32_wsa_busy;
+                case WSAEFAULT: return net_win32_wsa_invalid_data_address;
+                case WSAENETRESET: return net_win32_wsa_drop_conn_on_network_reset;
+                case WSAENOBUFS: return net_win32_wsa_insufficient_buffer_space;
+                case WSAENOTCONN: return net_win32_wsa_socket_not_connected;
+                case WSAENOTSOCK: return net_win32_wsa_not_a_sock;
+                case WSAEWOULDBLOCK: return net_win32_unavailable_resource;
                 // TODO: Handle other errors: https://learn.microsoft.com/fr-fr/windows/win32/api/winsock2/nf-winsock2-send
-            default: return net_unknown_err;
+                default: return net_unknown_err;
+                }
             }
-        }
-#endif // _WIN32
+        #endif // _WIN32
         total += sent;
     }
 
