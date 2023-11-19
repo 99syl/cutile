@@ -278,9 +278,9 @@ s64 sub_str_to_s64(const string* s, u32 offset, u32 count)
 {
     s64 res = 0;
     u32 i = offset;
-    bool neg = false;
+    bool8 neg = bool8_false;
     if (str_at(s, i) == '-') {
-        neg = true;
+        neg = bool8_true;
         ++i;
     }
     for (; i < count + offset; ++i) {
@@ -365,20 +365,20 @@ string s64_to_str(s64 nb, allocator* allocator)
     s64_into_sub_str(nb, &s, 0);
     return s;
 }
-void u8_into_str(u8 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
-void s8_into_str(s8 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
-void u16_into_str(u16 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
-void s16_into_str(s16 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
-void u32_into_str(u32 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
-void s32_into_str(s32 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
-void u64_into_str(u64 nb, string* out) { return u64_into_sub_str(nb, out, out->count); }
-void s64_into_str(s64 nb, string* out) { return s64_into_sub_str(nb, out, out->count); }
-void u8_into_sub_str(u8 nb, string* out, u32 index) { return u64_into_sub_str(nb, out, index); }
-void s8_into_sub_str(s8 nb, string* out, u32 index) { return s64_into_sub_str(nb, out, index); }
-void u16_into_sub_str(u16 nb, string* out, u32 index) { return u64_into_sub_str(nb, out, index); }
-void s16_into_sub_str(s16 nb, string* out, u32 index) { return s64_into_sub_str(nb, out, index); }
-void u32_into_sub_str(u32 nb, string* out, u32 index) { return u64_into_sub_str(nb, out, index); }
-void s32_into_sub_str(s32 nb, string* out, u32 index) { return s64_into_sub_str(nb, out, index); }
+void u8_into_str(u8 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
+void s8_into_str(s8 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
+void u16_into_str(u16 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
+void s16_into_str(s16 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
+void u32_into_str(u32 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
+void s32_into_str(s32 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
+void u64_into_str(u64 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
+void s64_into_str(s64 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
+void u8_into_sub_str(u8 nb, string* out, u32 index) { u64_into_sub_str(nb, out, index); }
+void s8_into_sub_str(s8 nb, string* out, u32 index) { s64_into_sub_str(nb, out, index); }
+void u16_into_sub_str(u16 nb, string* out, u32 index) { u64_into_sub_str(nb, out, index); }
+void s16_into_sub_str(s16 nb, string* out, u32 index) { s64_into_sub_str(nb, out, index); }
+void u32_into_sub_str(u32 nb, string* out, u32 index) { u64_into_sub_str(nb, out, index); }
+void s32_into_sub_str(s32 nb, string* out, u32 index) { s64_into_sub_str(nb, out, index); }
 void u64_into_sub_str(u64 nb, string* out, u32 index)
 {
     while (nb)
