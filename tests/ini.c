@@ -39,6 +39,23 @@ int main(int ac, char** av)
         test_assert(entry_value.value_start[0] == 'u');
         test_assert(entry_value.value_size == 5);
     }
+    entry_value = get_ini_entry_value("SectionA", "bar", &result);
+    {
+        test_assert(entry_value.found == bool8_false);
+    }
+    entry_value = get_ini_entry_value("SectionC", "oof", &result);
+    {
+        test_assert(entry_value.found == bool8_false);
+    }
+    entry_value = get_ini_global_entry_value("oof", &result);
+    {
+        test_assert(entry_value.found == bool8_false);
+    }
+    entry_value = get_ini_global_entry_value("not_existing_entry", &result);
+    {
+        test_assert(entry_value.found == bool8_false);
+    }
+    destroy_ini_parsed_data(&result);
     
     return test_result;
 }
