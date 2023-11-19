@@ -3,198 +3,123 @@
 
 #include "./memory.h"
 
-#ifdef CUTILE_CPP
+// Generates an array implementation of the given type.
+#define declare_array_of(type)          \
+    typedef struct type##_array         \
+    {                                   \
+        type*       data;               \
+        u32         count;              \
+        u32         size;               \
+        u32         increment;          \
+        allocator*  allocator;          \
+    } type##_array;                     \
+    force_inline type##_array create_##type##_array(u32 size, u32 increment, allocator* allocator) \
+    {                                                                   \
+        type##_array array;                                             \
+        init_array_macro(array, type, size, increment, allocator);      \
+        return array;                                                   \
+    }                                                                   \
+    force_inline void destroy_##type##_array(type##_array* array) { destroy_array_macro(array); } \
+    force_inline void resize_##type##_array(type##_array* array, u32 new_size) { resize_array_macro(array, type, new_size); } \
+    force_inline void type##_array_push(type##_array* array, type val) { array_push_macro(array, type, val); } \
+    force_inline void type##_array_push_repeated(type##_array* array, type val, u32 count) { array_push_repeated_macro(array, type, val, count); } \
+    force_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
+    force_inline void type##_array_push_array(type##_array* out, const type##_array* in) { array_push_array_macro(out, type, in); } \
+    force_inline void type##_array_pop(type##_array* array) { array_pop_macro(array); } \
+    force_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
+    force_inline void reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count) { reverse_array_slice_macro(array, type, offset, count); }
 
-template <typename T>
-struct array
-{
-    T*  data;
+// Calling `declare_array_of(type)` macro will generate the following API:
+/*
 
-    u32 count; // In T unit.
-    u32 size;  // In bytes.
+   (type)_array
+   {
+        data: type*
+        count: u32
+        size: u32
+        increment: u32
+        allocator: allocator*
+   }
 
-    u32 increment; // In T unit.
+   create_(type)_array: (size: u32, increment: u32, allocator: allocator*) -> (type)_array
+   TODO: Continue documentation...
+*/
 
-    allocator* allocator;
-};
-
-template <typename T>
-array<T> create_array(u32 size, u32 increment, allocator* allocator = &basic_heap_allocator);
-
-template <typename T>
-void destroy_array(array<T>* array);
-
-template <typename T>
-void resize_array(array<T>* array, u32 new_size);
-
-template <typename T>
-void array_push(array<T>* array, T val);
-
-template <typename T>
-void array_push_repeated(array<T>* array, T val, u32 count);
-
-template <typename T>
-void array_push_buffer(array<T>* array, const T* buf, u32 n);
-
-template <typename T>
-void array_push_array(array<T>* out, const array<T>* in);
-
-template <typename T>
-void array_pop(array<T>* array);
-
-template <typename T>
-void reverse_array(array<T>* array);
-template <typename T>
-void reverse_array_slice(array<T>* array, u32 offset, u32 count);
-
-template <typename T>
-T  get_array_elem(array<T>* array, u32 index);
-template <typename T>
-T* get_array_ptr_elem(array<T>* array, u32 index);
-
-template <typename T>
-void copy_array_to_buffer(const array<T>* in, T* out);
-template <typename T>
-void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count);
-
-#ifdef CUTILE_IMPLEM
-
-template <typename T>
-inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
-{
-    return array<T>
-    {
-        .data = allocate<T>(allocator, size),
-        .size = size,
-        .increment = incr,
-        .allocator = allocator
-    };
-}
-
-template <typename T>
-inline void destroy_array(array<T>* arr, void (*destroy_data_func)(T* data))
-{
-    if (destroy_data_func) {
-        for (u32 i = 0; i < arr->count; ++i) {
-            destroy_data_func(&arr->data[i]);
-        }
-    }
-    deallocate<T>(arr->allocator, arr->data);
-}
-
-template <typename T>
-inline void resize_array(array<T>* array, u32 new_size)
-{
-    T* new_data = allocate<T>(array->allocator, new_size);
-
-    u32 i = 0;
-    for (; i < array->count && i < new_size; ++i) // TODO: There is a double check here, it might be improved ?
-    {
-        new_data[i] = array->data[i];
-    }
-    array->count = i;
-
-    deallocate(array->allocator, array->data);
-    array->data = new_data;
-    array->size = new_size; 
-}
-
-template <typename T>
-inline void array_push(array<T>* array, T val)
-{
-    if (array->size == array->count) {
-        resize_array(array, array->size + array->increment);
-    }
-    array->data[array->count++] = val;
-}
-
-template <typename T>
-inline void array_push_repeated(array<T>* array, T val, u32 count)
-{
-    if (array->size <= array->count + count) {
-        resize_array(array, array->size + count + array->increment);
-    }
-    for (u32 i = 0; i < count; ++i) {
-        array->data[array->count++] = val;
-    }
-}
-
-template <typename T>
-inline void array_push_buffer(array<T>* array, const T* buf, u32 n)
-{
-    if (array->count + n >= array->size) {
-        resize_array(array, array->count + n + array->increment);
+#define init_array_macro(array, data_type, _size, _increment, _allocator) \
+    {                                                                   \
+        array.data = (data_type*)allocate(allocator, sizeof(data_type) * size); \
+        array.size = _size;                                             \
+        array.count = 0;                                                \
+        array.increment = _increment;                                   \
+        array.allocator = _allocator;                                   \
     }
 
-    for (u32 i = 0; i < n; ++i)
-    {
-        array->data[array->count++] = buf[i];
+#define destroy_array_macro(array_ptr) deallocate(array_ptr->allocator, array->data)
+
+#define resize_array_macro(array_ptr, data_type, new_size)              \
+    {                                                                   \
+        u32 count = new_size < array_ptr->count ? new_size : array_ptr->count; \
+        data_type* new_data = (data_type*)allocate(array_ptr->allocator, sizeof(data_type) * new_size); \
+        for (u32 i = 0; i < count; ++i) new_data[i] = array_ptr->data[i]; \
+        deallocate(array_ptr->allocator, array_ptr->data);              \
+        array_ptr->data = new_data;                                     \
+        array_ptr->count = count;                                       \
+        array_ptr->size = new_size;                                     \
     }
-}
 
-template <typename T>
-inline void array_push_array(array<T>* out, const array<T>* in)
-{
-    array_push_buffer(out, in->data, in->count);
-}
-
-template <typename T>
-inline void array_pop(array<T>* array)
-{
-    array->count -= 1;
-}
-
-
-template <typename T>
-inline void reverse_array(array<T>* array)
-{
-    reverse_array_slice(array, 0, array->count);
-}
-
-template <typename T>
-inline void reverse_array_slice(array<T>* array, u32 offset, u32 count)
-{
-    u32 end = count * 0.5;
-    for (u32 i = offset; i < end; ++i) {
-        T dump = get_array_elem(array, i);
-        u32 rhs_i = count - 1 - i;
-        array->data[i] = array->data[rhs_i];
-        array->data[rhs_i] = dump;
+#define array_push_macro(array_ptr, type, val)                          \
+    {                                                                   \
+        if (array_ptr->count >= array_ptr->size)                        \
+        {                                                               \
+            resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment); \
+        }                                                               \
+        array_ptr->data[array_ptr->count++] = val;                      \
     }
-}
 
-template <typename T>
-inline T get_array_elem(array<T>* array, u32 index)
-{
-    return array->data[index];
-}
-
-template <typename T>
-inline T* get_array_ptr_elem(array<T>* array, u32 index)
-{
-    return &array->data[index];
-}
-
-template <typename T>
-void copy_array_to_buffer(const array<T>* in, T* out)
-{
-    for (u32 i = 0; i < in->count; ++i)
-    {
-        out[i] = in[i];
+#define array_push_repeated_macro(array_ptr, type, val, _count)         \
+    {                                                                   \
+        if (array_ptr->count + _count >= array_ptr->size)               \
+        {                                                               \
+            resize_array_macro(array_ptr, type, array_ptr->count + _count + array_ptr->increment); \
+        }                                                               \
+        for (u32 i = 0; i < _count; ++i) array_ptr->data[array_ptr->count++] = val; \
     }
-}
 
-template <typename T>
-void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count)
-{
-    for (u32 i = 0; i < count; ++i)
-    {
-        out[i] = in[i + offset];
+#define array_push_buffer_macro(array_ptr, type, buf, n)                \
+    {                                                                   \
+        if (array_ptr->count + n >= array_ptr->size)                    \
+        {                                                               \
+            resize_array_macro(array_ptr, type, array_ptr->count + n + array_ptr->increment); \
+        }                                                               \
+        for (u32 i = 0; i < n; ++i) array_ptr->data[array_ptr->count++] = buf[i]; \
     }
-}
 
-#endif // CUTILE_IMPLEM
+#define array_push_array_macro(out, type, in) array_push_buffer_macro(out, type, in->data, in->count)
 
-#endif // CUTILE_CPP
+#define array_pop_macro(array_ptr) array_ptr->count -= 1
+
+#define reverse_array_macro(array_ptr, type) reverse_array_slice_macro(array_ptr, type, 0, array->count)
+
+#define reverse_array_slice_macro(array_ptr, type, offset, count)       \
+    {                                                                   \
+        u32 end = count * 0.5;                                          \
+        for (u32 i = offset; i < end; ++i)                              \
+        {                                                               \
+            type dump = array_ptr->data[i];                             \
+            u32 rhs_i = count - 1 - i;                                  \
+            array_ptr->data[i] = array_ptr->data[rhs_i];                \
+            array_ptr->data[rhs_i] = dump;                              \
+        }                                                               \
+    }
+
+// Generate some array types.
+declare_array_of(s8);
+declare_array_of(u8);
+declare_array_of(s16);
+declare_array_of(u16);
+declare_array_of(s32);
+declare_array_of(u32);
+declare_array_of(s64);
+declare_array_of(u64);
 
 #endif // !CUTILE_ARRAY_H
