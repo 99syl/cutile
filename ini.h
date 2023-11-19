@@ -49,6 +49,8 @@ typedef struct
 ini_entry_value_result get_ini_global_entry_value(const char* entry_name, const parse_ini_result* parsed_data);
 ini_entry_value_result get_ini_entry_value(const char* section_name, const char* entry_name, const parse_ini_result* parsed_data);
 
+void destroy_ini_parsed_data(parse_ini_result* parsed_data);
+
 #ifdef CUTILE_IMPLEM
 
     #include "memory.h"
