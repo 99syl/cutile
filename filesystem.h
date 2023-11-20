@@ -53,6 +53,8 @@ u64 get_file_size(file* file);
 char* get_current_executable_path(allocator* allocator);
 char* get_current_executable_dir_path(allocator* allocator);
 
+char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
+
 #ifdef CUTILE_IMPLEM
 
     #ifdef _WIN32
@@ -212,6 +214,23 @@ char* get_current_executable_dir_path(allocator* allocator);
             deallocate(allocator, exe_path);
             return exe_dir;
         #endif
+    }
+
+    char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator)
+    {
+        u32 lsize = cstr_length(lhs);
+        u32 rsize = cstr_length(rhs);
+
+        char* result = allocate(allocator, sizeof(char) * (lsize + rsize + 2));
+        copy_s8_memory(result, lhs, lsize);
+        #ifdef _WIN32
+            result[lsize] = '\\';
+        #elif defined(__unix__)
+            result[lsize] = '/';
+        #endif
+        copy_s8_memory(result + lsize + 1, rhs, rsize);
+        result[lsize + rsize + 1] = '\0';
+        return result;
     }
 
 #endif // CUTILE_IMPLEM
