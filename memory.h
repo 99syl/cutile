@@ -75,6 +75,9 @@ template <typename T>
 void    deallocate(allocator* allocator, T* ptr);
 #endif // CUTILE_CPP
 
+u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
+s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
+
 #ifdef CUTILE_ALLOCATOR_ANALYZER
 struct allocation_info
 {
@@ -339,6 +342,19 @@ bool8 memory_equals(const T* lhs, const T* rhs, u32 count)
 }
 #endif // CUTILE_CPP
 
+u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator)
+{
+    u8* result = (u8*)allocate(allocator, count);
+    copy_u8_memory(result, in, count);
+    return result;
+}
+s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator)
+{
+    s8* result = (s8*)allocate(allocator, count);
+    copy_s8_memory(result, in, count);
+    return result;
+}
+
 #ifdef CUTILE_ALLOCATOR_ANALYZER
 allocation_table allocations_info = { 0, 0, nullptr };
 #else // !CUTILE_ALLOCATOR_ANALYZER
@@ -393,6 +409,18 @@ allocator basic_heap_allocator =
 };
 
 #endif // CUTILE_IMPLEM
+
+#ifdef CUTILE_CPP
+
+    template <typename T>
+    force_inline T* dump_memory(const T* in, u32 count, allocator* allocator)
+    {
+        T* result = allocate<T>(allocator, count);
+        copy_memory(result, in, count);
+        return result;
+    }
+
+#endif
 
 #ifdef CUTILE_ALLOCATOR_ANALYZER
 force_inline void* allocate(allocator* allocator, u64 size)
