@@ -25,7 +25,12 @@ typedef struct file
     void* handle; // Platform/OS handle.
 } file;
 
-file open_file(file_access_mode access_mode, const char* path);
+typedef struct
+{
+    bool8       succeeded;
+    file        file;
+} open_file_result;
+open_file_result open_file(file_access_mode access_mode, const char* path);
 void close_file(file* file);
 
 // Defined in memory.h
@@ -86,9 +91,9 @@ char* get_current_executable_dir_path(allocator* allocator);
         #endif
     }
 
-    file open_file(file_access_mode access_mode, const char* path)
+    open_file_result open_file(file_access_mode access_mode, const char* path)
     {
-        file result;
+        open_file_result result;
 
         #ifdef _WIN32
             DWORD win32_access_mode = 0;
@@ -98,7 +103,7 @@ char* get_current_executable_dir_path(allocator* allocator);
                 case file_access_mode_write: win32_access_mode = GENERIC_WRITE; break;
                 case file_access_mode_read_write: win32_access_mode = GENERIC_READ | GENERIC_WRITE; break;
             }
-            result.handle = (void*)CreateFileA(
+            result.file.handle = (void*)CreateFileA(
                 path,
                 win32_access_mode,
                 0, // TODO: Make this value configurable maybe ?
@@ -106,6 +111,8 @@ char* get_current_executable_dir_path(allocator* allocator);
                 OPEN_EXISTING, //TODO: Make this value configurable maybe ?
                 FILE_ATTRIBUTE_NORMAL, // TODO: Make this value configurable maybe ?
                 NULL);
+            if (result.file.handle == INVALID_HANDLE_VALUE) result.succeeded = bool8_false;
+            else result.succeeded = bool8_true;
         #endif
 
         return result;
@@ -153,9 +160,18 @@ char* get_current_executable_dir_path(allocator* allocator);
 
     get_file_content_result get_file_content_from_path(const char* path, allocator* allocator)
     {
-        file file = open_file(file_access_mode_read, path);
-        get_file_content_result result = get_file_content(&file, allocator);
-        close_file(&file);
+        get_file_content_result result;
+        open_file_result open_file_result = open_file(file_access_mode_read, path);
+        if (open_file_result.succeeded)
+        {
+            result = get_file_content(&open_file_result.file, allocator);
+            close_file(&open_file_result.file);
+        }
+        else
+        {
+            result.content = nullptr;
+            result.size_in_bytes = 0;
+        }
         return result;
     }
 
