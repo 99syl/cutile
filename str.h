@@ -112,6 +112,7 @@ void format_arg_into_str(string* out, Arg arg);
 #endif // CUTILE_CPP
 
 char* create_cstr_from_str(const string* str, allocator* allocator);
+char* create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, allocator* allocator);
 
 u32 cstr_length(const char* cstr);
 
@@ -435,6 +436,15 @@ char* create_cstr_from_str(const string* str, allocator* allocator)
 {
     char* res = (char*)allocate(allocator, str->count + 1);
     copy_s8_memory(res, (char*)str->data, str->count);
+    res[str->count] = '\0';
+    return res;
+}
+
+char* create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, allocator* allocator)
+{
+    char* res = (char*)allocate(allocator, count + 1);
+    copy_s8_memory(res, cstr + pos, count);
+    res[count] = '\0';
     return res;
 }
 
