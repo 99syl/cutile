@@ -2,6 +2,7 @@
 #define CUTILE_PRINT_HPP
 
 #include "./print.h"
+#include "./str.h"
 
 template <typename ...Args>
 force_inline void print(allocator* allocator, const char* fmt, Args ...args);
