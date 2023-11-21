@@ -147,7 +147,7 @@ string copy_str(const string* original, allocator* allocator)
 {
     string s;
     s.data = (u8*)allocate(allocator, sizeof(u8) * original->count);
-    copy_memory(s.data, original->data, original->count);
+    copy_u8_memory(s.data, original->data, original->count);
     s.count = original->count;
     s.size = original->size;
     s.allocator = allocator;
