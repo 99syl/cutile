@@ -49,15 +49,30 @@ force_inline void print(const string* fmt, Args ...args)
 }
 
 template <typename ...Args> 
-force_inline void println(allocator* allocator, const char* fmt, Args ...args) { print(allocator, fmt, args..., '\n'); }
-
+force_inline void println(allocator* allocator, const char* fmt, Args ...args) 
+{ 
+    string str = format_str(allocator, fmt, args...);
+    println(&str);
+    destroy_str(&str);
+}
 template <typename ...Args> 
-force_inline void println(const char* fmt, Args ...args) { println(&global_default_heap_allocator, fmt, args...); }
+force_inline void println(const char* fmt, Args ...args) 
+{ 
+    println(&global_default_heap_allocator, fmt, args...); 
+}
 
 template <typename ...Args>
-force_inline void println(allocator* allocator, const string* fmt, Args ...args) { print(allocator, fmt, args..., '\n'); }
+force_inline void println(allocator* allocator, const string* fmt, Args ...args)
+{
+    string str = str_format(allocator, fmt, args...);
+    println(&str);
+    destroy_str(&str);
+}
 
 template <typename ...Args>
-force_inline void println(const string* fmt, Args ...args) { println(&global_default_heap_allocator, fmt, args...); }
+force_inline void println(const string* fmt, Args ...args) 
+{ 
+    println(&global_default_heap_allocator, fmt, args...); 
+}
 
 #endif // !CUTILE_PRINT_HPP
