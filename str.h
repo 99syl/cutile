@@ -18,6 +18,7 @@ typedef struct string string;
 
 string create_empty_str(allocator* allocator);
 string create_str_from_cstr(const char* cstr, allocator* allocator);
+string copy_str(const string* original, allocator* allocator);
 
 void destroy_str(string* str);
 
@@ -138,6 +139,17 @@ string create_str_from_cstr(const char* cstr, allocator* allocator)
     s.data = (u8*)allocate(allocator, sizeof(u8) * count);
     s.count = count;
     s.size = count;
+    s.allocator = allocator;
+    return s;
+}
+
+string copy_str(const string* original, allocator* allocator)
+{
+    string s;
+    s.data = (u8*)allocate(allocator, sizeof(u8) * original->count);
+    copy_memory(s.data, original->data, original->count);
+    s.count = original->count;
+    s.size = original->size;
     s.allocator = allocator;
     return s;
 }
