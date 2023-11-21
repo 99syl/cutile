@@ -540,6 +540,11 @@ void format_arg_into_str<string>(string* out, string arg)
 {
     format_arg_into_str(out, &arg);
 }
+template <>
+void format_arg_into_str<void*>(string* out, void* arg)
+{
+    format_arg_into_str(out, (u64)arg);
+}
 #endif // CUTILE_CPP
 
 #endif // CUTILE_IMPLEM
