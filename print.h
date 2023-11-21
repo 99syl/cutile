@@ -20,11 +20,11 @@ void println_cstr(const char* cstr);
     void print(const string* str)
     {
         #ifdef _WIN32
-            HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (stdout && stdout != INVALID_HANDLE_VALUE) 
+            HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (out && out != INVALID_HANDLE_VALUE) 
             {
                 DWORD written;
-                WriteConsoleA(stdout, str->data, str->count, &written, NULL);
+                WriteConsoleA(out, str->data, str->count, &written, NULL);
             }
         #elif defined(__unix__)
             write(1, str->data, str->count);
@@ -33,11 +33,11 @@ void println_cstr(const char* cstr);
     void print_cstr(const char* cstr)
     {
         #ifdef _WIN32
-            HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (stdout && stdout != INVALID_HANDLE_VALUE) 
+            HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (out && out != INVALID_HANDLE_VALUE) 
             {
                 DWORD written;
-                WriteConsoleA(stdout, cstr, cstr_length(cstr), &written, NULL);
+                WriteConsoleA(out, cstr, cstr_length(cstr), &written, NULL);
             }
         #elif defined(__unix__)
             write(1, cstr, cstr_length(cstr));
