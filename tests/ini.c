@@ -4,7 +4,7 @@
 
 int main(int ac, char** av)
 {
-    basic_heap_allocator = create_basic_heap_allocator();
+    initialize_global_default_heap_allocator();
     const char ini_data[] =
         "foo=123\n"
         "bar=Value\n"
@@ -13,7 +13,7 @@ int main(int ac, char** av)
         ";; comment\n"
         "oof=uelaV";
 
-    parse_ini_result result = parse_ini((const u8*)ini_data, sizeof(ini_data)/sizeof(char) - 1 /*  */, &basic_heap_allocator);
+    parse_ini_result result = parse_ini((const u8*)ini_data, sizeof(ini_data)/sizeof(char) - 1 /*  */, &global_default_heap_allocator);
     ini_entry_value_result entry_value;
     entry_value = get_ini_global_entry_value("foo", &result);
     {

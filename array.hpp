@@ -17,7 +17,7 @@ struct array
 };
 
 template <typename T>
-force_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &basic_heap_allocator);
+force_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
 
 template <typename T>
 force_inline void destroy_array(array<T>* array);

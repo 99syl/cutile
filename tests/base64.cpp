@@ -8,7 +8,7 @@ int main(int ac, char** av)
 
     int ret = 0;
 
-    allocator heap = create_basic_heap_allocator();
+    allocator heap = create_default_heap_allocator();
     
     const char text1[] = "Many hands make light work.";
     const char text2[] = "light work.";

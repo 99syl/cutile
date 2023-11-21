@@ -40,7 +40,7 @@ bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
 bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
 
 #define declare_memory_view_of(data_type)       \
-    typedef struct data_type##_memory_view    \
+    typedef struct data_type##_memory_view      \
     {                                           \
         const data_type*    data;               \
         u32                 size;               \
@@ -54,6 +54,13 @@ declare_memory_view_of(s32);
 declare_memory_view_of(u32);
 declare_memory_view_of(s64);
 declare_memory_view_of(u64);
+
+// Performs allocations/deallocations with the current process' default heap. (e.g. GetProcessHeap() on Win32).
+void* default_heap_allocate(u64 size);
+void  default_heap_deallocate(void* ptr);
+
+void* heap_allocate(void* heap, u64 size);
+void  heap_deallocate(void* heap, void* ptr);
 
 typedef struct allocator
 {
@@ -88,13 +95,17 @@ s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
     extern allocation_table allocations_info;
 #endif // CUTILE_ALLOCATOR_ANALYZER
 
-allocator create_basic_heap_allocator();
+allocator create_heap_allocator(void* heap);
+allocator create_default_heap_allocator();
 
-extern allocator basic_heap_allocator;
+extern allocator global_default_heap_allocator;
+void initialize_global_default_heap_allocator();
 
 #ifdef CUTILE_IMPLEM
 
-    #include <stdlib.h> //> malloc, free
+    #ifdef _WIN32
+        #include <Windows.h>
+    #endif
 
     void fill_u8_memory(u8* data, u32 count, u8 value)
     {
@@ -292,6 +303,19 @@ extern allocator basic_heap_allocator;
         return bool8_true;
     }
 
+    void* default_heap_allocate(u64 size)
+    {
+        #ifdef _WIN32
+            return heap_allocate(GetProcessHeap(), size);
+        #endif
+    }
+    void default_heap_deallocate(void* ptr)
+    {
+        #ifdef _WIN32
+            heap_deallocate(GetProcessHeap, ptr);
+        #endif
+    }
+
     u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator)
     {
         u8* result = (u8*)allocate(allocator, count);
@@ -318,33 +342,48 @@ extern allocator basic_heap_allocator;
         }
     #endif // CUTILE_ALLOCATOR_ANALYZER
 
-    void* basic_heap_allocate(void* user, u64 size)
+    void* heap_allocate(void* heap, u64 size)
     {
-        return malloc(size);
+        #ifdef _WIN32
+            return HeapAlloc(heap, 0, size);
+        #endif
     }
 
-    void basic_heap_deallocate(void* user, void* ptr)
+    void heap_deallocate(void* heap, void* ptr)
     {
-        free(ptr);
+        #ifdef _WIN32
+            HeapFree(heap, 0, ptr);
+        #endif
     }
 
-    allocator create_basic_heap_allocator()
+    allocator create_heap_allocator(void* heap)
     {
         allocator res =
         {
-            .user = 0,
-            .allocate = &basic_heap_allocate,
-            .deallocate = &basic_heap_deallocate
+            #ifdef _WIN32
+                .user = heap,
+            #endif
+            .allocate = &heap_allocate,
+            .deallocate = &heap_deallocate
         };
         return res;
     }
 
-    allocator basic_heap_allocator =
+    allocator create_default_heap_allocator()
     {
-        .user = 0,
-        .allocate = &basic_heap_allocate,
-        .deallocate = &basic_heap_deallocate
-    };
+        allocator res =
+        {
+            #ifdef _WIN32
+                .user = GetProcessHeap(),
+            #endif
+            .allocate = &heap_allocate,
+            .deallocate = &heap_deallocate
+        };
+        return res;
+    }
+
+    allocator global_default_heap_allocator;
+    void initialize_global_default_heap_allocator() { global_default_heap_allocator = create_default_heap_allocator(); }
 
 #endif // CUTILE_IMPLEM
 
@@ -371,9 +410,9 @@ extern allocator basic_heap_allocator;
             if (allocations_info.count == allocations_info.size)
             {
                 allocations_info.size += 100;
-                allocation_info* new_data = (allocation_info*) basic_heap_allocate(nullptr, sizeof(allocation_info) * allocations_info.size);
+                allocation_info* new_data = (allocation_info*) default_heap_allocate(sizeof(allocation_info) * allocations_info.size);
                 copy_u8_memory((u8*)new_data, (u8*)allocations_info.data, sizeof(allocation_info) * allocations_info.count);
-                basic_heap_deallocate(nullptr, allocations_info.data);
+                default_heap_deallocate(allocations_info.data);
                 allocations_info.data = new_data;
             }
             elem = &allocations_info.data[allocations_info.count++];
