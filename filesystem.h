@@ -221,7 +221,7 @@ char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
         u32 lsize = cstr_length(lhs);
         u32 rsize = cstr_length(rhs);
 
-        char* result = allocate(allocator, sizeof(char) * (lsize + rsize + 2));
+        char* result = (char*)allocate(allocator, sizeof(char) * (lsize + rsize + 2));
         copy_s8_memory(result, lhs, lsize);
         #ifdef _WIN32
             result[lsize] = '\\';
