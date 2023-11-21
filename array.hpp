@@ -1,6 +1,8 @@
 #ifndef CUTILE_ARRAY_HPP
 #define CUTILE_ARRAY_HPP
 
+#include "./array.h"
+
 template <typename T>
 struct array
 {
@@ -60,8 +62,6 @@ force_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 off
   =============================
 */
 
-#include "./array.h"
-
 template <typename T>
 force_inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
 {
@@ -97,7 +97,7 @@ force_inline void array_push_repeated(array<T>* array, T val, u32 count)
 template <typename T>
 force_inline void array_push_buffer(array<T>* array, const T* buf, u32 n)
 {
-    array_push_repeated_macro(array, T, buf, n);
+    array_push_buffer_macro(array, T, buf, n);
 }
 
 template <typename T>
