@@ -3,6 +3,7 @@
 
 int main(int ac, char **av)
 {
+    initialize_global_default_heap_allocator();
     int ret = 0;
 
     // String<->Numeric conversions tests.
@@ -11,9 +12,9 @@ int main(int ac, char **av)
         s32 j = -12893;
         s64 k = 2438750912;
     
-        string si = u32_to_str(i, &basic_heap_allocator);
-        string sj = s32_to_str(j, &basic_heap_allocator);
-        string sk = s64_to_str(k, &basic_heap_allocator);
+        string si = u32_to_str(i, &global_default_heap_allocator);
+        string sj = s32_to_str(j, &global_default_heap_allocator);
+        string sk = s64_to_str(k, &global_default_heap_allocator);
         u32_into_str(i, &sk);
 
         ret = !(si.data[0] == '5');

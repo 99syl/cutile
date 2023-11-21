@@ -5,7 +5,7 @@
 
 int main()
 {
-    basic_heap_allocator = create_basic_heap_allocator();
+    initialize_global_default_heap_allocator();
     auto arr = create_array<int>(5, 5);
     
     array_push(&arr, 5);

@@ -88,7 +88,7 @@ void u64_into_sub_str(u64, string* out, u32 index);
 void s64_into_sub_str(s64, string* out, u32 index);
 #ifdef CUTILE_CPP
 template <typename IntegerType>
-string nb_to_str(IntegerType val, allocator* = &basic_heap_allocator);
+string nb_to_str(IntegerType val, allocator* = &global_default_heap_allocator);
 template <typename IntegerType>
 void nb_into_str(IntegerType val, string* out);
 template <typename IntegerType>
@@ -561,7 +561,7 @@ inline string format_str(allocator* allocator, const char* fmt, Args ...args)
 template <typename ...Args>
 inline string format_str(const char* fmt, Args ...args)
 {
-    return format_str(&basic_heap_allocator, fmt, args...);
+    return format_str(&global_default_heap_allocator, fmt, args...);
 }
 template <typename ...Args>
 inline void format_str(string* out, const char* fmt, Args ...args)
@@ -599,7 +599,7 @@ inline string format_str(allocator* allocator, const string* fmt, Args ...args)
 template <typename ...Args>
 inline string format_str(const string* fmt, Args ...args)
 {
-    return format_str(&basic_heap_allocator, fmt, args...);
+    return format_str(&global_default_heap_allocator, fmt, args...);
 }
 template <typename ...Args>
 inline void format_str(string* out, const string* fmt, Args ...args)
