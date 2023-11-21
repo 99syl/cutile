@@ -312,7 +312,7 @@ void initialize_global_default_heap_allocator();
     void default_heap_deallocate(void* ptr)
     {
         #ifdef _WIN32
-            heap_deallocate(GetProcessHeap, ptr);
+            heap_deallocate(GetProcessHeap(), ptr);
         #endif
     }
 
