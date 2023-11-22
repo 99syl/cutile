@@ -394,12 +394,12 @@ void u32_into_sub_str(u32 nb, string* out, u32 index) { u64_into_sub_str(nb, out
 void s32_into_sub_str(s32 nb, string* out, u32 index) { s64_into_sub_str(nb, out, index); }
 void u64_into_sub_str(u64 nb, string* out, u32 index)
 {
-    while (nb)
+    do
     {
         auto remainder = nb % 10;
         nb /= 10;
         str_insert(out, index, remainder + '0');
-    }
+    } while (nb);
 }
 void s64_into_sub_str(s64 nb, string* out, u32 index)
 {
@@ -408,12 +408,12 @@ void s64_into_sub_str(s64 nb, string* out, u32 index)
         str_insert(out, index++, '-');
         nb = -nb;
     }
-    while (nb)
+    do
     {
         auto remainder = nb % 10;
         nb /= 10;
         str_insert(out, index, remainder + '0');
-    }
+    } while (nb);
 }
 #ifdef CUTILE_CPP
 template <typename IntegerType>
@@ -435,12 +435,12 @@ void nb_into_sub_str(IntegerType nb, string* out, u32 index)
         str_insert(out, index++, '-');
         nb = -nb;
     }
-    while (nb)
+    do
     {
         auto remainder = nb % 10;
         nb /= 10;
         str_insert(out, index, remainder + '0');
-    }
+    } while (nb);
 }
 #endif // CUTILE_CPP
 
