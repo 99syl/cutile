@@ -7,6 +7,8 @@
 
 #define internal static
 
+#define persist static
+
 // CUTILE_STATIC_ASSERT
 #ifdef CUTILE_CPP
     #define CUTILE_STATIC_ASSERT(a) static_assert(a)
