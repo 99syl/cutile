@@ -31,7 +31,7 @@
 
 // nullptr
 #ifdef CUTILE_C
-#define nullptr 0
+    #define nullptr 0
 #endif
 
 #endif // !CUTILE_CXX_H
