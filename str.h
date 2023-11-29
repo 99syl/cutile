@@ -580,6 +580,7 @@ inline void format_str(string* out, const char* fmt, Args ...args)
     u32 len = cstr_length(fmt);
     u32 i = 0;
     (format_next_arg_into_str(fmt, out, args, &i, len), ...);
+    if (i < len) str_push_back_cstr(out, fmt + i);
 }
 template <typename Arg>
 inline void format_next_arg_into_str(const char* fmt, string* out, Arg arg, u32* i, u32 len)
