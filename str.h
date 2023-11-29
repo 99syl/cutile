@@ -19,6 +19,7 @@ typedef struct string string;
 string create_empty_str(allocator* allocator);
 string create_str_from_cstr(const char* cstr, allocator* allocator);
 string copy_str(const string* original, allocator* allocator);
+string create_str_from_ascii_buf(const s8* buf, u32 buf_len, allocator* allocator);
 
 void destroy_str(string* str);
 
@@ -150,6 +151,16 @@ string copy_str(const string* original, allocator* allocator)
     copy_u8_memory(s.data, original->data, original->count);
     s.count = original->count;
     s.size = original->size;
+    s.allocator = allocator;
+    return s;
+}
+
+string create_str_from_ascii_buf(const s8* buf, u32 buf_len, allocator* allocator)
+{
+    string s;
+    s.data = dump_u8_memory((u8*)buf, buf_len, allocator);
+    s.count = buf_len;
+    s.size = s.count;
     s.allocator = allocator;
     return s;
 }
