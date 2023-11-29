@@ -3,6 +3,8 @@
 
 #include "./memory.h"
 
+#define fixed_array_length(arr) sizeof(arr)/sizeof(arr[0])
+
 // Generates an array implementation of the given type.
 #define declare_array_of(type)          \
     typedef struct type##_array         \
