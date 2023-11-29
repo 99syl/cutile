@@ -50,7 +50,9 @@ typedef float   f32;
 typedef double  f64;
 
 typedef u8  bool8;
+typedef u8  b8;
 typedef u32 bool32;
+typedef u32 b32;
 
 #define S8_MIN ~0x7f
 #define S8_MAX 0x7f
@@ -107,10 +109,14 @@ extern const u64 u64_min;
 extern const u64 u64_max;
 
 extern const bool8 bool8_false;
+extern const b8    b8_false;
 extern const bool8 bool8_true;
+extern const b8    b8_true;
 
 extern const bool32 bool32_false;
+extern const b32    b32_false;
 extern const bool32 bool32_true;
+extern const b32    b32_true;
 
 CUTILE_STATIC_ASSERT(sizeof(s8) == 1);
 CUTILE_STATIC_ASSERT(sizeof(u8) == 1);
@@ -153,10 +159,14 @@ CUTILE_STATIC_ASSERT(sizeof(bool32) == 4);
     const u64 u64_max = U64_MAX;
     
     const bool8 bool8_false = BOOL8_FALSE;
+    const b8    b8_false = BOOL8_FALSE;
     const bool8 bool8_true = BOOL8_TRUE;
-    
+    const b8    b8_true = BOOL8_TRUE;
+
     const bool32 bool32_false = BOOL32_FALSE;
+    const b32    b32_false = BOOL32_FALSE;
     const bool32 bool32_true = BOOL32_TRUE;
+    const b32    b32_true = BOOL32_TRUE;
 #endif // CUTILE_IMPLEM
 
-#endif
+#endif // !CUTILE_NUM_TYPES_H
