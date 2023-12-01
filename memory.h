@@ -69,31 +69,59 @@ typedef struct allocator
     void    (*deallocate)(void* user, void* ptr);
 } allocator;
 
-void*   allocate(allocator* allocator, u64 size);
-void    deallocate(allocator* allocator, void* ptr);
+void* allocate(allocator* allocator, u64 size);
+void deallocate(allocator* allocator, void* ptr);
 
 u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
 s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
 
 #ifdef CUTILE_ALLOCATOR_ANALYZER
+    #include "./stacktrace.h"
+
+    typedef enum allocation_info_status
+    {
+        allocation_info_status_available,
+        allocation_info_status_unavailable,
+        allocation_info_status_invalid_address,
+        allocation_info_status_double_free,
+    } allocation_info_status;
+
     typedef struct allocation_info
     {
-        bool8       available;
-        void*       address;
-        u64         size;
-        u32         line;
-        const char* filename;
+        bool8                   available;
+        void*                   address;
+        u64                     size;
+
+        stacktrace              stacktrace;
+        stacktrace_array        free_stacktraces;
+        
+        allocation_info_status  status;
     } allocation_info;
+    declare_array_of(allocation_info);
 
     typedef struct allocation_table
     {
-        u64 count;
-        u64 size;
-        allocation_info* data;
+        allocation_info_array   infos;
+        u64                     total_allocated;
+        u64                     total_freed;
+        allocator*              allocator; // This allocator will be used to allocate data inside `add_new_alloc_info` or `try_remove_alloc_info`.
     } allocation_table;
 
-    extern allocation_table allocations_info;
-#endif // CUTILE_ALLOCATOR_ANALYZER
+    allocation_table create_allocation_table(allocator* allocator);
+    void destroy_allocation_table(allocation_table* tbl);
+
+    void    add_new_alloc_info(allocation_table* alloc_table, void* allocation_address, u64 size);
+    b8      try_remove_alloc_info(allocation_table* alloc_table, void* allocation_address);
+    
+    extern allocation_table global_allocation_table;
+    void init_global_allocation_table();
+#else // !CUTILE_ALLOCATOR_ANALYZER
+    #define create_allocation_table(a)
+    #define destroy_allocation_table(a)
+    #define add_new_alloc_info(a, b, c)
+    #define try_remove_alloc_info(a, b)
+    #define init_global_allocation_table()
+#endif
 
 allocator create_heap_allocator(void* heap);
 allocator create_default_heap_allocator();
@@ -102,10 +130,6 @@ extern allocator global_default_heap_allocator;
 void initialize_global_default_heap_allocator();
 
 #ifdef CUTILE_IMPLEM
-
-    #ifdef _WIN32
-        #include <Windows.h>
-    #endif
 
     void fill_u8_memory(u8* data, u32 count, u8 value)
     {
@@ -330,27 +354,150 @@ void initialize_global_default_heap_allocator();
     }
 
     #ifdef CUTILE_ALLOCATOR_ANALYZER
-        allocation_table allocations_info = { 0, 0, nullptr };
-    #else // !CUTILE_ALLOCATOR_ANALYZER
-        void* allocate(allocator* allocator, u64 size)
+        
+        // Same as `heap_allocate` but does not push any information into an allocation table. 
+        internal void* heap_allocate_no_analyzer(void* null, u64 size)
         {
-            return allocator->allocate(allocator->user, size);
+            #ifdef _WIN32
+                persist HANDLE process_heap = GetProcessHeap();
+                return HeapAlloc(process_heap, 0, size);
+            #endif
         }
-        void deallocate(allocator* allocator, void* ptr)
+        // Same as `heap_deallocate` but does not push any information into an allocation table. 
+        internal void heap_deallocate_no_analyzer(void* null, void* ptr)
         {
-            allocator->deallocate(allocator->user, ptr);
+            #ifdef _WIN32
+                persist HANDLE process_heap = GetProcessHeap();
+                HeapFree(process_heap, 0, ptr);
+            #endif
         }
+
+        allocation_table create_allocation_table(allocator* allocator)
+        {
+            allocation_table tbl;
+            tbl.infos = create_allocation_info_array(20, 20, allocator);
+            tbl.total_allocated = 0;
+            tbl.total_freed = 0;
+            tbl.allocator = allocator;
+            return tbl;
+        }
+        internal void destroy_allocation_info(allocation_info* inf)
+        {
+            destroy_stacktrace(&inf->stacktrace);
+            destroy_stacktrace_array_deeply(&inf->free_stacktraces, &destroy_stacktrace);
+        }
+        void destroy_allocation_table(allocation_table* tbl)
+        {
+            destroy_allocation_info_array_deeply(&tbl->infos, &destroy_allocation_info);
+            tbl->total_allocated = 0;
+            tbl->total_freed = 0;
+        }
+
+        void add_new_alloc_info(allocation_table* alloc_table, void* allocation_address, u64 size)
+        {
+            allocation_info* alloc_info = nullptr;
+
+            // Search for an available node.
+            for (u32 i = 0; i < alloc_table->infos.count; ++i)
+            {
+                if (alloc_table->infos.data[i].status == allocation_info_status_available)
+                {
+                    alloc_info = &alloc_table->infos.data[i];
+                    clear_stacktrace(&alloc_info->stacktrace);
+                    clear_stacktrace_array_deeply(&alloc_info->free_stacktraces, &clear_stacktrace);
+                    break;
+                }
+            }
+
+            // No available node found so add a new one.
+            if (alloc_info == nullptr)
+            {
+                allocation_info new_elem;
+                new_elem.stacktrace = get_stacktrace(1, U16_MAX, alloc_table->allocator);
+                new_elem.free_stacktraces = create_stacktrace_array(2, 2, alloc_table->allocator);
+                allocation_info_array_push(&alloc_table->infos, new_elem);
+                alloc_info = &alloc_table->infos.data[alloc_table->infos.count - 1];
+            }
+            else fill_stacktrace(&alloc_info->stacktrace, 1, U16_MAX);
+
+            alloc_info->status = allocation_info_status_unavailable;
+            alloc_info->address = allocation_address;
+            alloc_info->size = size;
+
+            alloc_table->total_allocated += size;
+        }
+
+        b8 try_remove_alloc_info(allocation_table* alloc_table, void* allocation_address)
+        {
+            stacktrace st = get_stacktrace(1, U16_MAX, alloc_table->allocator);
+            for (u32 i = 0; i < alloc_table->infos.count; ++i)
+            {
+                allocation_info* alloc_info = &alloc_table->infos.data[i];
+                if (alloc_info->address == allocation_address)
+                {
+                    stacktrace_array_push(&alloc_info->free_stacktraces, st);
+                    switch (alloc_info->status)
+                    {
+                        case allocation_info_status_unavailable:
+                            alloc_table->total_freed += alloc_info->size;
+                            alloc_info->status = allocation_info_status_available;
+                            return b8_true;
+                        case allocation_info_status_available:
+                        case allocation_info_status_double_free:
+                            alloc_info->status = allocation_info_status_double_free;
+                            return b8_false;
+                        case allocation_info_status_invalid_address:
+                            return b8_false;
+                    }
+                }
+            }
+
+            // Address never allocated! Invalid deallocation!
+            allocation_info new_elem;
+            new_elem.free_stacktraces = create_stacktrace_array(2, 2, alloc_table->allocator);
+            new_elem.status = allocation_info_status_invalid_address;
+            new_elem.address = allocation_address;
+            new_elem.size = 0;
+            stacktrace_array_push(&new_elem.free_stacktraces, st);
+            allocation_info_array_push(&alloc_table->infos, new_elem);
+            return b8_false;
+        }
+
+        internal allocator  global_allocation_table_allocator = { nullptr, &heap_allocate_no_analyzer, &heap_deallocate_no_analyzer };
+        allocation_table    global_allocation_table;
+        void init_global_allocation_table() { global_allocation_table = create_allocation_table(&global_allocation_table_allocator); }
+        
     #endif // CUTILE_ALLOCATOR_ANALYZER
+    
+    void* allocate(allocator* allocator, u64 size)
+    {
+        return allocator->allocate(allocator->user, size);
+    }
+    void deallocate(allocator* allocator, void* ptr)
+    {
+        allocator->deallocate(allocator->user, ptr);
+    }
 
     void* heap_allocate(void* heap, u64 size)
     {
+        void* ptr;
         #ifdef _WIN32
-            return HeapAlloc(heap, 0, size);
+            ptr = HeapAlloc(heap, 0, size);
         #endif
+
+        #ifdef CUTILE_ALLOCATOR_ANALYZER
+            add_new_alloc_info(&global_allocation_table, ptr, size);
+        #endif // !CUTILE_ALLOCATOR_ANALYZER
+
+        return ptr;
     }
 
     void heap_deallocate(void* heap, void* ptr)
     {
+        #ifdef CUTILE_ALLOCATOR_ANALYZER
+            if (!try_remove_alloc_info(&global_allocation_table, ptr)) return; // Returns here so it prevents double free/freeing invalid address when using CUTILE_ALLOCATOR_ANALYZER.
+        #endif // !CUTILE_ALLOCATOR_ANALYZER
+        
         #ifdef _WIN32
             HeapFree(heap, 0, ptr);
         #endif
@@ -386,58 +533,5 @@ void initialize_global_default_heap_allocator();
     void initialize_global_default_heap_allocator() { global_default_heap_allocator = create_default_heap_allocator(); }
 
 #endif // CUTILE_IMPLEM
-
-#ifdef CUTILE_ALLOCATOR_ANALYZER
-    force_inline void* allocate(allocator* allocator, u64 size)
-    {
-        void* data = allocator->allocate(allocator->user, size);
-        allocation_info* elem = allocations_info.data;
-
-        // Search for an available node.
-        for (u32 i = 0; i < allocations_info.count; ++i)
-        {
-            if (allocations_info.data[i].available)
-            {
-                elem = &allocations_info.data[i];
-                break;
-            }
-        }
-
-        // No available node found so add a new one.
-        if (elem == allocations_info.data)
-        {
-            // Increase buffer size if it's full
-            if (allocations_info.count == allocations_info.size)
-            {
-                allocations_info.size += 100;
-                allocation_info* new_data = (allocation_info*) default_heap_allocate(sizeof(allocation_info) * allocations_info.size);
-                copy_u8_memory((u8*)new_data, (u8*)allocations_info.data, sizeof(allocation_info) * allocations_info.count);
-                default_heap_deallocate(allocations_info.data);
-                allocations_info.data = new_data;
-            }
-            elem = &allocations_info.data[allocations_info.count++];
-        }
-        elem->available = bool8_false;
-        elem->address = data;
-        elem->size = size;
-        elem->line = __LINE__;
-        elem->filename = __FILE__;
-
-        return data;
-    }
-    force_inline void deallocate(allocator* allocator, void* ptr)
-    {
-        for (u32 i = 0; i < allocations_info.count; ++i)
-        {
-            if (allocations_info.data[i].address == ptr)
-            {
-                allocations_info.data[i].available = bool8_true;
-                --allocations_info.count;
-                break;
-            }
-        }
-        allocator->deallocate(allocator->user, ptr);
-    }
-#endif // CUTILE_ALLOCATOR_ANALYZER
 
 #endif // !CUTILE_MEMORY_H
