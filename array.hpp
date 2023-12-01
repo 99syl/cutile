@@ -16,6 +16,9 @@ struct array
     allocator* allocator;
 };
 
+typedef struct allocator allocator;
+extern allocator global_default_heap_allocator;
+
 template <typename T>
 force_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
 
@@ -77,6 +80,12 @@ force_inline void destroy_array(array<T>* array)
 }
 
 template <typename T>
+force_inline void destroy_array_deeply(array<T>* array, void(*destroy_elem_func)(T* data))
+{
+    destroy_array_deeply_macro(array, destroy_elem_func);
+}
+
+template <typename T>
 force_inline void resize_array(array<T>* array, u32 new_size)
 {
     resize_array_macro(array, T, new_size);
@@ -110,6 +119,18 @@ template <typename T>
 force_inline void array_pop(array<T>* array)
 {
     array_pop_macro(array);
+}
+
+template <typename T>
+force_inline void clear_array(array<T>* array)
+{
+    clear_array_macro(array);
+}
+
+template <typename T>
+force_inline void clear_array_deeply(array<T>* array, void (*destroy_elem_func)(T* elem))
+{
+    clear_array_macro_deeply(array, destroy_elem_func);
 }
 
 template <typename T>
