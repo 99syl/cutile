@@ -54,6 +54,7 @@ char* get_current_executable_path(allocator* allocator);
 char* get_current_executable_dir_path(allocator* allocator);
 
 char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
+void  concat_file_paths_into_cstr(const char* lhs, const char* rhs, const char* out);
 
 #ifdef CUTILE_IMPLEM
 
@@ -231,6 +232,20 @@ char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
         copy_s8_memory(result + lsize + 1, rhs, rsize);
         result[lsize + rsize + 1] = '\0';
         return result;
+    }
+    
+    void concat_file_paths_into_cstr(const char* lhs, const char* rhs, char* out)
+    {
+        u32 lsize = cstr_length(lhs);
+        u32 rsize = cstr_length(rhs);
+        copy_s8_memory(out, lhs, lsize);
+        #ifdef _WIN32
+            out[lsize] = '\\';
+        #elif defined(__unix__)
+            out[lsize] = '/';
+        #endif
+        copy_s8_memory(out, rhs, rsize);
+        out[lsize + rsize + 1] = '\0';
     }
 
 #endif // CUTILE_IMPLEM
