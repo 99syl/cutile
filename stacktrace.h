@@ -36,8 +36,8 @@ void        destroy_stacktrace(stacktrace* stacktrace);
         #include <dbghelp.h>
         #include "./print.h"
         // str.h:
-        char* create_cstr_from_cstr(const char*, allocator*);
-        char* create_cstr_from_sub_cstr(const char*, u32, u32, allocator*);
+        CUTILE_C_API char* create_cstr_from_cstr(const char*, allocator*);
+        CUTILE_C_API char* create_cstr_from_sub_cstr(const char*, u32, u32, allocator*);
     #endif
 
     stacktrace get_stacktrace(u16 skip, u16 depth, allocator* allocator)

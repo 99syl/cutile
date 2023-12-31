@@ -3,41 +3,41 @@
 
 #include "./num_types.h"
 
-void fill_u8_memory(u8* data, u32 count, u8 value);
-void fill_s8_memory(s8* data, u32 count, s8 value);
-void fill_u16_memory(u16* data, u32 count, u16 value);
-void fill_s16_memory(s16* data, u32 count, s16 value);
-void fill_u32_memory(u32* data, u32 count, u32 value);
-void fill_s32_memory(s32* data, u32 count, s32 value);
-void fill_u64_memory(u64* data, u32 count, u64 value);
-void fill_s64_memory(s64* data, u32 count, s64 value);
+CUTILE_C_API void fill_u8_memory(u8* data, u32 count, u8 value);
+CUTILE_C_API void fill_s8_memory(s8* data, u32 count, s8 value);
+CUTILE_C_API void fill_u16_memory(u16* data, u32 count, u16 value);
+CUTILE_C_API void fill_s16_memory(s16* data, u32 count, s16 value);
+CUTILE_C_API void fill_u32_memory(u32* data, u32 count, u32 value);
+CUTILE_C_API void fill_s32_memory(s32* data, u32 count, s32 value);
+CUTILE_C_API void fill_u64_memory(u64* data, u32 count, u64 value);
+CUTILE_C_API void fill_s64_memory(s64* data, u32 count, s64 value);
 
-void copy_u8_memory(u8 *data, const u8* in, u32 count);
-void copy_s8_memory(s8* data, const s8* in, u32 count);
-void copy_u16_memory(u16* data, const u16* in, u32 count);
-void copy_s16_memory(s16* data, const s16* in, u32 count);
-void copy_u32_memory(u32* data, const u32* in, u32 count);
-void copy_s32_memory(s32* data, const s32* in, u32 count);
-void copy_u64_memory(u64* data, const u64* in, u32 count);
-void copy_s64_memory(s64* data, const s64* in, u32 count);
+CUTILE_C_API void copy_u8_memory(u8 *data, const u8* in, u32 count);
+CUTILE_C_API void copy_s8_memory(s8* data, const s8* in, u32 count);
+CUTILE_C_API void copy_u16_memory(u16* data, const u16* in, u32 count);
+CUTILE_C_API void copy_s16_memory(s16* data, const s16* in, u32 count);
+CUTILE_C_API void copy_u32_memory(u32* data, const u32* in, u32 count);
+CUTILE_C_API void copy_s32_memory(s32* data, const s32* in, u32 count);
+CUTILE_C_API void copy_u64_memory(u64* data, const u64* in, u32 count);
+CUTILE_C_API void copy_s64_memory(s64* data, const s64* in, u32 count);
 
-void reverse_u8_memory(u8* data, u32 count);
-void reverse_s8_memory(s8* data, u32 count);
-void reverse_u16_memory(u16* data, u32 count);
-void reverse_s16_memory(s16* data, u32 count);
-void reverse_u32_memory(u32* data, u32 count);
-void reverse_s32_memory(s32* data, u32 count);
-void reverse_u64_memory(u64* data, u32 count);
-void reverse_s64_memory(s64* data, u32 count);
+CUTILE_C_API void reverse_u8_memory(u8* data, u32 count);
+CUTILE_C_API void reverse_s8_memory(s8* data, u32 count);
+CUTILE_C_API void reverse_u16_memory(u16* data, u32 count);
+CUTILE_C_API void reverse_s16_memory(s16* data, u32 count);
+CUTILE_C_API void reverse_u32_memory(u32* data, u32 count);
+CUTILE_C_API void reverse_s32_memory(s32* data, u32 count);
+CUTILE_C_API void reverse_u64_memory(u64* data, u32 count);
+CUTILE_C_API void reverse_s64_memory(s64* data, u32 count);
 
-bool8 u8_memory_equals (const u8*  lhs, const u8*  rhs, u32 count);
-bool8 s8_memory_equals (const s8*  lhs, const s8*  rhs, u32 count);
-bool8 u16_memory_equals(const u16* lhs, const u16* rhs, u32 count);
-bool8 s16_memory_equals(const s16* lhs, const s16* rhs, u32 count);
-bool8 u32_memory_equals(const u32* lhs, const u32* rhs, u32 count);
-bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count);
-bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
-bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
+CUTILE_C_API bool8 u8_memory_equals (const u8*  lhs, const u8*  rhs, u32 count);
+CUTILE_C_API bool8 s8_memory_equals (const s8*  lhs, const s8*  rhs, u32 count);
+CUTILE_C_API bool8 u16_memory_equals(const u16* lhs, const u16* rhs, u32 count);
+CUTILE_C_API bool8 s16_memory_equals(const s16* lhs, const s16* rhs, u32 count);
+CUTILE_C_API bool8 u32_memory_equals(const u32* lhs, const u32* rhs, u32 count);
+CUTILE_C_API bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count);
+CUTILE_C_API bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
+CUTILE_C_API bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
 
 #define declare_memory_view_of(data_type)       \
     typedef struct data_type##_memory_view      \
@@ -56,11 +56,11 @@ declare_memory_view_of(s64);
 declare_memory_view_of(u64);
 
 // Performs allocations/deallocations with the current process' default heap. (e.g. GetProcessHeap() on Win32).
-void* default_heap_allocate(u64 size);
-void  default_heap_deallocate(void* ptr);
+CUTILE_C_API void* default_heap_allocate(u64 size);
+CUTILE_C_API void  default_heap_deallocate(void* ptr);
 
-void* heap_allocate(void* heap, u64 size);
-void  heap_deallocate(void* heap, void* ptr);
+CUTILE_C_API void* heap_allocate(void* heap, u64 size);
+CUTILE_C_API void  heap_deallocate(void* heap, void* ptr);
 
 typedef struct allocator
 {
@@ -69,11 +69,11 @@ typedef struct allocator
     void    (*deallocate)(void* user, void* ptr);
 } allocator;
 
-void* allocate(allocator* allocator, u64 size);
-void deallocate(allocator* allocator, void* ptr);
+CUTILE_C_API void* allocate(allocator* allocator, u64 size);
+CUTILE_C_API void deallocate(allocator* allocator, void* ptr);
 
-u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
-s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
+CUTILE_C_API u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
+CUTILE_C_API s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
 
 #ifdef CUTILE_ALLOCATOR_ANALYZER
     #include "./stacktrace.h"
@@ -107,14 +107,14 @@ s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
         allocator*              allocator; // This allocator will be used to allocate data inside `add_new_alloc_info` or `try_remove_alloc_info`.
     } allocation_table;
 
-    allocation_table create_allocation_table(allocator* allocator);
-    void destroy_allocation_table(allocation_table* tbl);
+    CUTILE_C_API allocation_table create_allocation_table(allocator* allocator);
+    CUTILE_C_API void destroy_allocation_table(allocation_table* tbl);
 
-    void    add_new_alloc_info(allocation_table* alloc_table, void* allocation_address, u64 size);
-    b8      try_remove_alloc_info(allocation_table* alloc_table, void* allocation_address);
+    CUTILE_C_API void    add_new_alloc_info(allocation_table* alloc_table, void* allocation_address, u64 size);
+    CUTILE_C_API b8      try_remove_alloc_info(allocation_table* alloc_table, void* allocation_address);
     
-    extern allocation_table global_allocation_table;
-    void init_global_allocation_table();
+    CUTILE_C_API allocation_table global_allocation_table;
+    CUTILE_C_API void init_global_allocation_table();
 #else // !CUTILE_ALLOCATOR_ANALYZER
     #define create_allocation_table(a)
     #define destroy_allocation_table(a)
@@ -123,11 +123,11 @@ s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
     #define init_global_allocation_table()
 #endif
 
-allocator create_heap_allocator(void* heap);
-allocator create_default_heap_allocator();
+CUTILE_C_API allocator create_heap_allocator(void* heap);
+CUTILE_C_API allocator create_default_heap_allocator();
 
-extern allocator global_default_heap_allocator;
-void initialize_global_default_heap_allocator();
+CUTILE_C_API allocator global_default_heap_allocator;
+CUTILE_C_API void initialize_global_default_heap_allocator();
 
 #ifdef CUTILE_IMPLEM
 

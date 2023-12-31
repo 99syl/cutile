@@ -84,39 +84,39 @@ typedef u32 b32;
 #define BOOL32_TRUE     0x00000001
 #define BOOL32_FALSE    0x00000000
 
-extern const s8 s8_min;
-extern const u8 s8_max;
+CUTILE_C_API const s8 s8_min;
+CUTILE_C_API const u8 s8_max;
 
-extern const u8 u8_min;
-extern const u8 u8_max;
+CUTILE_C_API const u8 u8_min;
+CUTILE_C_API const u8 u8_max;
 
-extern const s16 s16_min;
-extern const s16 s16_max;
+CUTILE_C_API const s16 s16_min;
+CUTILE_C_API const s16 s16_max;
 
-extern const u16 u16_min;
-extern const u16 u16_max;
+CUTILE_C_API const u16 u16_min;
+CUTILE_C_API const u16 u16_max;
 
-extern const s32 s32_min;
-extern const s32 s32_max;
+CUTILE_C_API const s32 s32_min;
+CUTILE_C_API const s32 s32_max;
 
-extern const u32 u32_min;
-extern const u32 u32_max;
+CUTILE_C_API const u32 u32_min;
+CUTILE_C_API const u32 u32_max;
 
-extern const s64 s64_min;
-extern const s64 s64_max;
+CUTILE_C_API const s64 s64_min;
+CUTILE_C_API const s64 s64_max;
 
-extern const u64 u64_min;
-extern const u64 u64_max;
+CUTILE_C_API const u64 u64_min;
+CUTILE_C_API const u64 u64_max;
 
-extern const bool8 bool8_false;
-extern const b8    b8_false;
-extern const bool8 bool8_true;
-extern const b8    b8_true;
+CUTILE_C_API const bool8 bool8_false;
+CUTILE_C_API const b8    b8_false;
+CUTILE_C_API const bool8 bool8_true;
+CUTILE_C_API const b8    b8_true;
 
-extern const bool32 bool32_false;
-extern const b32    b32_false;
-extern const bool32 bool32_true;
-extern const b32    b32_true;
+CUTILE_C_API const bool32 bool32_false;
+CUTILE_C_API const b32    b32_false;
+CUTILE_C_API const bool32 bool32_true;
+CUTILE_C_API const b32    b32_true;
 
 CUTILE_STATIC_ASSERT(sizeof(s8) == 1);
 CUTILE_STATIC_ASSERT(sizeof(u8) == 1);

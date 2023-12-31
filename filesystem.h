@@ -7,11 +7,11 @@
 // Defined in str.h
 typedef struct string string;
 
-bool8 file_exists(string* path);
-bool8 file_exists_cstr(const char* path);
+CUTILE_C_API bool8 file_exists(string* path);
+CUTILE_C_API bool8 file_exists_cstr(const char* path);
 
-bool8 directory_exists(string* path);
-bool8 directory_exists_cstr(const char* path);
+CUTILE_C_API bool8 directory_exists(string* path);
+CUTILE_C_API bool8 directory_exists_cstr(const char* path);
 
 typedef enum file_access_mode
 {
@@ -30,8 +30,8 @@ typedef struct
     bool8       succeeded;
     file        file;
 } open_file_result;
-open_file_result open_file(file_access_mode access_mode, const char* path);
-void close_file(file* file);
+CUTILE_C_API open_file_result open_file(file_access_mode access_mode, const char* path);
+CUTILE_C_API void close_file(file* file);
 
 // Defined in memory.h
 typedef struct allocator allocator;
@@ -41,20 +41,20 @@ typedef struct
     u8* content;
     u64 size_in_bytes;
 } get_file_content_result;
-get_file_content_result get_file_content_from_path(const char* path, allocator* allocator);
-get_file_content_result get_file_content(file* file, allocator* allocator);
+CUTILE_C_API get_file_content_result get_file_content_from_path(const char* path, allocator* allocator);
+CUTILE_C_API get_file_content_result get_file_content(file* file, allocator* allocator);
 
-void read_from_file(file* file, u8* out, u64 nb_bytes_to_read);
+CUTILE_C_API void read_from_file(file* file, u8* out, u64 nb_bytes_to_read);
 
-void write_in_file(file* file, const u8* buffer, u64 buffer_size_in_bytes);
+CUTILE_C_API void write_in_file(file* file, const u8* buffer, u64 buffer_size_in_bytes);
 
-u64 get_file_size(file* file);
+CUTILE_C_API u64 get_file_size(file* file);
 
-char* get_current_executable_path(allocator* allocator);
-char* get_current_executable_dir_path(allocator* allocator);
+CUTILE_C_API char* get_current_executable_path(allocator* allocator);
+CUTILE_C_API char* get_current_executable_dir_path(allocator* allocator);
 
-char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
-void  concat_file_paths_into_cstr(const char* lhs, const char* rhs, const char* out);
+CUTILE_C_API char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
+CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs, const char* out);
 
 #ifdef CUTILE_IMPLEM
 
