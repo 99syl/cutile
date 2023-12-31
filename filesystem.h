@@ -13,6 +13,9 @@ CUTILE_C_API bool8 file_exists_cstr(const char* path);
 CUTILE_C_API bool8 directory_exists(string* path);
 CUTILE_C_API bool8 directory_exists_cstr(const char* path);
 
+// This function copies a file to a new path.
+CUTILE_C_API bool8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite);
+
 typedef enum file_access_mode
 {
     file_access_mode_read,
@@ -93,6 +96,19 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
             return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
         #endif
     }
+
+    bool8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite)
+    {
+        #ifdef _WIN32
+        {
+            return CopyFile(path_of_file_to_copy, path_of_new_file, !overwrite);
+        }
+        #endif
+
+        // TODO: Implement for other platforms.
+        return b8_false;
+    }
+
 
     open_file_result open_file(file_access_mode access_mode, const char* path)
     {
