@@ -137,6 +137,8 @@ CUTILE_C_API u32 cstr_length(const char* cstr);
 
 CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
 
+CUTILE_C_API char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator);
+
 #ifdef CUTILE_IMPLEM
 
     #define CUTILE_STR_INCREMENT_COUNT 5
@@ -517,6 +519,17 @@ CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
             if (*lhs++ != *rhs++) return bool8_false;
         }
         return bool8_true;
+    }
+
+    char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator)
+    {
+        u32 l_length = cstr_length(lhs);
+        u32 r_length = cstr_length(rhs);
+        char* result = (char*)allocate(allocator, sizeof(char) * (l_length + r_length + 1));
+        copy_s8_memory(result, lhs, l_length);
+        copy_s8_memory(result + l_length, rhs, r_length);
+        result[l_length + r_length] = '\0';
+        return result;
     }
 
     #ifdef CUTILE_CPP
