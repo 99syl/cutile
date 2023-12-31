@@ -2,6 +2,7 @@
 #define CUTILE_ARRAY_HPP
 
 #include "./array.h"
+#include "./memory.h"
 
 template <typename T>
 struct array
@@ -15,9 +16,6 @@ struct array
 
     allocator* allocator;
 };
-
-typedef struct allocator allocator;
-extern allocator global_default_heap_allocator;
 
 template <typename T>
 force_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
@@ -58,6 +56,15 @@ force_inline void copy_array_to_buffer(const array<T>* in, T* out);
 template <typename T>
 force_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count);
 
+template <typename T>
+struct array_view
+{
+    T*  data;
+    u32 count;
+};
+
+template <typename T>
+force_inline array_view<T> null_array_view() { return array_view<T>{.data = nullptr, .count = 0}; }
 
 /*
   =============================
