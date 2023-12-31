@@ -1,11 +1,13 @@
 #ifndef CUTILE_PRINT_H
 #define CUTILE_PRINT_H
 
+#include "./cutile.h"
+
 typedef struct string string;
-void print(const string* str);
-void print_cstr(const char* cstr);
-void println(const string* str);
-void println_cstr(const char* cstr);
+CUTILE_C_API void print(const string* str);
+CUTILE_C_API void print_cstr(const char* cstr);
+CUTILE_C_API void println(const string* str);
+CUTILE_C_API void println_cstr(const char* cstr);
 
 #ifdef CUTILE_IMPLEM
 

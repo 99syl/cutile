@@ -51,7 +51,7 @@ typedef struct allocator allocator;
     force_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
     force_inline void reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count) { reverse_array_slice_macro(array, type, offset, count); }
 
-void* allocate(allocator*, u64);
+CUTILE_C_API void* allocate(allocator*, u64);
 
 #define init_array_macro(array, data_type, _size, _increment, _allocator)       \
     {                                                                           \
@@ -62,15 +62,11 @@ void* allocate(allocator*, u64);
         array.allocator = _allocator;                                           \
     }
 
-void deallocate(allocator*, void*);
+CUTILE_C_API void deallocate(allocator*, void*);
 
 #define destroy_array_macro(array_ptr) \
     {                                                   \
         deallocate(array_ptr->allocator, array->data);  \
-        array_ptr->count = 0;                           \
-        array_ptr->size = 0;                            \
-        array_ptr->allocator = nullptr;                 \
-        array_ptr->data = nullptr;                      \
     }
 
 
