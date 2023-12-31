@@ -4,17 +4,14 @@
 #include "./cutile.h"
 #include "./memory.h"
 
-struct string
+typedef struct string
 {
     u8* data;
     u32 count;
     u32 size;
 
     allocator* allocator;
-};
-#ifdef CUTILE_C
-typedef struct string string;
-#endif
+} string;
 
 CUTILE_C_API string create_empty_str(allocator* allocator);
 CUTILE_C_API string create_str_from_cstr(const char* cstr, allocator* allocator);
@@ -135,8 +132,6 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
 CUTILE_C_API char* create_cstr_from_cstr(const char* cstr, allocator* allocator);
 CUTILE_C_API char* create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, allocator* allocator);
-
-u32 cstr_length(const char* cstr);
 
 CUTILE_C_API u32 cstr_length(const char* cstr);
 
@@ -310,19 +305,20 @@ CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
     u32 sub_str_to_u32(const string* s, u32 offset, u32 count) { return sub_str_to_u64(s, offset, count); }
     s32 sub_str_to_s32(const string* s, u32 offset, u32 count) { return sub_str_to_s64(s, offset, count); }
     u64 sub_str_to_u64(const string* s, u32 offset, u32 count)
-{
-    s64 res = 0;
-    u32 i = offset;
-    for (; i < count + offset; ++i)
     {
         s64 res = 0;
         u32 i = offset;
         for (; i < count + offset; ++i)
         {
-            res *= 10;
-            res += s->data[i] - '0';
+            s64 res = 0;
+            u32 i = offset;
+            for (; i < count + offset; ++i)
+            {
+                res *= 10;
+                res += s->data[i] - '0';
+            }
+            return res;
         }
-        return res;
     }
     s64 sub_str_to_s64(const string* s, u32 offset, u32 count)
     {
@@ -505,36 +501,6 @@ CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
         res[count] = '\0';
         return res;
     }
-
-// Inline implementations...
-#ifdef CUTILE_CPP
-template <typename ...Args>
-inline string format_str(allocator* allocator, const char* fmt, Args ...args)
-{
-    auto str = create_empty_str(allocator);
-    format_str(&str, fmt, args...);
-    return str;
-}
-template <typename ...Args>
-inline string format_str(const char* fmt, Args ...args)
-{
-    return format_str(&global_default_heap_allocator, fmt, args...);
-}
-template <typename ...Args>
-inline void format_str(string* out, const char* fmt, Args ...args)
-{
-    u32 len = cstr_length(fmt);
-    u32 i = 0;
-    (format_next_arg_into_str(fmt, out, args, &i, len), ...);
-    if (i < len) str_push_back_cstr(out, fmt + i);
-}
-template <typename Arg>
-inline void format_next_arg_into_str(const char* fmt, string* out, Arg arg, u32* i, u32 len)
-{
-    while (*i < len) 
-    {
-        char c = fmt[*i];
-        if (c == '%') 
 
     u32 cstr_length(const char* cstr)
     {
