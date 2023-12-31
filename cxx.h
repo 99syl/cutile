@@ -34,4 +34,13 @@
     #define nullptr 0
 #endif
 
+#ifdef CUTILE_CPP
+    template <typename T, typename U>
+    struct duple
+    {
+        T _1;
+        U _2;
+    };
+#endif
+
 #endif // !CUTILE_CXX_H
