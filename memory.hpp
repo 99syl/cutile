@@ -10,6 +10,34 @@ struct memory_view
     u32      count;
 };
 
+template <typename DestT, typename SrcT>
+force_inline memory_view<DestT> to_memory_view(memory_view<SrcT> src)
+{
+    constexpr b8 mul = sizeof(DestT) <= sizeof(SrcT);
+    if constexpr (mul)
+    {
+        return memory_view<DestT>
+        {
+            .data = (const DestT*)src.data,
+            .count = src.count * sizeof(SrcT) / sizeof(DestT)
+        };
+    }
+    else
+    {
+        return memory_view<DestT>
+        {
+            .data = (const DestT*)src.data,
+            .count = src.count / sizeof(DestT) / sizeof(SrcT)
+        };
+    }
+}
+
+template <typename DestT, typename SrcT, u32 ArraySize>
+force_inline memory_view<DestT> to_memory_view(SrcT(&array)[ArraySize])
+{
+    return to_memory_view<DestT>(memory_view<SrcT>{.data = array, .count = ArraySize});
+}
+
 template <typename T>
 force_inline void fill_memory(T* data, u32 count, T value);
 
