@@ -3,7 +3,7 @@
 
 #include "./num_types.h"
 
-#define fixed_array_length(arr) sizeof(arr)/sizeof(arr[0])
+#define fixed_array_length(arr) (sizeof(arr)/sizeof(arr[0]))
 
 typedef struct allocator allocator;
 
