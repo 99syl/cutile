@@ -308,19 +308,14 @@ CUTILE_C_API char* concat_cstrs(const char* lhs, const char* rhs, allocator* all
     s32 sub_str_to_s32(const string* s, u32 offset, u32 count) { return sub_str_to_s64(s, offset, count); }
     u64 sub_str_to_u64(const string* s, u32 offset, u32 count)
     {
-        s64 res = 0;
+        u64 res = 0;
         u32 i = offset;
         for (; i < count + offset; ++i)
         {
-            s64 res = 0;
-            u32 i = offset;
-            for (; i < count + offset; ++i)
-            {
-                res *= 10;
-                res += s->data[i] - '0';
-            }
-            return res;
+            res *= 10;
+            res += s->data[i] - '0';
         }
+        return res;
     }
     s64 sub_str_to_s64(const string* s, u32 offset, u32 count)
     {
