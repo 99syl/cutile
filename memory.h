@@ -130,6 +130,11 @@ CUTILE_C_API allocator global_default_heap_allocator;
 CUTILE_C_API void initialize_global_default_heap_allocator();
 
 #ifdef CUTILE_IMPLEM
+    #ifdef _WIN32
+        #include <windows.h>
+    #else 
+        #include <stdlib.h>  // malloc, free. TODO: Implement for other platforms instead of using lib c.
+    #endif
 
     void fill_u8_memory(u8* data, u32 count, u8 value)
     {
@@ -331,12 +336,16 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
     {
         #ifdef _WIN32
             return heap_allocate(GetProcessHeap(), size);
+        #else
+            return heap_allocate(nullptr, size); // TODO: Implement for other platforms.
         #endif
     }
     void default_heap_deallocate(void* ptr)
     {
         #ifdef _WIN32
             heap_deallocate(GetProcessHeap(), ptr);
+        #else
+            heap_deallocate(nullptr, ptr); // TODO: Implement for other platforms.
         #endif
     }
 
@@ -483,6 +492,8 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         void* ptr;
         #ifdef _WIN32
             ptr = HeapAlloc(heap, 0, size);
+        #else
+            ptr = malloc(size); // TODO: Implement for other platforms.
         #endif
 
         #ifdef CUTILE_ALLOCATOR_ANALYZER
@@ -500,6 +511,8 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         
         #ifdef _WIN32
             HeapFree(heap, 0, ptr);
+        #else
+            free(ptr); // TODO: Implement for other platforms.
         #endif
     }
 
