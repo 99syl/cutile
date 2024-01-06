@@ -121,12 +121,6 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
     template <> CUTILE_CPP_API void format_arg_into_str<s64>(string*, s64);
     template <> CUTILE_CPP_API void format_arg_into_str<const char*>(string*, const char*);
     template <> CUTILE_CPP_API void format_arg_into_str<char*>(string*, char*);
-
-    template <typename NumberType>
-    struct str_format_as_hex
-    {
-        NumberType nb;
-    };
 #endif // CUTILE_CPP
 
 CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
