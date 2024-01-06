@@ -13,7 +13,7 @@ CUTILE_C_API void println_cstr(const char* cstr);
 
     #ifdef _WIN32
         #include <windows.h>
-    #elif defined(__unix__)
+    #elif defined(__unix__) || defined(__APPLE__)
         #include <unistd.h>
     #endif
 
@@ -28,8 +28,10 @@ CUTILE_C_API void println_cstr(const char* cstr);
                 DWORD written;
                 WriteConsoleA(out, str->data, str->count, &written, NULL);
             }
-        #elif defined(__unix__)
+        #elif defined(__unix__) || defined(__APPLE__)
             write(1, str->data, str->count);
+        #else
+            #error "Unsupported platform."
         #endif
     }
     void print_cstr(const char* cstr)
@@ -41,8 +43,10 @@ CUTILE_C_API void println_cstr(const char* cstr);
                 DWORD written;
                 WriteConsoleA(out, cstr, cstr_length(cstr), &written, NULL);
             }
-        #elif defined(__unix__)
+        #elif defined(__unix__) || defined(__APPLE__)
             write(1, cstr, cstr_length(cstr));
+        #else
+            #error "Unsupported platform."
         #endif
     }
     void println(const string* str)
