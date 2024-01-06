@@ -139,6 +139,19 @@ CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
 
 CUTILE_C_API char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator);
 
+typedef struct string_view
+{
+    const char* data;
+    u64         count;
+} string_view;
+
+#ifndef fixed_array_length
+    #define create_string_view_m(_) (create_string_view_m, "Please include \"array.h\" before \"memory.h\".")
+#else
+    #define create_string_view_m(str_array_or_literal)      \
+    (string_view{.data = str_array_or_literal, .count = fixed_array_length(str_array_or_literal)})
+#endif
+
 #ifdef CUTILE_IMPLEM
 
     #define CUTILE_STR_INCREMENT_COUNT 5
