@@ -139,12 +139,8 @@ typedef struct string_view
     u64         count;
 } string_view;
 
-#ifndef fixed_array_length
-    #define create_string_view_m(_) (create_string_view_m, "Please include \"array.h\" before \"memory.h\".")
-#else
-    #define create_string_view_m(str_array_or_literal)      \
-    (string_view{.data = str_array_or_literal, .count = fixed_array_length(str_array_or_literal)})
-#endif
+#define create_string_view_m(str_array)                                 \
+    (string_view{.data = str_array_or_literal, .count = sizeof(str_array)/sizeof(s8)})
 
 #ifdef CUTILE_IMPLEM
 
