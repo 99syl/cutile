@@ -140,7 +140,7 @@ typedef struct string_view
 } string_view;
 
 #define create_string_view_m(str_array)                                 \
-    (string_view{.data = str_array_or_literal, .count = sizeof(str_array)/sizeof(s8)})
+    (string_view{.data = str_array, .count = sizeof(str_array)/sizeof(s8)})
 
 #ifdef CUTILE_IMPLEM
 
