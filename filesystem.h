@@ -63,6 +63,9 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
 
     #ifdef _WIN32
         #include <windows.h>
+    #elif defined(__unix__) || defined(__APPLE__)
+        #include <unistd.h>
+        #include <fcntl.h>
     #endif
 
     #include "./str.h"
@@ -109,7 +112,6 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
         return b8_false;
     }
 
-
     open_file_result open_file(file_access_mode access_mode, const char* path)
     {
         open_file_result result;
@@ -132,15 +134,28 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
                 NULL);
             if (result.file.handle == INVALID_HANDLE_VALUE) result.succeeded = bool8_false;
             else result.succeeded = bool8_true;
+            return result;
+        #elif defined(__unix__) || defined(__APPLE__)
+            int flags = 0;
+            switch (access_mode)
+            {
+                case file_access_mode_read: flags = O_RDONLY; break;
+                case file_access_mode_write: flags = O_WRONLY; break;
+                case file_access_mode_read_write: flags = O_RDWR; break;
+            }
+            s64 fd = open(path, flags);
+            result.succeeded = fd != -1;
+            result.file.handle = (void*)fd;
+            return result;
         #endif
-
-        return result;
     }
 
     void close_file(file* file)
     {
         #ifdef _WIN32
             CloseHandle(file->handle);
+        #elif defined(__unix__) || defined(__APPLE__)
+            close((u64)file->handle);
         #endif
     }
 
@@ -152,6 +167,8 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
             {
                 if (!WriteFile(file->handle, buffer + written_bytes, buffer_size_in_bytes - written_bytes, &written_bytes, nullptr)) break;
             } while (written_bytes < buffer_size_in_bytes);
+        #elif defined(__unix__) || defined(__APPLE__)
+            write((u64)file->handle, buffer, buffer_size_in_bytes);
         #endif
     }
     
@@ -161,9 +178,14 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
 
         #ifdef _WIN32
             GetFileSizeEx((HANDLE)file->handle, (PLARGE_INTEGER)&result);
+            return result;
+        #elif defined(__unix__) || defined(__APPLE__)
+            off_t curr_pos = lseek((u64)file->handle, 0, SEEK_CUR);
+            off_t end_pos = lseek((u64)file->handle, 0, SEEK_END);
+            lseek((u64)file->handle, curr_pos, SEEK_SET);
+            result = (u64)end_pos;
+            return result;
         #endif
-
-        return result;
     }
 
     void read_from_file(file* file, u8* out, u64 nb_bytes_to_read)
@@ -174,6 +196,16 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
             {
                 if (!ReadFile(file->handle, out + read_bytes, nb_bytes_to_read - read_bytes, &read_bytes, nullptr)) break;
             } while (read_bytes < nb_bytes_to_read);
+        #elif defined(__unix__) || defined(__APPLE__)
+            u64 read_bytes = 0;
+            do
+            {
+                ssize_t rd = read((u64)file->handle, out, nb_bytes_to_read);
+                if (rd == -1) break;
+                read_bytes += rd;
+            } while (read_bytes < nb_bytes_to_read);
+        #else
+            #error "read_from_file: Unsupported platform"
         #endif
     }
 
@@ -232,23 +264,6 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
             return exe_dir;
         #endif
     }
-
-    char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator)
-    {
-        u32 lsize = cstr_length(lhs);
-        u32 rsize = cstr_length(rhs);
-
-        char* result = (char*)allocate(allocator, sizeof(char) * (lsize + rsize + 2));
-        copy_s8_memory(result, lhs, lsize);
-        #ifdef _WIN32
-            result[lsize] = '\\';
-        #elif defined(__unix__)
-            result[lsize] = '/';
-        #endif
-        copy_s8_memory(result + lsize + 1, rhs, rsize);
-        result[lsize + rsize + 1] = '\0';
-        return result;
-    }
     
     void concat_file_paths_into_cstr(const char* lhs, const char* rhs, char* out)
     {
@@ -257,13 +272,23 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
         copy_s8_memory(out, lhs, lsize);
         #ifdef _WIN32
             out[lsize] = '\\';
-        #elif defined(__unix__)
+        #elif defined(__unix__) || defined(__APPLE__)
             out[lsize] = '/';
+        #else
+            #error "concat_file_paths_into_cstr: Unsupported platforn."
         #endif
         copy_s8_memory(out, rhs, rsize);
         out[lsize + rsize + 1] = '\0';
     }
 
+    char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator)
+    {
+        u32 lsize = cstr_length(lhs);
+        u32 rsize = cstr_length(rhs);
+        char* result = (char*)allocate(allocator, sizeof(char) * (lsize + rsize + 2));
+        concat_file_paths_into_cstr(lhs, rhs, result);
+        return result;
+    }
 #endif // CUTILE_IMPLEM
 
 #endif // !CUTILE_FILESYSTEM_H
