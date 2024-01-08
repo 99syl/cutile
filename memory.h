@@ -72,6 +72,9 @@ typedef struct allocator
 CUTILE_C_API void* allocate(allocator* allocator, u64 size);
 CUTILE_C_API void deallocate(allocator* allocator, void* ptr);
 
+#define allocate_m(allocator, T) (T*)(allocate(allocator, sizeof(T)))
+#define allocate_many_m(allocator, T, count) (T*)(allocate(allocator, sizeof(T)*count))
+
 CUTILE_C_API u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
 CUTILE_C_API s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
 
