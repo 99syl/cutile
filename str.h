@@ -160,6 +160,7 @@ typedef struct string_view
         u32 count = cstr_length(cstr);
         string s;
         s.data = (u8*)allocate(allocator, sizeof(u8) * count);
+        copy_s8_memory((s8*)s.data, cstr, count);
         s.count = count;
         s.size = count;
         s.allocator = allocator;
