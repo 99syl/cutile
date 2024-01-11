@@ -42,6 +42,7 @@ typedef struct allocator allocator;
     force_inline void destroy_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { destroy_array_deeply_macro(array, destroy_elem_func); } \
     force_inline void resize_##type##_array(type##_array* array, u32 new_size) { resize_array_macro(array, type, new_size); } \
     force_inline void type##_array_push(type##_array* array, type val) { array_push_macro(array, type, val); } \
+    force_inline type* type##_array_push_empty(type##_array* array) { array_push_empty_m(array, type); } \
     force_inline void type##_array_push_repeated(type##_array* array, type val, u32 count) { array_push_repeated_macro(array, type, val, count); } \
     force_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
     force_inline void type##_array_push_array(type##_array* out, const type##_array* in) { array_push_array_macro(out, type, in); } \
@@ -97,6 +98,15 @@ CUTILE_C_API void deallocate(allocator*, void*);
             resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment);   \
         }                                                                                   \
         array_ptr->data[array_ptr->count++] = val;                                          \
+    }
+
+#define array_push_empty_m(array_ptr, type)                             \
+    {                                                                   \
+        if (array_ptr->count >= array_ptr->size)                        \
+        {                                                               \
+            resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment); \
+        }                                                               \
+        return &array_ptr->data[array_ptr->count++];                    \
     }
 
 #define array_push_repeated_macro(array_ptr, type, val, _count)                                     \
