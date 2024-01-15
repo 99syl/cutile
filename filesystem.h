@@ -1,51 +1,49 @@
 #ifndef CUTILE_FILESYSTEM_H
 #define CUTILE_FILESYSTEM_H
 
-#include "./num_types.h"
-#include "./array.h"
+#include "num_types.h"
+#include "array.h"
 
-// Defined in str.h
+// Defined in str.h.
 typedef struct string string;
-
-CUTILE_C_API bool8 file_exists(string* path);
-CUTILE_C_API bool8 file_exists_cstr(const char* path);
-
-CUTILE_C_API bool8 directory_exists(string* path);
-CUTILE_C_API bool8 directory_exists_cstr(const char* path);
-
-// This function copies a file to a new path.
-CUTILE_C_API bool8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite);
-
-typedef enum file_access_mode
-{
-    file_access_mode_read,
-    file_access_mode_write,
-    file_access_mode_read_write
-} file_access_mode;
 
 typedef struct file
 {
-    void* handle; // Platform/OS handle.
+    void* handle; // Platform handle.
 } file;
 
-typedef struct
+CUTILE_C_API b8 file_exists(string* path);
+CUTILE_C_API b8 file_exists_cstr(const char* path);
+
+CUTILE_C_API b8 directory_exists(string* path);
+CUTILE_C_API b8 directory_exists_cstr(const char* path);
+
+// This function copies a file to a new path.
+// If the new path corresponds to an existing file, overwrite parameters tells if it should be overwritten. Therefore, if the new path already correponds to an existing file and overwritten is set to false, the function returns false.
+CUTILE_C_API b8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite);
+
+typedef enum file_access_mode
 {
-    bool8       succeeded;
-    file        file;
-} open_file_result;
-CUTILE_C_API open_file_result open_file(file_access_mode access_mode, const char* path);
+    file_access_mode_read          = 1 << 0,
+    file_access_mode_write         = 1 << 1,
+    file_access_mode_read_write    = file_access_mode_read | file_access_mode_write
+} file_access_mode;
+
+typedef enum file_create_mode
+{
+    file_create_if_not_exists = 0 << 1,
+    file_always_create        = 1 << 0
+} file_create_mode;
+
+CUTILE_C_API b8   open_file(file_access_mode access_mode, const char* path, file* out);
+CUTILE_C_API b8   create_file(file_create_mode create_mode, file_access_mode access_mode, const char* path, file* out);
 CUTILE_C_API void close_file(file* file);
 
-// Defined in memory.h
+// Defined in memory.h.
 typedef struct allocator allocator;
 
-typedef struct
-{
-    u8* content;
-    u64 size_in_bytes;
-} get_file_content_result;
-CUTILE_C_API get_file_content_result get_file_content_from_path(const char* path, allocator* allocator);
-CUTILE_C_API get_file_content_result get_file_content(file* file, allocator* allocator);
+CUTILE_C_API b8 get_file_content_from_path(const char* path, allocator* allocator, u8** out, u64* size_in_bytes);
+CUTILE_C_API b8 get_file_content(file* file, allocator* allocator, u8** out, u64* size_in_bytes);
 
 CUTILE_C_API void read_from_file(file* file, u8* out, u64 nb_bytes_to_read);
 
@@ -80,14 +78,15 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
 
     #include "./str.h"
 
-    bool8 file_exists(string* path)
+    b8 file_exists(string* path)
     {
         char* cpath = create_cstr_from_str(path, path->allocator);
         bool8 res = file_exists_cstr(cpath);
         deallocate(path->allocator, cpath);
         return res;
     }
-    bool8 file_exists_cstr(const char* path)
+
+    b8 file_exists_cstr(const char* path)
     {
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributesA(path);
@@ -95,14 +94,14 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #endif
     }
 
-    bool8 directory_exists(string* path)
+    b8 directory_exists(string* path)
     {
         char* cpath = create_cstr_from_str(path, path->allocator);
-        bool8 res = directory_exists_cstr(cpath);
+        b8 res = directory_exists_cstr(cpath);
         deallocate(path->allocator, cpath);
         return res;
     }
-    bool8 directory_exists_cstr(const char* path)
+    b8 directory_exists_cstr(const char* path)
     {
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributesA(path);
@@ -110,7 +109,7 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #endif
     }
 
-    bool8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite)
+    b8 copy_file(const char* path_of_file_to_copy, const char* path_of_new_file, b8 overwrite)
     {
         #ifdef _WIN32
         {
@@ -120,31 +119,32 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
 
         // TODO: Implement for other platforms.
         return b8_false;
+}
+
+#ifdef _WIN32
+    force_inline UINT file_access_mode_to_win32(file_access_mode mode)
+    {
+        DWORD flags = 0;
+        if (mode & file_access_mode_read) flags |= GENERIC_READ;
+        if (mode & file_access_mode_write) flags |= GENERIC_WRITE;
+        return flags;
     }
 
-    open_file_result open_file(file_access_mode access_mode, const char* path)
+    force_inline DWORD file_create_mode_to_win32(file_create_mode mode)
     {
-        open_file_result result;
+        if (mode & file_create_if_not_exists) return CREATE_NEW;
+        else return CREATE_ALWAYS;
+    }
+#endif
 
-        #ifdef _WIN32
-            DWORD win32_access_mode = 0;
-            switch (access_mode)
-            {
-                case file_access_mode_read: win32_access_mode = GENERIC_READ; break;
-                case file_access_mode_write: win32_access_mode = GENERIC_WRITE; break;
-                case file_access_mode_read_write: win32_access_mode = GENERIC_READ | GENERIC_WRITE; break;
-            }
-            result.file.handle = (void*)CreateFileA(
-                path,
-                win32_access_mode,
-                0, // TODO: Make this value configurable maybe ?
-                NULL,
-                OPEN_EXISTING, //TODO: Make this value configurable maybe ?
-                FILE_ATTRIBUTE_NORMAL, // TODO: Make this value configurable maybe ?
-                NULL);
-            if (result.file.handle == INVALID_HANDLE_VALUE) result.succeeded = bool8_false;
-            else result.succeeded = bool8_true;
-            return result;
+    b8 open_file(file_access_mode access_mode, const char* path, file* out)
+    {
+        #if defined(_WIN32)
+            out->handle = (void*)CreateFileA(path, file_access_mode_to_win32(access_mode), 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    
+            if (out->handle == INVALID_HANDLE_VALUE) return b8_false;
+            return b8_true;
+    
         #elif defined(__unix__) || defined(__APPLE__)
             int flags = 0;
             switch (access_mode)
@@ -154,9 +154,21 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
                 case file_access_mode_read_write: flags = O_RDWR; break;
             }
             s64 fd = open(path, flags);
-            result.succeeded = fd != -1;
-            result.file.handle = (void*)fd;
-            return result;
+            out->handle = (void*)fd;
+            return fd != -1 ? b8_true : b8_false;
+    
+         #endif
+    }
+
+    b8 create_file(file_create_mode create_mode, file_access_mode access_mode, const char* path, file* out)
+    {
+        #if defined(_WIN32)
+        {
+            out->handle = (void*)CreateFileA(path, file_access_mode_to_win32(access_mode), 0, nullptr, file_create_mode_to_win32(create_mode), 0, nullptr);
+        
+            if (out->handle == INVALID_HANDLE_VALUE) return b8_false;
+            return b8_true;
+        }
         #endif
     }
 
@@ -200,10 +212,11 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
 
     b8 get_file_size_from_path(const char* path, u64* out)
     {
-        open_file_result ofr = open_file(file_access_mode_read, path);
-        if (!ofr.succeeded) return b8_false;
-        *out = get_file_size(&ofr.file);
-        close_file(&ofr.file);
+        file f;
+        b8 file_opened = open_file(file_access_mode_read, path, &f);
+        if (!file_opened) return b8_false;
+        *out = get_file_size(&f);
+        close_file(&f);
         return b8_true;
     }
 
@@ -228,32 +241,22 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #endif
     }
 
-    get_file_content_result get_file_content_from_path(const char* path, allocator* allocator)
+    b8 get_file_content_from_path(const char* path, allocator* allocator, u8** out, u64* size_in_bytes)
     {
-        get_file_content_result result;
-        open_file_result open_file_result = open_file(file_access_mode_read, path);
-        if (open_file_result.succeeded)
-        {
-            result = get_file_content(&open_file_result.file, allocator);
-            close_file(&open_file_result.file);
-        }
-        else
-        {
-            result.content = nullptr;
-            result.size_in_bytes = 0;
-        }
-        return result;
+        file file;
+        b8 file_opened = open_file(file_access_mode_read, path, &file);
+        if (!file_opened) return b8_false;
+        get_file_content(&file, allocator, out, size_in_bytes);
+        close_file(&file);
+        return b8_true;
     }
 
-    get_file_content_result get_file_content(file* file, allocator* allocator)
+    b8 get_file_content(file* file, allocator* allocator, u8** out, u64* size_in_bytes)
     {
-        u64 file_size = get_file_size(file);
-        u8* data = (u8*)allocate(allocator, file_size);
-        read_from_file(file, data, file_size);
-        get_file_content_result result;
-        result.content = data;
-        result.size_in_bytes = file_size;
-        return result;
+        *size_in_bytes = get_file_size(file);
+        *out = (u8*)allocate(allocator, *size_in_bytes);
+        read_from_file(file, *out, *size_in_bytes);
+        return b8_true;
     }
 
     char* get_current_executable_path(allocator* allocator)
