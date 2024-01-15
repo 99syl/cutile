@@ -52,12 +52,22 @@ CUTILE_C_API void read_from_file(file* file, u8* out, u64 nb_bytes_to_read);
 CUTILE_C_API void write_in_file(file* file, const u8* buffer, u64 buffer_size_in_bytes);
 
 CUTILE_C_API u64 get_file_size(file* file);
+CUTILE_C_API b8  get_file_size_from_path(const char* path, u64* out);
 
 CUTILE_C_API char* get_current_executable_path(allocator* allocator);
 CUTILE_C_API char* get_current_executable_dir_path(allocator* allocator);
 
 CUTILE_C_API char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
 CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs, const char* out);
+
+// Returns the last element of a path.
+// Elements are separated by path separators: '\' for Windows and '/' for Unix.
+CUTILE_C_API const char* get_last_path_element(const char* path);
+
+// Returns the extension of the filename without the '.' (e.g. "txt", "wav", ...etc).
+// Returns null if filename does not have any.
+// This function does not allocate any memory, it returns a pointer to the starting position of the extension.
+CUTILE_C_API const char* get_filename_extension(const char* file_path);
 
 #ifdef CUTILE_IMPLEM
 
@@ -188,6 +198,15 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
         #endif
     }
 
+    b8 get_file_size_from_path(const char* path, u64* out)
+    {
+        open_file_result ofr = open_file(file_access_mode_read, path);
+        if (!ofr.succeeded) return b8_false;
+        *out = get_file_size(&ofr.file);
+        close_file(&ofr.file);
+        return b8_true;
+    }
+
     void read_from_file(file* file, u8* out, u64 nb_bytes_to_read)
     {
         #ifdef _WIN32
@@ -289,6 +308,40 @@ CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs,
         concat_file_paths_into_cstr(lhs, rhs, result);
         return result;
     }
+
+    const char* get_last_path_element(const char* path)
+    {
+        persist char path_separator;
+        #if defined(_WIN32)
+        {
+            path_separator = '\\';
+        }
+        #elif defined(__unix__)
+        {
+            path_separator = '/';
+        }
+        #endif
+        const char* saved = path;
+        while (*path)
+        {
+            if (*path == path_separator) saved = path;
+            ++path;
+        }
+        return saved;
+    }
+
+    const char* get_filename_extension(const char* file_path)
+    {
+        const char* last_path_element = get_last_path_element(file_path);
+        const char* saved = nullptr;
+        while (*last_path_element)
+        {
+            if (*last_path_element == '.' && *(last_path_element + 1)) saved = last_path_element + 1;
+            ++last_path_element;
+        }
+        return saved;
+    }
+
 #endif // CUTILE_IMPLEM
 
 #endif // !CUTILE_FILESYSTEM_H
