@@ -3,7 +3,9 @@
 
 #include "./num_types.h"
 
+// Deprecated, use fixed_array_length_m instead.
 #define fixed_array_length(arr) (sizeof(arr)/sizeof(arr[0]))
+#define fixed_array_length_m(arr) (sizeof(arr)/sizeof(arr[0]))
 
 typedef struct allocator allocator;
 
