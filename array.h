@@ -5,6 +5,7 @@
 
 // Deprecated, use fixed_array_length_m instead.
 #define fixed_array_length(arr) (sizeof(arr)/sizeof(arr[0]))
+
 #define fixed_array_length_m(arr) (sizeof(arr)/sizeof(arr[0]))
 
 typedef struct allocator allocator;
@@ -49,6 +50,7 @@ typedef struct allocator allocator;
     force_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
     force_inline void type##_array_push_array(type##_array* out, const type##_array* in) { array_push_array_macro(out, type, in); } \
     force_inline void type##_array_pop(type##_array* array) { array_pop_macro(array); } \
+    force_inline void type##_array_remove(type##_array* array, u32 index) { array_remove_macro(array, index); } \
     force_inline void clear_##type##_array(type##_array* array) { clear_array_macro(array); }  \
     force_inline void clear_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { clear_array_deeply_macro(array, destroy_elem_func); }  \
     force_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
@@ -132,6 +134,15 @@ CUTILE_C_API void deallocate(allocator*, void*);
 #define array_push_array_macro(out, type, in) array_push_buffer_macro(out, type, in->data, in->count)
 
 #define array_pop_macro(array_ptr) array_ptr->count -= 1
+
+#define array_remove_macro(array_ptr, index)                \
+    {                                                       \
+        for (u32 i = index; i < array_ptr->count - 1; ++i)  \
+        {                                                   \
+            array_ptr->data[i] = array_ptr->data[i + 1];    \
+        }                                                   \
+        array_ptr->count -= 1;                              \
+    }
 
 #define clear_array_macro(array_ptr) array_ptr->count = 0;
 
