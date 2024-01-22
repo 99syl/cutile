@@ -183,12 +183,9 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
 
     void write_in_file(file* file, const u8* buffer, u64 buffer_size_in_bytes)
     {
-        #ifdef _WIN32
-            DWORD written_bytes = 0;
-            do
-            {
-                if (!WriteFile(file->handle, buffer + written_bytes, buffer_size_in_bytes - written_bytes, &written_bytes, nullptr)) break;
-            } while (written_bytes < buffer_size_in_bytes);
+        #if defined(_WIN32)
+            DWORD written = 0;
+            WriteFile(file->handle, buffer, buffer_size_in_bytes, &written, nullptr);
         #elif defined(__unix__) || defined(__APPLE__)
             write((u64)file->handle, buffer, buffer_size_in_bytes);
         #endif
@@ -223,19 +220,21 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
     void read_from_file(file* file, u8* out, u64 nb_bytes_to_read)
     {
         #ifdef _WIN32
-            DWORD read_bytes = 0;
+            DWORD total_read = 0;
             do
             {
-                if (!ReadFile(file->handle, out + read_bytes, nb_bytes_to_read - read_bytes, &read_bytes, nullptr)) break;
-            } while (read_bytes < nb_bytes_to_read);
+                DWORD read = 0;
+                if (!ReadFile(file->handle, out + total_read, nb_bytes_to_read - total_read, &read, nullptr)) break;
+                total_read += read;
+            } while (total_read < nb_bytes_to_read);
         #elif defined(__unix__) || defined(__APPLE__)
-            u64 read_bytes = 0;
+            u64 total_read = 0;
             do
             {
-                ssize_t rd = read((u64)file->handle, out, nb_bytes_to_read);
+                ssize_t rd = read((u64)file->handle, out + total_read, nb_bytes_to_read - total_read);
                 if (rd == -1) break;
-                read_bytes += rd;
-            } while (read_bytes < nb_bytes_to_read);
+                total_read += rd;
+            } while (total_read < nb_bytes_to_read);
         #else
             #error "read_from_file: Unsupported platform"
         #endif
@@ -299,7 +298,7 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #else
             #error "concat_file_paths_into_cstr: Unsupported platforn."
         #endif
-        copy_s8_memory(out, rhs, rsize);
+        copy_s8_memory(out + lsize + 1, rhs, rsize);
         out[lsize + rsize + 1] = '\0';
     }
 
