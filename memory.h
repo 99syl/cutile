@@ -39,22 +39,29 @@ CUTILE_C_API bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count);
 CUTILE_C_API bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
 CUTILE_C_API bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
 
-#define declare_memory_view_of(data_type)       \
-    typedef struct data_type##_memory_view      \
-    {                                           \
-        const data_type*    data;               \
-        u32                 size;               \
-    } data_type##_memory_view;
+// Size is in data_type size unit.
+#define declare_memory_view_of_m(data_type)      \
+    typedef struct data_type##_memory_view       \
+    {                                            \
+        const data_type*    data;                \
+        u64                 size;                \
+    } data_type##_memory_view;                   \
 
-declare_memory_view_of(s8);
-declare_memory_view_of(u8);
-declare_memory_view_of(s16);
-declare_memory_view_of(u16);
-declare_memory_view_of(s32);
-declare_memory_view_of(u32);
-declare_memory_view_of(s64);
-declare_memory_view_of(u64);
+declare_memory_view_of_m(s8);
+declare_memory_view_of_m(u8);
+declare_memory_view_of_m(s16);
+declare_memory_view_of_m(u16);
+declare_memory_view_of_m(s32);
+declare_memory_view_of_m(u32);
+declare_memory_view_of_m(s64);
+declare_memory_view_of_m(u64);
 
+#define memory_view_from_fixed_size_array_m(arr)                         \
+    {                                                                   \
+        .data = arr,                                                    \
+            .size = fixed_array_length_m(arr)                           \
+            };                                                          \
+    
 // Performs allocations/deallocations with the current process' default heap. (e.g. GetProcessHeap() on Win32).
 CUTILE_C_API void* default_heap_allocate(u64 size);
 CUTILE_C_API void  default_heap_deallocate(void* ptr);
@@ -79,7 +86,7 @@ CUTILE_C_API u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator);
 CUTILE_C_API s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
 
 #ifdef CUTILE_ALLOCATOR_ANALYZER
-    #include "./stacktrace.h"
+    #include "stacktrace.h"
 
     typedef enum allocation_info_status
     {
