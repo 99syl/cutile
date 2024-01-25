@@ -1,7 +1,7 @@
 #ifndef CUTILE_ARRAY_H
 #define CUTILE_ARRAY_H
 
-#include "./num_types.h"
+#include "num_types.h"
 
 // Deprecated, use fixed_array_length_m instead.
 #define fixed_array_length(arr) (sizeof(arr)/sizeof(arr[0]))
@@ -11,7 +11,7 @@
 typedef struct allocator allocator;
 
 // Generates an array implementation of the given type.
-// Calling `declare_array_of(type)` macro will generate the following API:
+// Calling `declare_array_of_m(type)` macro will generate the following API:
 /*
 
    (type)_array
@@ -26,6 +26,9 @@ typedef struct allocator allocator;
    create_(type)_array: (size: u32, increment: u32, allocator: allocator*) -> (type)_array
    TODO: Continue documentation...
 */
+#define declare_array_of_m(type) declare_array_of(type)
+// NOTE(syl): declare_array_of is deprecated.
+// TODO(syl): Remove this macro in the future...
 #define declare_array_of(type)          \
     typedef struct type##_array         \
     {                                   \
@@ -69,25 +72,27 @@ CUTILE_C_API void* allocate(allocator*, u64);
 
 CUTILE_C_API void deallocate(allocator*, void*);
 
-#define destroy_array_macro(array_ptr) \
-    {                                                   \
-        deallocate(array_ptr->allocator, array->data);  \
+#define destroy_array_m(array_ptr) destroy_array_macro(array_ptr)
+#define destroy_array_macro(array_ptr)                          \
+    {                                                           \
+        deallocate((array_ptr)->allocator, (array_ptr)->data);  \
     }
 
 
 #define destroy_array_deeply_macro(array_ptr, destroy_array_elem_func)  \
-    {                                                       \
-        for (u32 i = 0; i < array_ptr->count; ++i)          \
-        {                                                   \
-            destroy_array_elem_func(&array_ptr->data[i]);   \
-        }                                                   \
-        destroy_array_macro(array_ptr);                     \
+    {                                                                   \
+        for (u32 i = 0; i < array_ptr->count; ++i)                      \
+        {                                                               \
+            destroy_array_elem_func(&(array_ptr)->data[i]);             \
+        }                                                               \
+        destroy_array_macro(array_ptr);                                 \
     }
 
 #define resize_array_macro(array_ptr, data_type, new_size)                                              \
     {                                                                                                   \
         u32 count = new_size < array_ptr->count ? new_size : array_ptr->count;                          \
-        data_type* new_data = (data_type*)allocate(array_ptr->allocator, sizeof(data_type) * new_size); \
+        data_type* new_data =                                                                           \
+            (data_type*)allocate(array_ptr->allocator, sizeof(data_type) * new_size);                   \
         for (u32 i = 0; i < count; ++i) new_data[i] = array_ptr->data[i];                               \
         deallocate(array_ptr->allocator, array_ptr->data);                                              \
         array_ptr->data = new_data;                                                                     \
