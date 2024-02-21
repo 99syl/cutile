@@ -3,10 +3,9 @@
 #ifndef CUTILE_CXX_H
 #define CUTILE_CXX_H
 
-#include "./cutile.h"
+#include "cutile.h"
 
 #define internal static
-
 #define persist static
 
 // CUTILE_STATIC_ASSERT
@@ -27,7 +26,24 @@
     #define force_inline __forceinline
 #else
     #define force_inline inline
-#endif // _MSC_VER
+#endif
+
+CUTILE_C_API void exit_process(unsigned int);
+CUTILE_C_API void println_cstr(const char* cstr);
+
+// CUTILE_ASSERT
+#ifdef CUTILE_ENABLE_ASSERT
+    #define CUTILE_ASSERT(pred, ...)                                        \
+    {                                                                   \
+        if (!(pred))                                                    \
+        {                                                               \
+            println_cstr("Assertion Failed: " #pred ". " __VA_ARGS__);  \
+            exit_process(1);                                            \
+        }                                                               \
+    }
+#else
+    #define CUTILE_ASSERT(pred, ...)
+#endif
 
 // nullptr
 #ifdef CUTILE_C
@@ -42,5 +58,10 @@
         U _2;
     };
 #endif
+
+#define stringify_m(x) stringify2_m(x)
+#define stringify2_m(x) #x
+
+#define current_line_cstr_m stringify_m(__LINE__)
 
 #endif // !CUTILE_CXX_H
