@@ -38,26 +38,26 @@ typedef struct allocator allocator;
         u32         increment;          \
         allocator*  allocator;          \
     } type##_array;                     \
-    force_inline type##_array create_##type##_array(u32 size, u32 increment, allocator* allocator) \
+    maybe_inline type##_array create_##type##_array(u32 size, u32 increment, allocator* allocator) \
     {                                                                   \
         type##_array array;                                             \
         init_array_macro(array, type, size, increment, allocator);      \
         return array;                                                   \
     }                                                                   \
-    force_inline void destroy_##type##_array(type##_array* array) { destroy_array_macro(array); } \
-    force_inline void destroy_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { destroy_array_deeply_macro(array, destroy_elem_func); } \
-    force_inline void resize_##type##_array(type##_array* array, u32 new_size) { resize_array_macro(array, type, new_size); } \
-    force_inline void type##_array_push(type##_array* array, type val) { array_push_macro(array, type, val); } \
-    force_inline type* type##_array_push_empty(type##_array* array) { array_push_empty_m(array, type); } \
-    force_inline void type##_array_push_repeated(type##_array* array, type val, u32 count) { array_push_repeated_macro(array, type, val, count); } \
-    force_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
-    force_inline void type##_array_push_array(type##_array* out, const type##_array* in) { array_push_array_macro(out, type, in); } \
-    force_inline void type##_array_pop(type##_array* array) { array_pop_macro(array); } \
-    force_inline void type##_array_remove(type##_array* array, u32 index) { array_remove_macro(array, index); } \
-    force_inline void clear_##type##_array(type##_array* array) { clear_array_macro(array); }  \
-    force_inline void clear_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { clear_array_deeply_macro(array, destroy_elem_func); }  \
-    force_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
-    force_inline void reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count) { reverse_array_slice_macro(array, type, offset, count); }
+    maybe_inline void destroy_##type##_array(type##_array* array) { destroy_array_macro(array); } \
+    maybe_inline void destroy_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { destroy_array_deeply_macro(array, destroy_elem_func); } \
+    maybe_inline void resize_##type##_array(type##_array* array, u32 new_size) { resize_array_macro(array, type, new_size); } \
+    maybe_inline void type##_array_push(type##_array* array, type val) { array_push_macro(array, type, val); } \
+    maybe_inline type* type##_array_push_empty(type##_array* array) { array_push_empty_m(array, type); } \
+    maybe_inline void type##_array_push_repeated(type##_array* array, type val, u32 count) { array_push_repeated_macro(array, type, val, count); } \
+    maybe_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
+    maybe_inline void type##_array_push_array(type##_array* out, type##_array* in) { array_push_array_macro(out, type, in); } \
+    maybe_inline void type##_array_pop(type##_array* array) { array_pop_macro(array); } \
+    maybe_inline void type##_array_remove(type##_array* array, u32 index) { array_remove_macro(array, index); } \
+    maybe_inline void clear_##type##_array(type##_array* array) { clear_array_macro(array); }  \
+    maybe_inline void clear_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { clear_array_deeply_macro(array, destroy_elem_func); }  \
+    maybe_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
+    maybe_inline void reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count) { reverse_array_slice_macro(array, type, offset, count); }
 
 CUTILE_C_API void* allocate(allocator*, u64);
 
@@ -77,7 +77,6 @@ CUTILE_C_API void deallocate(allocator*, void*);
     {                                                           \
         deallocate((array_ptr)->allocator, (array_ptr)->data);  \
     }
-
 
 #define destroy_array_deeply_macro(array_ptr, destroy_array_elem_func)  \
     {                                                                   \
@@ -122,7 +121,7 @@ CUTILE_C_API void deallocate(allocator*, void*);
     {                                                                                               \
         if (array_ptr->count + _count >= array_ptr->size)                                           \
         {                                                                                           \
-            resize_array_macro(array_ptr, type, array_ptr->count + _count + array_ptr->increment);  \
+            resize_array_macro(array_ptr, type, array_ptr->count + _count);                         \
         }                                                                                           \
         for (u32 i = 0; i < _count; ++i) array_ptr->data[array_ptr->count++] = val;                 \
     }
@@ -131,7 +130,7 @@ CUTILE_C_API void deallocate(allocator*, void*);
     {                                                                                           \
         if (array_ptr->count + n >= array_ptr->size)                                            \
         {                                                                                       \
-            resize_array_macro(array_ptr, type, array_ptr->count + n + array_ptr->increment);   \
+            resize_array_macro(array_ptr, type, array_ptr->count + n);                          \
         }                                                                                       \
         for (u32 i = 0; i < n; ++i) array_ptr->data[array_ptr->count++] = buf[i];               \
     }
