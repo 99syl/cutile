@@ -18,43 +18,43 @@ struct array
 };
 
 template <typename T>
-force_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
+maybe_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
 
 template <typename T>
-force_inline void destroy_array(array<T>* array);
+maybe_inline void destroy_array(array<T>* array);
 
 template <typename T>
-force_inline void resize_array(array<T>* array, u32 new_size);
+maybe_inline void resize_array(array<T>* array, u32 new_size);
 
 template <typename T>
-force_inline void array_push(array<T>* array, T val);
+maybe_inline void array_push(array<T>* array, T val);
 
 template <typename T>
-force_inline void array_push_repeated(array<T>* array, T val, u32 count);
+maybe_inline void array_push_repeated(array<T>* array, T val, u32 count);
 
 template <typename T>
-force_inline void array_push_buffer(array<T>* array, const T* buf, u32 n);
+maybe_inline void array_push_buffer(array<T>* array, const T* buf, u32 n);
 
 template <typename T>
-force_inline void array_push_array(array<T>* out, const array<T>* in);
+maybe_inline void array_push_array(array<T>* out, const array<T>* in);
 
 template <typename T>
-force_inline void array_pop(array<T>* array);
+maybe_inline void array_pop(array<T>* array);
 
 template <typename T>
-force_inline void reverse_array(array<T>* array);
+maybe_inline void reverse_array(array<T>* array);
 template <typename T>
-force_inline void reverse_array_slice(array<T>* array, u32 offset, u32 count);
+maybe_inline void reverse_array_slice(array<T>* array, u32 offset, u32 count);
 
 template <typename T>
-force_inline T  get_array_elem(array<T>* array, u32 index);
+maybe_inline T  get_array_elem(array<T>* array, u32 index);
 template <typename T>
-force_inline T* get_array_ptr_elem(array<T>* array, u32 index);
+maybe_inline T* get_array_ptr_elem(array<T>* array, u32 index);
 
 template <typename T>
-force_inline void copy_array_to_buffer(const array<T>* in, T* out);
+maybe_inline void copy_array_to_buffer(const array<T>* in, T* out);
 template <typename T>
-force_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count);
+maybe_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count);
 
 template <typename T>
 struct array_view
@@ -64,7 +64,7 @@ struct array_view
 };
 
 template <typename T>
-force_inline array_view<T> null_array_view() { return array_view<T>{.data = nullptr, .count = 0}; }
+maybe_inline array_view<T> null_array_view() { return array_view<T>{.data = nullptr, .count = 0}; }
 
 /*
   =============================
@@ -73,7 +73,7 @@ force_inline array_view<T> null_array_view() { return array_view<T>{.data = null
 */
 
 template <typename T>
-force_inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
+maybe_inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
 {
     array<T> result;
     init_array_macro(result, T, size, incr, allocator);
@@ -81,91 +81,91 @@ force_inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
 }
 
 template <typename T>
-force_inline void destroy_array(array<T>* array)
+maybe_inline void destroy_array(array<T>* array)
 {
     destroy_array_macro(array);
 }
 
 template <typename T>
-force_inline void destroy_array_deeply(array<T>* array, void(*destroy_elem_func)(T* data))
+maybe_inline void destroy_array_deeply(array<T>* array, void(*destroy_elem_func)(T* data))
 {
     destroy_array_deeply_macro(array, destroy_elem_func);
 }
 
 template <typename T>
-force_inline void resize_array(array<T>* array, u32 new_size)
+maybe_inline void resize_array(array<T>* array, u32 new_size)
 {
     resize_array_macro(array, T, new_size);
 }
 
 template <typename T>
-force_inline void array_push(array<T>* array, T val)
+maybe_inline void array_push(array<T>* array, T val)
 {
     array_push_macro(array, T, val);
 }
 
 template <typename T>
-force_inline void array_push_repeated(array<T>* array, T val, u32 count)
+maybe_inline void array_push_repeated(array<T>* array, T val, u32 count)
 {
     array_push_repeated_macro(array, T, val, count);
 }
 
 template <typename T>
-force_inline void array_push_buffer(array<T>* array, const T* buf, u32 n)
+maybe_inline void array_push_buffer(array<T>* array, const T* buf, u32 n)
 {
     array_push_buffer_macro(array, T, buf, n);
 }
 
 template <typename T>
-force_inline void array_push_array(array<T>* out, const array<T>* in)
+maybe_inline void array_push_array(array<T>* out, array<T>* in)
 {
     array_push_array_macro(out, T, in);
 }
 
 template <typename T>
-force_inline void array_pop(array<T>* array)
+maybe_inline void array_pop(array<T>* array)
 {
     array_pop_macro(array);
 }
 
 template <typename T>
-force_inline void clear_array(array<T>* array)
+maybe_inline void clear_array(array<T>* array)
 {
     clear_array_macro(array);
 }
 
 template <typename T>
-force_inline void clear_array_deeply(array<T>* array, void (*destroy_elem_func)(T* elem))
+maybe_inline void clear_array_deeply(array<T>* array, void (*destroy_elem_func)(T* elem))
 {
     clear_array_macro_deeply(array, destroy_elem_func);
 }
 
 template <typename T>
-force_inline void reverse_array(array<T>* array)
+maybe_inline void reverse_array(array<T>* array)
 {
     reverse_array_macro(array, T);
 }
 
 template <typename T>
-force_inline void reverse_array_slice(array<T>* array, u32 offset, u32 count)
+maybe_inline void reverse_array_slice(array<T>* array, u32 offset, u32 count)
 {
     reverse_array_slice_macro(array, T, offset, count);
 }
 
 template <typename T>
-force_inline T get_array_elem(array<T>* array, u32 index)
+maybe_inline T get_array_elem(array<T>* array, u32 index)
 {
     return array->data[index];
 }
 
 template <typename T>
-force_inline T* get_array_ptr_elem(array<T>* array, u32 index)
+maybe_inline T* get_array_ptr_elem(array<T>* array, u32 index)
 {
     return &array->data[index];
 }
 
 template <typename T>
-force_inline void copy_array_to_buffer(const array<T>* in, T* out)
+maybe_inline void copy_array_to_buffer(const array<T>* in, T* out)
 {
     for (u32 i = 0; i < in->count; ++i)
     {
@@ -174,7 +174,7 @@ force_inline void copy_array_to_buffer(const array<T>* in, T* out)
 }
 
 template <typename T>
-force_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count)
+maybe_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count)
 {
     for (u32 i = 0; i < count; ++i)
     {
