@@ -10,15 +10,14 @@
 
 typedef struct allocator allocator;
 
-// Generates an array implementation of the given type.
-// Calling `declare_array_of_m(type)` macro will generate the following API:
+// Generates an array struct of the given type.
+// Calling declare_array_of_m(type) macro will generate the following API:
 /*
-
    (type)_array
    {
-        data: type*
-        count: u32
-        size: u32
+        data:      type*
+        count:     u32
+        size:      u32
         increment: u32
         allocator: allocator*
    }
@@ -26,57 +25,111 @@ typedef struct allocator allocator;
    create_(type)_array: (size: u32, increment: u32, allocator: allocator*) -> (type)_array
    TODO: Continue documentation...
 */
-#define declare_array_of_m(type) declare_array_of(type)
-// NOTE(syl): declare_array_of is deprecated.
-// TODO(syl): Remove this macro in the future...
-#define declare_array_of(type)          \
-    typedef struct type##_array         \
-    {                                   \
-        type*       data;               \
-        u32         count;              \
-        u32         size;               \
-        u32         increment;          \
-        allocator*  allocator;          \
-    } type##_array;                     \
-    maybe_inline type##_array create_##type##_array(u32 size, u32 increment, allocator* allocator) \
-    {                                                                   \
-        type##_array array;                                             \
-        init_array_macro(array, type, size, increment, allocator);      \
-        return array;                                                   \
-    }                                                                   \
-    maybe_inline void destroy_##type##_array(type##_array* array) { destroy_array_macro(array); } \
-    maybe_inline void destroy_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { destroy_array_deeply_macro(array, destroy_elem_func); } \
-    maybe_inline void resize_##type##_array(type##_array* array, u32 new_size) { resize_array_macro(array, type, new_size); } \
-    maybe_inline void type##_array_push(type##_array* array, type val) { array_push_macro(array, type, val); } \
-    maybe_inline type* type##_array_push_empty(type##_array* array) { array_push_empty_m(array, type); } \
-    maybe_inline void type##_array_push_repeated(type##_array* array, type val, u32 count) { array_push_repeated_macro(array, type, val, count); } \
-    maybe_inline void type##_array_push_buffer(type##_array* array, type* buf, u32 n) { array_push_buffer_macro(array, type, buf, n); } \
-    maybe_inline void type##_array_push_array(type##_array* out, type##_array* in) { array_push_array_macro(out, type, in); } \
-    maybe_inline void type##_array_pop(type##_array* array) { array_pop_macro(array); } \
-    maybe_inline void type##_array_remove(type##_array* array, u32 index) { array_remove_macro(array, index); } \
-    maybe_inline void clear_##type##_array(type##_array* array) { clear_array_macro(array); }  \
-    maybe_inline void clear_##type##_array_deeply(type##_array* array, void (*destroy_elem_func)(type* elem)) { clear_array_deeply_macro(array, destroy_elem_func); }  \
-    maybe_inline void reverse_##type##_array(type##_array* array) { reverse_array_macro(array, type); } \
-    maybe_inline void reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count) { reverse_array_slice_macro(array, type, offset, count); }
+#define declare_array_of_m(type)                                                                                \
+    typedef struct type##_array                                                                                 \
+    {                                                                                                           \
+        type*       data;                                                                                       \
+        u32         count;                                                                                      \
+        u32         size;                                                                                       \
+        u32         increment;                                                                                  \
+        allocator*  allocator;                                                                                  \
+    } type##_array;                                                                                             \
+                                                                                                                \
+    maybe_inline type##_array create_##type##_array(u32 size, u32 increment, allocator* allocator)              \
+    {                                                                                                           \
+        type##_array array;                                                                                     \
+        init_array_macro(array, type, size, increment, allocator);                                              \
+        return array;                                                                                           \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         destroy_##type##_array(type##_array* array)                                       \
+    {                                                                                                           \
+        destroy_array_macro(array);                                                                             \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         destroy_##type##_array_deeply(type##_array* arr, void (*destroy_func)(type* elem))\
+    {                                                                                                           \
+        destroy_array_deeply_macro(arr, destroy_func);                                                          \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         resize_##type##_array(type##_array* array, u32 new_size)                          \
+    {                                                                                                           \
+        resize_array_macro(array, type, new_size);                                                              \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_push(type##_array* array, type val)                                  \
+    {                                                                                                           \
+        array_push_macro(array, type, val);                                                                     \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline type*        type##_array_push_empty(type##_array* array)                                      \
+    {                                                                                                           \
+        array_push_empty_m(array, type);                                                                        \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_push_repeated(type##_array* array, type val, u32 count)              \
+    {                                                                                                           \
+        array_push_repeated_macro(array, type, val, count);                                                     \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_push_buffer(type##_array* array, type* buf, u32 n)                   \
+    {                                                                                                           \
+        array_push_buffer_macro(array, type, buf, n);                                                           \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_push_array(type##_array* out, type##_array* in)                      \
+    {                                                                                                           \
+        array_push_array_macro(out, type, in);                                                                  \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_pop(type##_array* array)                                             \
+    {                                                                                                           \
+        array_pop_macro(array);                                                                                 \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         type##_array_remove(type##_array* array, u32 index)                               \
+    {                                                                                                           \
+        array_remove_macro(array, index);                                                                       \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         clear_##type##_array(type##_array* array)                                         \
+    {                                                                                                           \
+        clear_array_macro(array);                                                                               \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         clear_##type##_array_deeply(type##_array* arr, void (*destroy_func)(type* elem))  \
+    {                                                                                                           \
+        clear_array_deeply_macro(arr, destroy_func);                                                            \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         reverse_##type##_array(type##_array* array)                                       \
+    {                                                                                                           \
+        reverse_array_macro(array, type);                                                                       \
+    }                                                                                                           \
+                                                                                                                \
+    maybe_inline void         reverse_##type##_array_slice(type##_array* array, u32 offset, u32 count)          \
+    {                                                                                                           \
+        reverse_array_slice_macro(array, type, offset, count);                                                  \
+    }                                                                                                           \
 
 CUTILE_C_API void* allocate(allocator*, u64);
 
-#define init_array_macro(array, data_type, _size, _increment, _allocator)       \
-    {                                                                           \
-        array.data = (data_type*)allocate(allocator, sizeof(data_type) * size); \
-        array.size = _size;                                                     \
-        array.count = 0;                                                        \
-        array.increment = _increment;                                           \
-        array.allocator = _allocator;                                           \
-    }
+#define init_array_macro(array, data_type, _size, _increment, _allocator)   \
+{                                                                           \
+    array.data = (data_type*)allocate(allocator, sizeof(data_type) * size); \
+    array.size = _size;                                                     \
+    array.count = 0;                                                        \
+    array.increment = _increment;                                           \
+    array.allocator = _allocator;                                           \
+}
 
 CUTILE_C_API void deallocate(allocator*, void*);
 
 #define destroy_array_m(array_ptr) destroy_array_macro(array_ptr)
-#define destroy_array_macro(array_ptr)                          \
-    {                                                           \
-        deallocate((array_ptr)->allocator, (array_ptr)->data);  \
-    }
+#define destroy_array_macro(array_ptr)                      \
+{                                                           \
+    deallocate((array_ptr)->allocator, (array_ptr)->data);  \
+}
 
 #define destroy_array_deeply_macro(array_ptr, destroy_array_elem_func)  \
     {                                                                   \
@@ -92,7 +145,10 @@ CUTILE_C_API void deallocate(allocator*, void*);
         u32 count = new_size < array_ptr->count ? new_size : array_ptr->count;                          \
         data_type* new_data =                                                                           \
             (data_type*)allocate(array_ptr->allocator, sizeof(data_type) * new_size);                   \
-        for (u32 i = 0; i < count; ++i) new_data[i] = array_ptr->data[i];                               \
+        for (u32 i = 0; i < count; ++i)                                                                 \
+        {                                                                                               \
+            new_data[i] = array_ptr->data[i];                                                           \
+        }                                                                                               \
         deallocate(array_ptr->allocator, array_ptr->data);                                              \
         array_ptr->data = new_data;                                                                     \
         array_ptr->count = count;                                                                       \
@@ -105,16 +161,19 @@ CUTILE_C_API void deallocate(allocator*, void*);
         {                                                                                   \
             resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment);   \
         }                                                                                   \
-        array_ptr->data[array_ptr->count++] = val;                                          \
+        array_ptr->data[array_ptr->count] = val;                                            \
+        array_ptr->count++;                                                                 \
     }
 
-#define array_push_empty_m(array_ptr, type)                             \
-    {                                                                   \
-        if (array_ptr->count >= array_ptr->size)                        \
-        {                                                               \
-            resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment); \
-        }                                                               \
-        return &array_ptr->data[array_ptr->count++];                    \
+#define array_push_empty_m(array_ptr, type)                                                 \
+    {                                                                                       \
+        if (array_ptr->count >= array_ptr->size)                                            \
+        {                                                                                   \
+            resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment);   \
+        }                                                                                   \
+        u32 index = array_ptr->count;                                                       \
+        array_ptr->count++;                                                                 \
+        return &array_ptr->data[index];                                                     \
     }
 
 #define array_push_repeated_macro(array_ptr, type, val, _count)                                     \
@@ -174,13 +233,13 @@ CUTILE_C_API void deallocate(allocator*, void*);
     }
 
 // Generate some array types.
-declare_array_of(s8);
-declare_array_of(u8);
-declare_array_of(s16);
-declare_array_of(u16);
-declare_array_of(s32);
-declare_array_of(u32);
-declare_array_of(s64);
-declare_array_of(u64);
+declare_array_of_m(s8);
+declare_array_of_m(u8);
+declare_array_of_m(s16);
+declare_array_of_m(u16);
+declare_array_of_m(s32);
+declare_array_of_m(u32);
+declare_array_of_m(s64);
+declare_array_of_m(u64);
 
 #endif // !CUTILE_ARRAY_H

@@ -1,18 +1,19 @@
 #ifndef CUTILE_ARRAY_HPP
 #define CUTILE_ARRAY_HPP
 
-#include "./array.h"
-#include "./memory.h"
+#include "array.h"
+#include "memory.h"
 
 template <typename T>
 struct array
 {
     T*  data;
 
-    u32 count; // In T unit.
-    u32 size;  // In T unit.
+    u32 count;     // Number of elements currently contained in the array.
+    u32 size;      // Number of elements that the array is able to contain.
 
-    u32 increment; // In T unit.
+    u32 increment; // How much more space we want to reserve each time a resize is needed.
+                   // Value is expressed in number of elements.
 
     allocator* allocator;
 };
