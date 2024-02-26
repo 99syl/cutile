@@ -14,12 +14,12 @@ typedef struct stacktrace_elem
     char*       symbol_name;
     allocator*  allocator;
 } stacktrace_elem;
-declare_array_of(stacktrace_elem);
+declare_array_of_m(stacktrace_elem);
 typedef struct stacktrace
 {
     stacktrace_elem_array calls;
 } stacktrace;
-declare_array_of(stacktrace);
+declare_array_of_m(stacktrace);
 
 stacktrace  get_stacktrace(u16 skip, u16 depth, allocator* allocator);
 void        fill_stacktrace(stacktrace* stacktrace, u16 skip, u16 depth);
