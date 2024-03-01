@@ -1,7 +1,7 @@
 #ifndef CUTILE_INI_H
 #define CUTILE_INI_H
 
-#include "./array.h"
+#include "array.h"
 
 typedef struct ini_field
 {
@@ -10,7 +10,7 @@ typedef struct ini_field
     const u8* val_start;        // Where the value starts.
     const u8* val_end;          // Where the value ends.
 } ini_field;
-declare_array_of(ini_field);
+declare_array_of_m(ini_field);
 
 typedef struct ini_section
 {
@@ -23,7 +23,7 @@ typedef struct ini_section
     
     ini_field_array fields;
 } ini_section;
-declare_array_of(ini_section);
+declare_array_of_m(ini_section);
 
 typedef struct ini_error
 {
@@ -38,18 +38,24 @@ typedef struct
     ini_section       global_section;
     ini_section_array sections;
 } parse_ini_result;
-parse_ini_result parse_ini(const u8* data, u64 data_size, allocator* allocator);
+CUTILE_C_API parse_ini_result parse_ini(const u8* data, u64 data_size, allocator* allocator);
+CUTILE_C_API void             destroy_ini_parsed_data(parse_ini_result* parsed_data);
 
 typedef struct
 {
-    bool8 found;
+    b8        found;
     const u8* value_start;
-    u64 value_size;
+    u64       value_size;
 } ini_entry_value_result;
-ini_entry_value_result get_ini_global_entry_value(const char* entry_name, const parse_ini_result* parsed_data);
-ini_entry_value_result get_ini_entry_value(const char* section_name, const char* entry_name, const parse_ini_result* parsed_data);
+CUTILE_C_API ini_entry_value_result get_ini_global_entry_value(const char* entry_name, const parse_ini_result* parsed_data);
+CUTILE_C_API ini_entry_value_result get_ini_entry_value(const char* section_name, const char* entry_name, const parse_ini_result* parsed_data);
 
-void destroy_ini_parsed_data(parse_ini_result* parsed_data);
+// Fast ini api.
+CUTILE_C_API b8 get_ini_field(u8* ini_data,
+                              u64 ini_size,
+                              const char* section_name, // NULL if no section (global section).
+                              const char* entry_name,
+                              ini_field* out);
 
 #ifdef CUTILE_IMPLEM
 
@@ -92,7 +98,7 @@ void destroy_ini_parsed_data(parse_ini_result* parsed_data);
 
             ch = state->data[state->index];
             
-            if (ch == ' ' || ch == '\t')
+            if (ch == ' ' || ch == '\t' || ch == '\r')
             {
                 ++state->index;
                 continue;
@@ -152,11 +158,15 @@ void destroy_ini_parsed_data(parse_ini_result* parsed_data);
             while (state->index < state->data_size)
             {
                 ch = state->data[state->index];
-                if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))
+
+                // Allowed characters:
+                if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                    (ch == '_'))
                 {
                     ++tok.end;
                     ++state->index;
                 }
+
                 else break;
             }
         }
@@ -344,6 +354,7 @@ void destroy_ini_parsed_data(parse_ini_result* parsed_data);
         }
     }
 
+// TODO: What happens if allocation fails ??????
     parse_ini_result parse_ini(const u8* data, u64 data_size, allocator* allocator)
     {
         parse_ini_result result;
@@ -360,7 +371,7 @@ void destroy_ini_parsed_data(parse_ini_result* parsed_data);
         return result;
     }
 
-    #include "./str.h"
+    #include "str.h"
 
     internal ini_entry_value_result get_ini_section_entry_value(const ini_section* section, const char* entry_name)
     {
@@ -416,6 +427,94 @@ void destroy_ini_parsed_data(parse_ini_result* parsed_data);
         destroy_ini_section_array(&parsed_data->sections);
     }
 
+    b8 get_ini_field(u8* ini_data,
+                     u64 ini_size,
+                     const char* section_name, // NULL if no section (global section).
+                     const char* entry_name,
+                     ini_field* out)
+    {
+        ini_parser_state state =
+        {
+            ini_data, ini_size, 0, 1
+        };
+
+        ini_parser_token tok;
+        if (section_name != nullptr)
+        {
+            u32 section_name_length = cstr_length(section_name);
+            
+            while (true)
+            {
+                tok = get_next_ini_parser_token(&state);
+                if (tok.kind == ini_parser_token_kind_end ||
+                    tok.kind == ini_parser_token_kind_unknown)
+                {
+                    return b8_false;
+                }
+                if (*tok.start == '[')
+                {
+                    tok = get_next_ini_parser_token(&state);
+                    if (tok.kind == ini_parser_token_kind_name_or_value)
+                    {
+                        // Section name length is different than the given one so this is not the good section.
+                        if (section_name_length != tok.end - tok.start + 1)
+                        {
+                            continue;
+                        }
+
+                        if (u8_memory_equals((const u8*)section_name, tok.start, section_name_length))
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        u32 entry_name_length = cstr_length(entry_name);
+        while (true)
+        {
+            tok = get_next_ini_parser_token(&state);
+            if (tok.kind == ini_parser_token_kind_end ||
+                tok.kind == ini_parser_token_kind_unknown)
+            {
+                return b8_false;
+            }
+            if (tok.kind == ini_parser_token_kind_name_or_value)
+            {
+                // Entry name size does not match so we already know it's not the good one. 
+                if (entry_name_length != tok.end - tok.start + 1)
+                {
+                    continue;
+                }
+
+                if (u8_memory_equals((const u8*)entry_name, tok.start, entry_name_length))
+                {
+                    out->name_start = tok.start;
+                    out->name_end = tok.end;
+                    tok = get_next_ini_parser_token(&state);
+                    if (tok.kind == ini_parser_token_kind_op && *tok.start == '=')
+                    {
+                        tok = get_next_ini_parser_token(&state);
+                        if (tok.kind == ini_parser_token_kind_name_or_value)
+                        {
+                            out->val_start = tok.start;
+                            out->val_end = tok.end;
+                            return b8_true;
+                        }
+                    }
+                }
+            }
+            if (section_name &&
+                tok.kind == ini_parser_token_kind_separator &&
+                *tok.start == '[')
+            {
+                return b8_false;
+            }
+        }
+
+        return b8_false;
+    }
 #endif // CUTILE_IMPLEM
 
 #endif // !CUTILE_INI_H
