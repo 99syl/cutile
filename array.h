@@ -44,22 +44,50 @@ typedef struct allocator allocator;
                                                                                                                 \
     maybe_inline void         destroy_##type##_array(type##_array* array)                                       \
     {                                                                                                           \
-        destroy_array_macro(array);                                                                             \
+        deallocate(array->allocator, array->data);                                                              \
     }                                                                                                           \
                                                                                                                 \
     maybe_inline void         destroy_##type##_array_deeply(type##_array* arr, void (*destroy_func)(type* elem))\
     {                                                                                                           \
-        destroy_array_deeply_macro(arr, destroy_func);                                                          \
+        for (u32 i = 0; i < arr->count; ++i)                                                                    \
+        {                                                                                                       \
+            destroy_func(&(arr->data[i]));                                                                      \
+        }                                                                                                       \
+        destroy_##type##_array(arr);                                                                            \
     }                                                                                                           \
                                                                                                                 \
     maybe_inline void         resize_##type##_array(type##_array* array, u32 new_size)                          \
     {                                                                                                           \
-        resize_array_macro(array, type, new_size);                                                              \
+        type* new_data = (type*)allocate(array->allocator,  sizeof(type) * new_size);                           \
+        if (new_size < array->count)                                                                            \
+        {                                                                                                       \
+            for (u32 i = 0; i < new_size; ++i)                                                                  \
+            {                                                                                                   \
+                new_data[i] = array->data[i];                                                                   \
+            }                                                                                                   \
+            array->count = new_size;                                                                            \
+        }                                                                                                       \
+        else                                                                                                    \
+        {                                                                                                       \
+            for (u32 i = 0; i < array->count; ++i)                                                              \
+            {                                                                                                   \
+                new_data[i] = array->data[i];                                                                   \
+            }                                                                                                   \
+        }                                                                                                       \
+        deallocate(array->allocator, array->data);                                                              \
+        array->data = new_data;                                                                                 \
+        array->size = new_size;                                                                                 \
     }                                                                                                           \
                                                                                                                 \
     maybe_inline void         type##_array_push(type##_array* array, type val)                                  \
     {                                                                                                           \
-        array_push_macro(array, type, val);                                                                     \
+        CUTILE_ASSERT(array->increment);                                                                        \
+        if (array->count >= array->size)                                                                        \
+        {                                                                                                       \
+            resize_##type##_array(array, array->count + array->increment);                                      \
+        }                                                                                                       \
+        array->data[array->count] = val;                                                                        \
+        array->count++;                                                                                         \
     }                                                                                                           \
                                                                                                                 \
     maybe_inline type*        type##_array_push_empty(type##_array* array)                                      \
@@ -114,13 +142,14 @@ typedef struct allocator allocator;
 
 CUTILE_C_API void* allocate(allocator*, u64);
 
-#define init_array_macro(array, data_type, _size, _increment, _allocator)   \
-{                                                                           \
-    array.data = (data_type*)allocate(allocator, sizeof(data_type) * size); \
-    array.size = _size;                                                     \
-    array.count = 0;                                                        \
-    array.increment = _increment;                                           \
-    array.allocator = _allocator;                                           \
+#define init_array_macro(array, data_type, _size, _increment, _allocator)       \
+{                                                                               \
+    CUTILE_ASSERT(_increment);                                                  \
+        array.data = (data_type*)allocate(allocator, sizeof(data_type) * size); \
+    array.size = _size;                                                         \
+    array.count = 0;                                                            \
+    array.increment = _increment;                                               \
+    array.allocator = _allocator;                                               \
 }
 
 CUTILE_C_API void deallocate(allocator*, void*);
@@ -142,21 +171,31 @@ CUTILE_C_API void deallocate(allocator*, void*);
 
 #define resize_array_macro(array_ptr, data_type, new_size)                                              \
     {                                                                                                   \
-        u32 count = new_size < array_ptr->count ? new_size : array_ptr->count;                          \
         data_type* new_data =                                                                           \
             (data_type*)allocate(array_ptr->allocator, sizeof(data_type) * new_size);                   \
-        for (u32 i = 0; i < count; ++i)                                                                 \
+        if (new_size < array_ptr->count)                                                                \
         {                                                                                               \
-            new_data[i] = array_ptr->data[i];                                                           \
+            for (u32 i = 0; i < new_size; ++i)                                                          \
+            {                                                                                           \
+                new_data[i] = array_ptr->data[i];                                                       \
+            }                                                                                           \
+            array_ptr->count = new_size;                                                                \
+        }                                                                                               \
+        else                                                                                            \
+        {                                                                                               \
+            for (u32 i = 0; i < array_ptr->count; ++i)                                                  \
+            {                                                                                           \
+                new_data[i] = array_ptr->data[i];                                                       \
+            }                                                                                           \
         }                                                                                               \
         deallocate(array_ptr->allocator, array_ptr->data);                                              \
         array_ptr->data = new_data;                                                                     \
-        array_ptr->count = count;                                                                       \
         array_ptr->size = new_size;                                                                     \
     }
 
 #define array_push_macro(array_ptr, type, val)                                              \
     {                                                                                       \
+        CUTILE_ASSERT(array_ptr->increment);                                                \
         if (array_ptr->count >= array_ptr->size)                                            \
         {                                                                                   \
             resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment);   \
@@ -167,6 +206,7 @@ CUTILE_C_API void deallocate(allocator*, void*);
 
 #define array_push_empty_m(array_ptr, type)                                                 \
     {                                                                                       \
+        CUTILE_ASSERT(array_ptr->increment);                                                \
         if (array_ptr->count >= array_ptr->size)                                            \
         {                                                                                   \
             resize_array_macro(array_ptr, type, array_ptr->count + array_ptr->increment);   \
