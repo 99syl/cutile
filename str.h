@@ -68,6 +68,15 @@ CUTILE_C_API string u32_to_str(u32, allocator* allocator);
 CUTILE_C_API string s32_to_str(s32, allocator* allocator);
 CUTILE_C_API string u64_to_str(u64, allocator* allocator);
 CUTILE_C_API string s64_to_str(s64, allocator* allocator);
+CUTILE_C_API char* u8_to_cstr(u8, allocator* allocator);
+CUTILE_C_API char* s8_to_cstr(s8, allocator* allocator);
+CUTILE_C_API char* u16_to_cstr(u16, allocator* allocator);
+CUTILE_C_API char* s16_to_cstr(s16, allocator* allocator);
+CUTILE_C_API char* u32_to_cstr(u32, allocator* allocator);
+CUTILE_C_API char* s32_to_cstr(s32, allocator* allocator);
+CUTILE_C_API char* u64_to_cstr(u64, allocator* allocator);
+CUTILE_C_API char* s64_to_cstr(s64, allocator* allocator);
+
 // nb_into_str: Pushes the number at the end of the string.
 CUTILE_C_API void u8_into_str(u8, string* out);
 CUTILE_C_API void s8_into_str(s8, string* out);
@@ -86,6 +95,8 @@ CUTILE_C_API void u32_into_sub_str(u32, string* out, u32 index);
 CUTILE_C_API void s32_into_sub_str(s32, string* out, u32 index);
 CUTILE_C_API void u64_into_sub_str(u64, string* out, u32 index);
 CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
+
+
 
 #ifdef CUTILE_CPP
     template <typename IntegerType>
@@ -143,6 +154,8 @@ typedef struct string_view
     (string_view{.data = str_array, .count = sizeof(str_array)/sizeof(s8)})
 #define create_string_view_from_str_m(str)      \
     (string_view{.data = str.data, .count = str.count})
+
+CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
 
 #ifdef CUTILE_IMPLEM
 
@@ -414,6 +427,220 @@ typedef struct string_view
         s64_into_sub_str(nb, &s, 0);
         return s;
     }
+
+#define unsigned_nb_to_cstr_m(digits, nb, allocator, out)      \
+    {                                                          \
+        out = allocate_many_m(allocator, char, digits+1);      \
+        out[digits] = '\0';                                    \
+        for (u32 i = digits; i > 0; --i)                       \
+        {                                                      \
+            out[i - 1] = nb % 10 + '0';                        \
+            nb /= 10;                                          \
+        }                                                      \
+        return out;                                            \
+    }
+
+#define signed_nb_to_cstr_m(digits, neg, nb, allocator, out)            \
+    {                                                                   \
+        u32 shift;                                                      \
+        if (neg)                                                        \
+        {                                                               \
+            out = allocate_many_m(allocator, char, digits+2);           \
+            out[0] = '-';                                               \
+            shift = 1;                                                  \
+            out[digits+1] = '\0';                                       \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            out = allocate_many_m(allocator, char, digits+1);           \
+            shift = 0;                                                  \
+        }                                                               \
+        for (u32 i = digits; i > 0; --i)                                \
+        {                                                               \
+            out[i - 1 + shift] = nb % 10 + '0';                         \
+            nb /= 10;                                                   \
+        }                                                               \
+        return out;                                                     \
+    }
+
+    force_inline s32 _u8_to_str_get_u8_digits(u8 nb)
+    {
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        return 3;
+    }
+    
+    force_inline s32 _s8_to_str_get_s8_digits(s8 nb)
+    {
+        if (nb < 0) nb == s8_min ? s8_max : -nb;
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        return 3;
+    }
+    
+    force_inline s32 _u16_to_str_get_u16_digits(u16 nb)
+    {
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        if (nb < 1000) return 3;
+        if (nb < 10000) return 4;
+        return 5;
+    }
+    
+    force_inline s32 _s16_to_str_get_s16_digits(s16 nb)
+    {
+        if (nb < 0) nb == s16_min ? s16_max : -nb;
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        if (nb < 1000) return 3;
+        if (nb < 10000) return 4;
+        return 5;
+    }
+    
+    force_inline s32 _u32_to_str_get_u32_digits(u32 nb)
+    {
+        if (nb < 10) return 1;
+        else if (nb < 100) return 2;
+        else if (nb < 1000) return 3;
+        else if (nb < 10000) return 4;
+        else if (nb < 100000) return 5;
+        else if (nb < 1000000) return 6;
+        else if (nb < 10000000) return 7;
+        else if (nb < 100000000) return 8;
+        else if (nb < 1000000000) return 9;
+        return 10;
+    }
+    
+    force_inline s32 _s32_to_str_get_s32_digits(s32 nb)
+    {
+        if (nb < 0) nb == s32_min ? s32_max : -nb;
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        if (nb < 1000) return 3;
+        if (nb < 10000) return 4;
+        if (nb < 100000) return 5;
+        if (nb < 1000000) return 6;
+        if (nb < 10000000) return 7;
+        if (nb < 100000000) return 8;
+        if (nb < 1000000000) return 9;
+        return 10;
+    }
+    
+    force_inline s64 _u64_to_str_get_u64_digits(u64 nb)
+    {
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        if (nb < 1000) return 3;
+        if (nb < 10000) return 4;
+        if (nb < 100000) return 5;
+        if (nb < 1000000) return 6;
+        if (nb < 10000000) return 7;
+        if (nb < 100000000) return 8;
+        if (nb < 1000000000) return 9;
+        if (nb < 10000000000) return 11;
+        if (nb < 100000000000) return 12;
+        if (nb < 1000000000000) return 13;
+        if (nb < 10000000000000) return 14;
+        if (nb < 100000000000000) return 15;
+        if (nb < 1000000000000000) return 16;
+        if (nb < 10000000000000000) return 17;
+        if (nb < 100000000000000000) return 18;
+        if (nb < 1000000000000000000) return 19;
+        return 20;
+    }
+    
+    force_inline s64 _s64_to_str_get_s64_digits(s64 nb)
+    {
+        if (nb < 0) nb == s64_min ? s64_max : -nb;
+        if (nb < 10) return 1;
+        if (nb < 100) return 2;
+        if (nb < 1000) return 3;
+        if (nb < 10000) return 4;
+        if (nb < 100000) return 5;
+        if (nb < 1000000) return 6;
+        if (nb < 10000000) return 7;
+        if (nb < 100000000) return 8;
+        if (nb < 1000000000) return 9;
+        if (nb < 10000000000) return 11;
+        if (nb < 100000000000) return 12;
+        if (nb < 1000000000000) return 13;
+        if (nb < 10000000000000) return 14;
+        if (nb < 100000000000000) return 15;
+        if (nb < 1000000000000000) return 16;
+        if (nb < 10000000000000000) return 17;
+        if (nb < 100000000000000000) return 18;
+        if (nb < 1000000000000000000) return 19;
+        return 20;
+    }
+
+    char* u8_to_cstr(u8 nb, allocator* allocator)
+    {
+        s32 digits = _u8_to_str_get_u8_digits(nb);
+        char* result;
+        unsigned_nb_to_cstr_m(digits, nb, allocator, result);
+        return result;
+    }
+
+    char* s8_to_cstr(s8 nb, allocator* allocator)
+    {
+        s32 digits = _s8_to_str_get_s8_digits(nb);
+        b8 neg = nb < 0;
+        char* result;
+        signed_nb_to_cstr_m(digits, neg, nb, allocator, result);
+        return result;
+    }
+
+    char* u16_to_cstr(u16 nb, allocator* allocator)
+    {
+        s32 digits = _u16_to_str_get_u16_digits(nb);
+        char* result;
+        unsigned_nb_to_cstr_m(digits, nb, allocator, result);
+        return result;
+    }
+
+    char* s16_to_cstr(s16 nb, allocator* allocator)
+    {
+        s32 digits = _s16_to_str_get_s16_digits(nb);
+        b8 neg = nb < 0;
+        char* result;
+        signed_nb_to_cstr_m(digits, neg, nb, allocator, result);
+        return result;
+    }
+
+    char* u32_to_cstr(u32 nb, allocator* allocator)
+    {
+        s32 digits = _u32_to_str_get_u32_digits(nb);
+        char* result;
+        unsigned_nb_to_cstr_m(digits, nb, allocator, result);
+        return result;
+    }
+
+    char* s32_to_cstr(s32 nb, allocator* allocator)
+    {
+        s32 digits = _s32_to_str_get_s32_digits(nb);
+        b8 neg = nb < 0;
+        char* result;
+        signed_nb_to_cstr_m(digits, neg, nb, allocator, result);
+        return result;
+    }
+
+    char* u64_to_cstr(u64 nb, allocator* allocator)
+    {
+        s32 digits = _u64_to_str_get_u64_digits(nb);
+        char* result;
+        unsigned_nb_to_cstr_m(digits, nb, allocator, result);
+        return result;
+    }
+
+    char* s64_to_cstr(s64 nb, allocator* allocator)
+    {
+        s32 digits = _s64_to_str_get_s64_digits(nb);
+        b8 neg = nb < 0;
+        char* result;
+        signed_nb_to_cstr_m(digits, neg, nb, allocator, result);
+        return result;
+    }
+    
     void u8_into_str(u8 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
     void s8_into_str(s8 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
     void u16_into_str(u16 nb, string* out) { u64_into_sub_str(nb, out, out->count); }
@@ -533,6 +760,19 @@ typedef struct string_view
         return result;
     }
 
+    b8 str_view_equals_cstr(string_view* lhs, const char* rhs)
+    {
+        u32 rhs_length = cstr_length(rhs);
+
+        if (lhs->count != rhs_length) return b8_false;
+
+        for (u32 i = 0; i < rhs_length; ++i)
+        {
+            if (rhs[i] != lhs->data[i]) return b8_false;
+        }
+        return b8_true;
+    }
+
     #ifdef CUTILE_CPP
         template <>
         void format_arg_into_str<u64>(string* out, u64 arg)
@@ -598,6 +838,11 @@ typedef struct string_view
         void format_arg_into_str<string>(string* out, string arg)
         {
             format_arg_into_str(out, &arg);
+        }
+        template <>
+        void format_arg_into_str<string_view>(string* out, string_view arg)
+        {
+            // TODO: Implement
         }
         template <>
         void format_arg_into_str<void*>(string* out, void* arg)
