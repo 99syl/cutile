@@ -96,7 +96,24 @@ maybe_inline void destroy_array_deeply(array<T>* array, void(*destroy_elem_func)
 template <typename T>
 maybe_inline void resize_array(array<T>* array, u32 new_size)
 {
-    resize_array_macro(array, T, new_size);
+    T* new_data = allocate_many_m(array->allocator, T, new_size);
+    if (new_size < array->count)
+    {
+        for (u32 i = 0; i < new_size; ++i)
+        {
+            new_data[i] = array->data[i];
+        }
+        array->count = new_size;
+    }
+    else
+    {
+        for (u32 i = 0; i < array->count; ++i)
+        {
+            new_data[i] = array->data[i];
+        }
+    }
+    array->data = new_data;
+    array->size = new_size;
 }
 
 template <typename T>
@@ -112,15 +129,31 @@ maybe_inline void array_push_repeated(array<T>* array, T val, u32 count)
 }
 
 template <typename T>
-maybe_inline void array_push_buffer(array<T>* array, const T* buf, u32 n)
+maybe_inline void array_push_buffer(array<T>* out, const T* buf, u32 n)
 {
-    array_push_buffer_macro(array, T, buf, n);
+    if (out->count + n > out->size)
+    {
+        resize_array(out, out->size + n);
+    }
+    for (u32 i = 0; i < n; ++i)
+    {
+        out->data[out->count] = buf[i];
+        out->count++;
+    }
 }
 
 template <typename T>
-maybe_inline void array_push_array(array<T>* out, array<T>* in)
+maybe_inline void array_push_array(array<T>* out, const array<T>* in)
 {
-    array_push_array_macro(out, T, in);
+    if (out->count + in->count > out->size)
+    {
+        resize_array(out, out->size + in->count);
+    }
+    for (u32 i = 0; i < in->count; ++i)
+    {
+        out->data[out->count] = in->data[i];
+        out->count++;
+    }
 }
 
 template <typename T>
