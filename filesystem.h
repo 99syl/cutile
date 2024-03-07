@@ -55,10 +55,15 @@ CUTILE_C_API b8  get_file_size_from_path(const char* path, u64* out);
 CUTILE_C_API char* get_current_executable_path(allocator* allocator);
 CUTILE_C_API char* get_current_executable_dir_path(allocator* allocator);
 
-CUTILE_C_API char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator);
-CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, const char* rhs, const char* out);
+CUTILE_C_API void  concat_file_paths_into_cstr(const char* lhs, u32 lsize, const char* rhs, u32 rsize, const char* out);
+CUTILE_C_API char* concat_cstr_file_paths(const char* lhs, const char* rhs, allocator* allocator);
 
-// Returns the last element of a path.
+// Defined in str.h.
+typedef struct string_view string_view;
+
+CUTILE_C_API char* concat_str_view_file_paths(string_view lhs, string_view rhs, allocator*);
+
+// Returns a pointer to the last element of a path.
 // Elements are separated by path separators: '\' for Windows and '/' for Unix.
 CUTILE_C_API const char* get_last_path_element(const char* path);
 
@@ -168,7 +173,14 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         
             if (out->handle == INVALID_HANDLE_VALUE) return b8_false;
             return b8_true;
-        }
+        } // _WIN32
+        #elif defined(__unix__) || defined(__APPLE__)
+        {
+            s64 fd = open(path, flags | O_CREAT);
+            if (fd == -1) return b8_false;
+            out->handle = (void*)fd;
+            return b8_true;
+        } // __unix__ || __APPLE__
         #endif
     }
 
@@ -286,10 +298,8 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #endif
     }
     
-    void concat_file_paths_into_cstr(const char* lhs, const char* rhs, char* out)
+    void concat_file_paths_into_cstr(const char* lhs, u32 lsize, const char* rhs, u32 rsize, char* out)
     {
-        u32 lsize = cstr_length(lhs);
-        u32 rsize = cstr_length(rhs);
         copy_s8_memory(out, lhs, lsize);
         #ifdef _WIN32
             out[lsize] = '\\';
@@ -302,31 +312,28 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         out[lsize + rsize + 1] = '\0';
     }
 
-    char* concat_file_paths(const char* lhs, const char* rhs, allocator* allocator)
+    char* concat_cstr_file_paths(const char* lhs, const char* rhs, allocator* allocator)
     {
         u32 lsize = cstr_length(lhs);
         u32 rsize = cstr_length(rhs);
         char* result = (char*)allocate(allocator, sizeof(char) * (lsize + rsize + 2));
-        concat_file_paths_into_cstr(lhs, rhs, result);
+        concat_file_paths_into_cstr(lhs, lsize, rhs, rsize, result);
+        return result;
+    }
+
+    char* concat_str_view_file_paths(string_view lhs, string_view rhs, allocator* allocator)
+    {
+        char* result = allocate_many_m(allocator, char, lhs.count + rhs.count + 2);
+        concat_file_paths_into_cstr(lhs.data, lhs.count, rhs.data, rhs.count, result);
         return result;
     }
 
     const char* get_last_path_element(const char* path)
     {
-        persist char path_separator;
-        #if defined(_WIN32)
-        {
-            path_separator = '\\';
-        }
-        #elif defined(__unix__)
-        {
-            path_separator = '/';
-        }
-        #endif
         const char* saved = path;
         while (*path)
         {
-            if (*path == path_separator) saved = path;
+            if (*path == '/' || *path == '\\') saved = path;
             ++path;
         }
         return saved;
