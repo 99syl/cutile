@@ -176,6 +176,13 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         } // _WIN32
         #elif defined(__unix__) || defined(__APPLE__)
         {
+            int flags = 0;
+            switch (access_mode)
+            {
+                case file_access_mode_read: flags = O_RDONLY; break;
+                case file_access_mode_write: flags = O_WRONLY; break;
+                case file_access_mode_read_write: flags = O_RDWR; break;
+            }
             s64 fd = open(path, flags | O_CREAT);
             if (fd == -1) return b8_false;
             out->handle = (void*)fd;
