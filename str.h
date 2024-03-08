@@ -472,7 +472,7 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
     
     force_inline s32 _s8_to_str_get_s8_digits(s8 nb)
     {
-        if (nb < 0) nb == s8_min ? s8_max : -nb;
+        if (nb < 0) nb = nb == s8_min ? s8_max : -nb;
         if (nb < 10) return 1;
         if (nb < 100) return 2;
         return 3;
@@ -489,7 +489,7 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
     
     force_inline s32 _s16_to_str_get_s16_digits(s16 nb)
     {
-        if (nb < 0) nb == s16_min ? s16_max : -nb;
+        if (nb < 0) nb = nb == s16_min ? s16_max : -nb;
         if (nb < 10) return 1;
         if (nb < 100) return 2;
         if (nb < 1000) return 3;
@@ -513,7 +513,7 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
     
     force_inline s32 _s32_to_str_get_s32_digits(s32 nb)
     {
-        if (nb < 0) nb == s32_min ? s32_max : -nb;
+        if (nb < 0) nb = nb == s32_min ? s32_max : -nb;
         if (nb < 10) return 1;
         if (nb < 100) return 2;
         if (nb < 1000) return 3;
@@ -551,7 +551,7 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
     
     force_inline s64 _s64_to_str_get_s64_digits(s64 nb)
     {
-        if (nb < 0) nb == s64_min ? s64_max : -nb;
+        if (nb < 0) nb = nb == s64_min ? s64_max : -nb;
         if (nb < 10) return 1;
         if (nb < 100) return 2;
         if (nb < 1000) return 3;
