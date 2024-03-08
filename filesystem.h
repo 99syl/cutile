@@ -64,7 +64,7 @@ typedef struct string_view string_view;
 CUTILE_C_API char* concat_str_view_file_paths(string_view lhs, string_view rhs, allocator*);
 
 // Returns a pointer to the last element of a path.
-// Elements are separated by path separators: '\' for Windows and '/' for Unix.
+// Elements can be separated by path separators '\' or '/'.
 CUTILE_C_API const char* get_last_path_element(const char* path);
 
 // Returns the extension of the filename without the '.' (e.g. "txt", "wav", ...etc).
@@ -79,14 +79,16 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
     #elif defined(__unix__) || defined(__APPLE__)
         #include <unistd.h>
         #include <fcntl.h>
+        #include <sys/stat.h>
+        #include <limits.h>
     #endif
 
-    #include "./str.h"
+    #include "str.h"
 
     b8 file_exists(string* path)
     {
         char* cpath = create_cstr_from_str(path, path->allocator);
-        bool8 res = file_exists_cstr(cpath);
+        b8 res = file_exists_cstr(cpath);
         deallocate(path->allocator, cpath);
         return res;
     }
@@ -96,6 +98,10 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributesA(path);
             return (dwAttrib != INVALID_FILE_ATTRIBUTES);
+        #elif defined(__unix__) || defined(__APPLE__)
+            return access(path, F_OK) != -1;
+        #else
+            #error "Unsupported platform."
         #endif
     }
 
@@ -111,6 +117,13 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
         #ifdef _WIN32
             DWORD dwAttrib = GetFileAttributesA(path);
             return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+        #elif defined(__unix__) || defined (__APPLE__)
+            struct stat info;
+            if (stat(path, &info) == -1) return b8_false;
+            if (S_ISDIR(info.st_mode)) return b8_true;
+            return b8_false;
+        #else
+            #error "Unsupported platform."
         #endif
     }
 
@@ -284,25 +297,35 @@ CUTILE_C_API const char* get_filename_extension(const char* file_path);
             DWORD path_len = GetModuleFileNameA(NULL, tmp, MAX_PATH);
             DWORD err = GetLastError();
             if (err == ERROR_INSUFFICIENT_BUFFER || !path_len) return nullptr;
-            char* result = (char*)allocate(allocator, sizeof(char) * path_len + 1);
-            copy_s8_memory(result, tmp, path_len);
-            result[path_len] = '\0';
-            return result;
+
+        #elif defined(__unix__) || defined(__APPLE__)
+            char tmp[PATH_MAX];
+            char cwd[PATH_MAX];
+            if (getcwd(cwd, sizeof(cwd)) == nullptr) return nullptr;
+            u32 path_len = readlink("/proc/self/exe", tmp, sizeof(tmp));
+            if (path_len == -1) return nullptr;
+            
+        #else
+            #error "read_from_file: Unsupported platform"
         #endif
+
+        char* result = (char*)allocate(allocator, sizeof(char) * path_len + 1);
+        copy_s8_memory(result, tmp, path_len);
+        result[path_len] = '\0';
+        return result;
     }
+
     char* get_current_executable_dir_path(allocator* allocator)
     {
         char* exe_path = get_current_executable_path(allocator);
-        #ifdef _WIN32
-            u32 last_sep_index = 0;
-            for (u32 i = 0; exe_path[i]; ++i)
-            {
-                if (exe_path[i] == '\\') last_sep_index = i;
-            }
-            char* exe_dir = create_cstr_from_sub_cstr(exe_path, 0, last_sep_index, allocator);
-            deallocate(allocator, exe_path);
-            return exe_dir;
-        #endif
+        u32 last_sep_index = 0;
+        for (u32 i = 0; exe_path[i]; ++i)
+        {
+            if (exe_path[i] == '\\' || exe_path[i] == '/') last_sep_index = i;
+        }
+        char* exe_dir = create_cstr_from_sub_cstr(exe_path, 0, last_sep_index, allocator);
+        deallocate(allocator, exe_path);
+        return exe_dir;
     }
     
     void concat_file_paths_into_cstr(const char* lhs, u32 lsize, const char* rhs, u32 rsize, char* out)
