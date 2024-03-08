@@ -14,7 +14,7 @@
         #error "Only C11 and next versions are supported by cutile."
     #endif
 #else
-    #error "Compiler could not tell if this is C or C++. Please define yourself CUTILE_CPP or CUTILE_C."
+    #error "cutile could not tell if this is C or C++. Please define yourself CUTILE_CPP or CUTILE_C."
 #endif // CUTILE_C
 
 #ifdef _WIN32
