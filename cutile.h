@@ -15,7 +15,7 @@
     #endif
 #else
     #error "cutile could not tell if this is C or C++. Please define yourself CUTILE_CPP or CUTILE_C."
-#endif // CUTILE_C
+#endif
 
 #ifdef _WIN32
     #define CUTILE_API_SL_EXPORT __declspec(dllexport)
