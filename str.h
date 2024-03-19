@@ -96,8 +96,6 @@ CUTILE_C_API void s32_into_sub_str(s32, string* out, u32 index);
 CUTILE_C_API void u64_into_sub_str(u64, string* out, u32 index);
 CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 
-
-
 #ifdef CUTILE_CPP
     template <typename IntegerType>
     CUTILE_CPP_API string nb_to_str(IntegerType val, allocator* = &global_default_heap_allocator);
