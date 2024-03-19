@@ -29,7 +29,7 @@
 #endif
 
 // numeric types:
-
+///////////////////////////////////////////////////////
 typedef char            s8;
 typedef unsigned char   u8;
 
@@ -67,6 +67,7 @@ typedef u8  bool8;
 typedef u8  b8;
 typedef u32 bool32;
 typedef u32 b32;
+///////////////////////////////////////////////////////
 
 CUTILE_C_API void exit_process(unsigned int);
 CUTILE_C_API void println_cstr(const char* cstr);
@@ -98,6 +99,9 @@ CUTILE_C_API void println_cstr(const char* cstr);
         U _2;
     };
 #endif
+
+// field_offset
+#define field_offset(type, member) ((u64)(&((type*)0x0)->member))
 
 #define stringify_m(x) stringify2_m(x)
 #define stringify2_m(x) #x
