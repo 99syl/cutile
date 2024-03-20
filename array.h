@@ -2,13 +2,14 @@
 #define CUTILE_ARRAY_H
 
 #include "num_types.h"
+#include "memory.h"
 
 // Deprecated, use fixed_array_length_m instead.
 #define fixed_array_length(arr) (sizeof(arr)/sizeof(arr[0]))
 
 #define fixed_array_length_m(arr) (sizeof(arr)/sizeof(arr[0]))
 
-typedef struct allocator allocator;
+#define array_m(type) type##_array
 
 // Generates an array struct of the given type.
 // Calling declare_array_of_m(type) macro will generate the following API:
@@ -281,5 +282,7 @@ declare_array_of_m(s32);
 declare_array_of_m(u32);
 declare_array_of_m(s64);
 declare_array_of_m(u64);
+
+declare_array_of_m(u8_memory_view);
 
 #endif // !CUTILE_ARRAY_H
