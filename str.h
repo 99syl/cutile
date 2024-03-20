@@ -16,7 +16,7 @@ typedef struct string
 CUTILE_C_API string create_empty_str(allocator* allocator);
 CUTILE_C_API string create_str_from_cstr(const char* cstr, allocator* allocator);
 CUTILE_C_API string copy_str(const string* original, allocator* allocator);
-CUTILE_C_API string create_str_from_ascii_buf(const s8* buf, u32 buf_len, allocator* allocator);
+CUTILE_C_API string create_str_from_buf(const u8* buf, u32 buf_len, allocator* allocator);
 
 CUTILE_C_API void destroy_str(string* str);
 
@@ -27,6 +27,7 @@ CUTILE_C_API void str_push_back_u8(string* str, u8 c);
 CUTILE_C_API void str_insert(string* str, u32 index, u32 c);
 CUTILE_C_API void str_push_back_str(string* str, const string* rhs);
 CUTILE_C_API void str_push_back_cstr(string* str, const char* rhs);
+CUTILE_C_API void str_push_back_buf(string* str, u8* buf, u64 buf_size);
 CUTILE_C_API void str_pop_back(string* str);
 
 CUTILE_C_API void reverse_str(string* str);
@@ -130,6 +131,8 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
     template <> CUTILE_CPP_API void format_arg_into_str<s64>(string*, s64);
     template <> CUTILE_CPP_API void format_arg_into_str<const char*>(string*, const char*);
     template <> CUTILE_CPP_API void format_arg_into_str<char*>(string*, char*);
+    template <> CUTILE_CPP_API void format_arg_into_str<string>(string*, string);
+    template <> CUTILE_CPP_API void format_arg_into_str<string*>(string*, string*);
 #endif // CUTILE_CPP
 
 CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
@@ -191,10 +194,10 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
         return s;
     }
 
-    string create_str_from_ascii_buf(const s8* buf, u32 buf_len, allocator* allocator)
+    string create_str_from_buf(const u8* buf, u32 buf_len, allocator* allocator)
     {
         string s;
-        s.data = dump_u8_memory((u8*)buf, buf_len, allocator);
+        s.data = dump_u8_memory(buf, buf_len, allocator);
         s.count = buf_len;
         s.size = s.count;
         s.allocator = allocator;
@@ -280,6 +283,14 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
         copy_u8_memory(str->data + str->count, (u8*)rhs, rlen);
         str->count += rlen;
     }
+
+    void str_push_back_buf(string* str, u8* buf, u64 buf_size)
+    {
+        if (str->count + buf_size >= str->size) resize_str(str, str->size + buf_size);
+        copy_u8_memory(str->data + str->count, buf, buf_size);
+        str->count += buf_size;
+    }
+
     void str_pop_back(string* str)
     {
         str->count--;
