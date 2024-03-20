@@ -44,6 +44,7 @@ CUTILE_C_API void       destroy_hash_table(hash_table* hash_table);
 // Call might fail if allocation fails, return nullptr in that case.
 // Returns a pointer to the value stored in the inserted hash_table_entry otherwise.
 // If the key is already emplaced, this call will not change the state of the given hash_table.
+// The key content is copied so you can do whatever you want with it after this call.
 CUTILE_C_API u8*        hash_table_emplace(hash_table* hash_table, u8* key, u64 key_length);
 
 // Returns false if the entry could not be removed because the key has not been found.
@@ -116,10 +117,11 @@ CUTILE_C_API void       hash_table_for_each_entry(hash_table* hash_table,
             head = &entry->next;
         }
 
-        hash_table_entry* new_entry = (hash_table_entry*)allocate(hash_table->allocator, sizeof(hash_table_entry) + hash_table->value_size_in_bytes);
+        hash_table_entry* new_entry = (hash_table_entry*)allocate(hash_table->allocator, sizeof(hash_table_entry) + hash_table->value_size_in_bytes + key_length);
         if (new_entry == nullptr) return nullptr;
         new_entry->key_length = key_length;
-        new_entry->key = key;
+        new_entry->key = ((u8*)new_entry) + sizeof(hash_table_entry) + hash_table->value_size_in_bytes;
+        copy_u8_memory(new_entry->key, key, key_length);
         new_entry->value = (u8*)new_entry + sizeof(hash_table_entry);
         new_entry->next = nullptr;
         *head = new_entry;
@@ -168,6 +170,20 @@ CUTILE_C_API void       hash_table_for_each_entry(hash_table* hash_table,
             head = &entry->next;
         }
         return nullptr;
+    }
+
+    void hash_table_for_each_entry(hash_table* hash_table,
+                                   void (*call)(hash_table_entry* entry))
+    {
+        for (u32 i = 0; i < hash_table->size; ++i)
+        {
+            hash_table_entry* head = hash_table->entries[i];
+            while (head != nullptr)
+            {
+                call(head);
+                head = head->next;
+            }
+        }
     }
 
 #endif // CUTILE_IMPLEM
