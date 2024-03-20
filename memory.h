@@ -1,7 +1,7 @@
 #ifndef CUTILE_MEMORY_H
 #define CUTILE_MEMORY_H
 
-#include "./num_types.h"
+#include "num_types.h"
 
 CUTILE_C_API void fill_u8_memory(u8* data, u32 count, u8 value);
 CUTILE_C_API void fill_s8_memory(s8* data, u32 count, s8 value);
@@ -20,6 +20,8 @@ CUTILE_C_API void copy_u32_memory(u32* data, const u32* in, u32 count);
 CUTILE_C_API void copy_s32_memory(s32* data, const s32* in, u32 count);
 CUTILE_C_API void copy_u64_memory(u64* data, const u64* in, u32 count);
 CUTILE_C_API void copy_s64_memory(s64* data, const s64* in, u32 count);
+CUTILE_C_API void copy_f32_memory(f32* data, const f32* in, u32 count);
+CUTILE_C_API void copy_f64_memory(f64* data, const f64* in, u32 count);
 
 CUTILE_C_API void reverse_u8_memory(u8* data, u32 count);
 CUTILE_C_API void reverse_s8_memory(s8* data, u32 count);
@@ -39,6 +41,8 @@ CUTILE_C_API bool8 s32_memory_equals(const s32* lhs, const s32* rhs, u32 count);
 CUTILE_C_API bool8 u64_memory_equals(const u64* lhs, const u64* rhs, u32 count);
 CUTILE_C_API bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
 
+CUTILE_C_API b8 memory_equals(u8* lhs, u64 lhs_size, u8* rhs, u64 rhs_size);
+
 // Size is in data_type size unit.
 #define declare_memory_view_of_m(data_type)      \
     typedef struct data_type##_memory_view       \
@@ -46,6 +50,8 @@ CUTILE_C_API bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
         const data_type*    data;                \
         u64                 size;                \
     } data_type##_memory_view;                   \
+
+#define memory_view_m(data_type) data_type##_memory_view
 
 declare_memory_view_of_m(s8);
 declare_memory_view_of_m(u8);
@@ -56,11 +62,11 @@ declare_memory_view_of_m(u32);
 declare_memory_view_of_m(s64);
 declare_memory_view_of_m(u64);
 
-#define memory_view_from_fixed_size_array_m(arr)                         \
-    {                                                                   \
-        .data = arr,                                                    \
-            .size = fixed_array_length_m(arr)                           \
-            };                                                          \
+#define memory_view_from_fixed_size_array_m(arr)                \
+    {                                                           \
+        .data = arr,                                            \
+        .size = fixed_array_length_m(arr)                       \
+    };                                                          \
     
 // Performs allocations/deallocations with the current process' default heap. (e.g. GetProcessHeap() on Win32).
 CUTILE_C_API void* default_heap_allocate(u64 size);
@@ -68,6 +74,23 @@ CUTILE_C_API void  default_heap_deallocate(void* ptr);
 
 CUTILE_C_API void* heap_allocate(void* heap, u64 size);
 CUTILE_C_API void  heap_deallocate(void* heap, void* ptr);
+
+typedef struct arena
+{
+    u8* buffer;         // buffer must remain valid during the lifetime of the arena.
+    u64 buffer_size;
+    u64 offset;
+} arena;
+
+// create_arena and reset_arena always succeed.
+CUTILE_C_API arena create_arena(u8* buffer, u64 buffer_size);
+CUTILE_C_API void  reset_arena(arena* arena);
+
+// Returns nullptr when this function fails, returns a valid pointer otherwise.
+// Fails if arena.offset + size > arena.buffer_size.
+CUTILE_C_API void* arena_allocate(arena* arena, u64 size);
+
+CUTILE_C_API void  arena_free(arena* arena, void* ptr);    // Does nothing.
 
 typedef struct allocator
 {
@@ -77,7 +100,7 @@ typedef struct allocator
 } allocator;
 
 CUTILE_C_API void* allocate(allocator* allocator, u64 size);
-CUTILE_C_API void deallocate(allocator* allocator, void* ptr);
+CUTILE_C_API void  deallocate(allocator* allocator, void* ptr);
 
 #define allocate_m(allocator, T) (T*)(allocate(allocator, sizeof(T)))
 #define allocate_many_m(allocator, T, count) (T*)(allocate(allocator, sizeof(T)*count))
@@ -114,23 +137,22 @@ CUTILE_C_API s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
         allocation_info_array   infos;
         u64                     total_allocated;
         u64                     total_freed;
-        allocator*              allocator; // This allocator will be used to allocate data inside `add_new_alloc_info` or `try_remove_alloc_info`.
+        void                    (*bad_free_handler)(allocation_info* alloc_info);
+        
+        allocator*              allocator; // This allocator will be used to allocate data required to store any allocation info.
+                                           // You have to provide it yourself.
+
     } allocation_table;
 
     CUTILE_C_API allocation_table create_allocation_table(allocator* allocator);
-    CUTILE_C_API void destroy_allocation_table(allocation_table* tbl);
+    CUTILE_C_API void             destroy_allocation_table(allocation_table* tbl);
 
+    // Call these in your custom allocator to update allocation table informations.
     CUTILE_C_API void    add_new_alloc_info(allocation_table* alloc_table, void* allocation_address, u64 size);
     CUTILE_C_API b8      try_remove_alloc_info(allocation_table* alloc_table, void* allocation_address);
     
     CUTILE_C_API allocation_table global_allocation_table;
     CUTILE_C_API void init_global_allocation_table();
-#else // !CUTILE_ALLOCATOR_ANALYZER
-    #define create_allocation_table(a)
-    #define destroy_allocation_table(a)
-    #define add_new_alloc_info(a, b, c)
-    #define try_remove_alloc_info(a, b)
-    #define init_global_allocation_table()
 #endif
 
 CUTILE_C_API allocator create_heap_allocator(void* heap);
@@ -208,6 +230,14 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         for (u32 i = 0; i < count; ++i) data[i] = in[i];
     }
     void copy_s64_memory(s64* data, const s64* in, u32 count)
+    {
+        for (u32 i = 0; i < count; ++i) data[i] = in[i];
+    }
+    void copy_f32_memory(f32* data, const f32* in, u32 count)
+    {
+        for (u32 i = 0; i < count; ++i) data[i] = in[i];
+    }
+    void copy_f64_memory(f64* data, const f64* in, u32 count)
     {
         for (u32 i = 0; i < count; ++i) data[i] = in[i];
     }
@@ -342,6 +372,16 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         return bool8_true;
     }
 
+    b8 memory_equals(u8* lhs, u64 lhs_size, u8* rhs, u64 rhs_size)
+    {
+        if (lhs_size != rhs_size) return b8_false;
+        for (u32 i = 0; i < rhs_size; ++i)
+        {
+            if (lhs[i] != rhs[i]) return b8_false;
+        }
+        return b8_true;
+    }
+
     void* default_heap_allocate(u64 size)
     {
         #ifdef _WIN32
@@ -358,6 +398,30 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
             heap_deallocate(nullptr, ptr); // TODO: Implement for other platforms.
         #endif
     }
+
+    arena create_arena(u8* buffer, u64 buffer_size)
+    {
+        arena result =
+        {
+            buffer, buffer_size, 0
+        };
+        return result;
+    }
+    
+    void reset_arena(arena* arena)
+    {
+        arena->offset = 0;
+    }
+
+    void* arena_allocate(arena* arena, u64 size)
+    {
+        if (arena->offset + size >= arena->buffer_size) return nullptr;
+        void* ptr = arena->buffer + arena->offset;
+        arena->offset += size;
+        return ptr;
+    }
+
+    void arena_free(arena*, void*) { }
 
     u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator)
     {
@@ -551,6 +615,8 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         };
         return res;
     }
+
+
 
     allocator global_default_heap_allocator;
     void initialize_global_default_heap_allocator() { global_default_heap_allocator = create_default_heap_allocator(); }
