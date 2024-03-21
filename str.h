@@ -38,6 +38,29 @@ CUTILE_C_API bool8 str_equals_cstr(const string* str, const char* cstr);
 CUTILE_C_API bool8 str_begins_with(const string* str, const char* val);
 CUTILE_C_API bool8 str_ends_with(const string* str, const char* val);
 
+CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
+CUTILE_C_API char* create_cstr_from_cstr(const char* cstr, allocator* allocator);
+CUTILE_C_API char* create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, allocator* allocator);
+
+CUTILE_C_API u32 cstr_length(const char* cstr);
+
+CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
+
+CUTILE_C_API char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator);
+
+typedef struct string_view
+{
+    const char* data;
+    u64         count;
+} string_view;
+
+#define create_string_view_m(str_array)                                 \
+    (string_view{.data = str_array, .count = sizeof(str_array)/sizeof(s8)})
+#define create_string_view_from_str_m(str)      \
+    (string_view{.data = str.data, .count = str.count})
+
+CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
+
 CUTILE_C_API u8 sub_str_to_u8(const string* s, u32 offset, u32 count);
 CUTILE_C_API s8 sub_str_to_s8(const string* s, u32 offset, u32 count);
 CUTILE_C_API u16 sub_str_to_u16(const string* s, u32 offset, u32 count);
@@ -133,30 +156,9 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
     template <> CUTILE_CPP_API void format_arg_into_str<char*>(string*, char*);
     template <> CUTILE_CPP_API void format_arg_into_str<string>(string*, string);
     template <> CUTILE_CPP_API void format_arg_into_str<string*>(string*, string*);
+    template <> CUTILE_CPP_API void format_arg_into_str<string_view>(string*, string_view);
+    template <> CUTILE_CPP_API void format_arg_into_str<string_view*>(string*, string_view*);
 #endif // CUTILE_CPP
-
-CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
-CUTILE_C_API char* create_cstr_from_cstr(const char* cstr, allocator* allocator);
-CUTILE_C_API char* create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, allocator* allocator);
-
-CUTILE_C_API u32 cstr_length(const char* cstr);
-
-CUTILE_C_API bool8 cstr_equals(const char* lhs, const char* rhs);
-
-CUTILE_C_API char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator);
-
-typedef struct string_view
-{
-    const char* data;
-    u64         count;
-} string_view;
-
-#define create_string_view_m(str_array)                                 \
-    (string_view{.data = str_array, .count = sizeof(str_array)/sizeof(s8)})
-#define create_string_view_from_str_m(str)      \
-    (string_view{.data = str.data, .count = str.count})
-
-CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
 
 #ifdef CUTILE_IMPLEM
 
@@ -848,16 +850,25 @@ CUTILE_C_API b8 str_view_equals_cstr(string_view* lhs, const char* rhs);
         {
             format_arg_into_str(out, &arg);
         }
-        template <>
-        void format_arg_into_str<string_view>(string* out, string_view arg)
-        {
-            // TODO: Implement
-        }
+
         template <>
         void format_arg_into_str<void*>(string* out, void* arg)
         {
             format_arg_into_str(out, (u64)arg);
         }
+
+        template <> 
+        void format_arg_into_str<string_view>(string* out, string_view sv)
+        {
+            str_push_back_buf(out, (u8*)sv.data, sv.count);
+        }
+
+        template <> 
+        void format_arg_into_str<string_view*>(string* out, string_view* sv)
+        {
+            str_push_back_buf(out, (u8*)sv->data, sv->count);
+        }
+
     #endif // CUTILE_CPP
 
 #endif // CUTILE_IMPLEM
