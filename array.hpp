@@ -57,16 +57,6 @@ maybe_inline void copy_array_to_buffer(const array<T>* in, T* out);
 template <typename T>
 maybe_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 offset, u32 count);
 
-template <typename T>
-struct array_view
-{
-    T*  data;
-    u32 count;
-};
-
-template <typename T>
-maybe_inline array_view<T> null_array_view() { return array_view<T>{.data = nullptr, .count = 0}; }
-
 /*
   =============================
          IMPLEMENTATION:

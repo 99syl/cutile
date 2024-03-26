@@ -283,6 +283,17 @@ declare_array_of_m(u32);
 declare_array_of_m(s64);
 declare_array_of_m(u64);
 
-declare_array_of_m(u8_memory_view);
+typedef struct array_view
+{
+    const u8* data;
+    u32       count;
+} array_view;
+
+#define declare_array_view_m(type) typedef struct type##_array_view { const type* data; u32 count; } type##_array_view
+
+#define array_view_m(type) type##_array_view
+
+#define view_from_fixed_size_array_m(arr) { (u8*)arr, sizeof(arr)/sizeof(arr[0]) }
+#define view_from_array_m(arr) { (u8*)arr.data, arr.count }
 
 #endif // !CUTILE_ARRAY_H
