@@ -58,6 +58,8 @@ CUTILE_C_API u8*        hash_table_get(hash_table* hash_table, u8* key, u64 key_
 CUTILE_C_API void       hash_table_for_each_entry(hash_table* hash_table,
                                                   void (*)(hash_table_entry* entry));
 
+#define                 hash_table_for_each_entry_m(hash_table, ...)
+
 #ifdef CUTILE_IMPLEM
 
     hash_table create_hash_table(u32                       base_size,
@@ -187,6 +189,20 @@ CUTILE_C_API void       hash_table_for_each_entry(hash_table* hash_table,
     }
 
 #endif // CUTILE_IMPLEM
+
+#undef                  hash_table_for_each_entry_m
+#define                 hash_table_for_each_entry_m(ht, ...)            \
+    {                                                                   \
+        for (u32 i = 0; i < (ht)->size; ++i)                            \
+        {                                                               \
+            hash_table_entry* it = (ht)->entries[i];                    \
+            while (it != nullptr)                                       \
+            {                                                           \
+                __VA_ARGS__;                                            \
+                it = it->next;                                          \
+            }                                                           \
+        }                                                               \
+    }
 
 #define CUTILE_HASH_TABLE_H
 #endif
