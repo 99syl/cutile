@@ -158,6 +158,7 @@ CUTILE_C_API s8* dump_s8_memory(const s8* in, u32 count, allocator* allocator);
 CUTILE_C_API allocator create_heap_allocator(void* heap);
 CUTILE_C_API allocator create_default_heap_allocator();
 
+CUTILE_C_API allocator default_allocator;
 CUTILE_C_API allocator global_default_heap_allocator;
 CUTILE_C_API void initialize_global_default_heap_allocator();
 
