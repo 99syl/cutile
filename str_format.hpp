@@ -1,6 +1,6 @@
 #pragma once
 
-#include "str.h"
+#include "str.hpp"
 
 template <typename ...Args>
 maybe_inline string format_str(allocator* allocator, const char* fmt, Args ...args);
@@ -72,7 +72,7 @@ maybe_inline void format_next_arg_into_str(const char* fmt, string* out, Arg arg
         }
         else
         {
-            str_push_back_u8(out, c);
+            str_push_back_s8(out, c);
             ++(*i);
         }
     }
