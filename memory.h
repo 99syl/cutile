@@ -1,5 +1,4 @@
-#ifndef CUTILE_MEMORY_H
-#define CUTILE_MEMORY_H
+#pragma once
 
 #include "num_types.h"
 
@@ -623,5 +622,3 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
     void initialize_global_default_heap_allocator() { global_default_heap_allocator = create_default_heap_allocator(); }
 
 #endif // CUTILE_IMPLEM
-
-#endif // !CUTILE_MEMORY_H
