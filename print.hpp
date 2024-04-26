@@ -1,8 +1,7 @@
-#ifndef CUTILE_PRINT_HPP
-#define CUTILE_PRINT_HPP
+#pragma once
 
-#include "./print.h"
-#include "./str.h"
+#include "print.h"
+#include "str_format.hpp"
 
 template <typename ...Args>
 force_inline void print(allocator* allocator, const char* fmt, Args ...args);
@@ -74,5 +73,3 @@ force_inline void println(const string* fmt, Args ...args)
 { 
     println(&default_allocator, fmt, args...); 
 }
-
-#endif // !CUTILE_PRINT_HPP
