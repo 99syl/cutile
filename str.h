@@ -1,8 +1,7 @@
-#ifndef CUTILE_STR_H
-#define CUTILE_STR_H
+#pragma once
 
-#include "./cutile.h"
-#include "./memory.h"
+#include "cutile.h"
+#include "memory.h"
 
 typedef struct string
 {
@@ -122,42 +121,11 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 
 #ifdef CUTILE_CPP
     template <typename IntegerType>
-    CUTILE_CPP_API string nb_to_str(IntegerType val, allocator* = &global_default_heap_allocator);
+    CUTILE_CPP_API string nb_to_str(IntegerType val, allocator* = &default_allocator);
     template <typename IntegerType>
     CUTILE_CPP_API void nb_into_str(IntegerType val, string* out);
     template <typename IntegerType>
     CUTILE_CPP_API void nb_into_sub_str(IntegerType val, string* out, u32 offset);
-#endif // CUTILE_CPP
-
-#ifdef CUTILE_CPP
-    template <typename ...Args>
-    force_inline string format_str(allocator* allocator, const char* fmt, Args ...args);
-    template <typename ...Args>
-    force_inline string format_str(const char* fmt, Args ...args);
-    template <typename ...Args>
-    force_inline void   format_str(string* out, const char* fmt, Args ...args);
-    template <typename ...Args>
-    force_inline string format_str(allocator* allocator, const string* fmt, Args ...args);
-    template <typename ...Args>
-    force_inline string format_str(const string* fmt, Args ...args);
-    template <typename ...Args>
-    force_inline void   format_str(string* out, const string* fmt, Args ...args);
-    template <typename Arg>
-    CUTILE_CPP_API void format_arg_into_str(string* out, Arg arg);
-    template <> CUTILE_CPP_API void format_arg_into_str<u8>(string*, u8);
-    template <> CUTILE_CPP_API void format_arg_into_str<s8>(string*, s8);
-    template <> CUTILE_CPP_API void format_arg_into_str<u16>(string*, u16);
-    template <> CUTILE_CPP_API void format_arg_into_str<s16>(string*, s16);
-    template <> CUTILE_CPP_API void format_arg_into_str<u32>(string*, u32);
-    template <> CUTILE_CPP_API void format_arg_into_str<s32>(string*, s32);
-    template <> CUTILE_CPP_API void format_arg_into_str<u64>(string*, u64);
-    template <> CUTILE_CPP_API void format_arg_into_str<s64>(string*, s64);
-    template <> CUTILE_CPP_API void format_arg_into_str<const char*>(string*, const char*);
-    template <> CUTILE_CPP_API void format_arg_into_str<char*>(string*, char*);
-    template <> CUTILE_CPP_API void format_arg_into_str<string>(string*, string);
-    template <> CUTILE_CPP_API void format_arg_into_str<string*>(string*, string*);
-    template <> CUTILE_CPP_API void format_arg_into_str<string_view>(string*, string_view);
-    template <> CUTILE_CPP_API void format_arg_into_str<string_view*>(string*, string_view*);
 #endif // CUTILE_CPP
 
 #ifdef CUTILE_IMPLEM
@@ -784,175 +752,4 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
         return b8_true;
     }
 
-    #ifdef CUTILE_CPP
-        template <>
-        void format_arg_into_str<u64>(string* out, u64 arg)
-        {
-            nb_into_str(arg, out);
-        }
-        template <>
-        void format_arg_into_str<s64>(string* out, s64 arg)
-        {
-            nb_into_str(arg, out);
-        }
-        template <>
-        void format_arg_into_str<u32>(string* out, u32 arg)
-        {
-            format_arg_into_str(out, (u64)arg);
-        }
-        template <>
-        void format_arg_into_str<s32>(string* out, s32 arg)
-        {
-            format_arg_into_str(out, (s64)arg);
-        }
-        template <>
-        void format_arg_into_str<u16>(string* out, u16 arg)
-        {
-            format_arg_into_str(out, (u64)arg);
-        }
-        template <>
-        void format_arg_into_str<s16>(string* out, s16 arg)
-        {
-            format_arg_into_str(out, (s64)arg);
-        }
-        template <>
-        void format_arg_into_str<u8>(string* out, u8 arg)
-        {
-            format_arg_into_str(out, (u64)arg);
-        }
-        template <>
-        void format_arg_into_str<s8>(string* out, s8 arg)
-        {
-            format_arg_into_str(out, (s64)arg);
-        }
-        template <>
-        void format_arg_into_str<const char*>(string* out, const char* arg)
-        {
-            str_push_back_cstr(out, arg);
-        }
-        template <>
-        void format_arg_into_str<char*>(string* out, char* arg)
-        {
-            str_push_back_cstr(out, arg);
-        }
-        template <>
-        void format_arg_into_str<const string*>(string* out, const string* arg)
-        {
-            str_push_back_str(out, arg);
-        }
-        template <>
-        void format_arg_into_str<string*>(string* out, string* arg)
-        {
-            str_push_back_str(out, arg);
-        }
-        template <>
-        void format_arg_into_str<string>(string* out, string arg)
-        {
-            format_arg_into_str(out, &arg);
-        }
-
-        template <>
-        void format_arg_into_str<void*>(string* out, void* arg)
-        {
-            format_arg_into_str(out, (u64)arg);
-        }
-
-        template <> 
-        void format_arg_into_str<string_view>(string* out, string_view sv)
-        {
-            str_push_back_buf(out, (u8*)sv.data, sv.count);
-        }
-
-        template <> 
-        void format_arg_into_str<string_view*>(string* out, string_view* sv)
-        {
-            str_push_back_buf(out, (u8*)sv->data, sv->count);
-        }
-
-    #endif // CUTILE_CPP
-
 #endif // CUTILE_IMPLEM
-
-// Inline implementations:
-#ifdef CUTILE_CPP
-
-    template <typename ...Args>
-    force_inline string format_str(allocator* allocator, const char* fmt, Args ...args)
-    {
-        auto str = create_empty_str(allocator);
-        format_str(&str, fmt, args...);
-        return str;
-    }
-    template <typename ...Args>
-    force_inline string format_str(const char* fmt, Args ...args)
-    {
-        return format_str(&global_default_heap_allocator, fmt, args...);
-    }
-    template <typename ...Args>
-    force_inline void format_str(string* out, const char* fmt, Args ...args)
-    {
-        u32 len = cstr_length(fmt);
-        u32 i = 0;
-        (format_next_arg_into_str(fmt, out, args, &i, len), ...);
-        if (i < len) str_push_back_cstr(out, fmt + i);
-    }
-    template <typename Arg>
-    force_inline void format_next_arg_into_str(const char* fmt, string* out, Arg arg, u32* i, u32 len)
-    {
-        while (*i < len) 
-        {
-            char c = fmt[*i];
-            if (c == '%') 
-            {
-                format_arg_into_str(out, arg);
-                ++(*i);
-                return;
-            }
-            else 
-            {
-                str_push_back_u8(out, c);
-                ++(*i);
-            }
-        }
-    }
-    template <typename ...Args>
-    force_inline string format_str(allocator* allocator, const string* fmt, Args ...args)
-    {
-        auto str = create_empty_str(allocator);
-        format_str(&str, fmt, args...);
-        return str;
-    }
-    template <typename ...Args>
-    force_inline string format_str(const string* fmt, Args ...args)
-    {
-        return format_str(&global_default_heap_allocator, fmt, args...);
-    }
-    template <typename ...Args>
-    force_inline void format_str(string* out, const string* fmt, Args ...args)
-    {
-        u32 i = 0;
-        (format_next_arg_into_string(fmt, out, args, &i), ...);
-    }
-    template <typename Arg>
-    force_inline void format_next_arg_into_string(const string* fmt, string* out, Arg arg, u32* i)
-    {
-        while (*i < fmt->count) 
-        {
-            u8 c = fmt->data[*i];
-            if (c == '%') 
-            {
-                format_arg_into_string(out, arg);
-                ++(*i);
-                return;
-            }
-            else 
-            {
-                str_push_back_u8(out, c);
-                ++(*i);
-            }
-        }
-    }
-
-#endif // CUTILE_CPP // ^- Inline implementations
-
-#endif // !CUTILE_STR_H
