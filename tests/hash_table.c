@@ -19,6 +19,8 @@ b8 dummy_compare(u8* lhs, u64 lhs_size, u8* rhs, u64 rhs_size)
 
 int main(int ac, char** av)
 {
+    test_begin();
+
     initialize_global_default_heap_allocator();
 
     hash_table tbl = create_hash_table(24,
@@ -52,5 +54,5 @@ int main(int ac, char** av)
 
     test_assert(*hash_table_get(&tbl, "11", 2) == 12);
 
-    return test_result;
+    test_end();
 }

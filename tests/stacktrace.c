@@ -2,6 +2,8 @@
 #include "../stacktrace.h"
 #include "../test.h"
 
+test_begin();
+
 void depth_two()
 {
     stacktrace st = get_stacktrace(0, U16_MAX, &global_default_heap_allocator);
@@ -31,5 +33,5 @@ int main(void)
 {
     initialize_global_default_heap_allocator();
     depth_one();
-    return 0;
+    test_end();
 }
