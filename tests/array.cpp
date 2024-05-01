@@ -5,6 +5,8 @@
 
 int main()
 {
+    test_begin();
+
     initialize_global_default_heap_allocator();
     auto arr = create_array<int>(5, 5);
     
@@ -29,5 +31,5 @@ int main()
         }
     }
     
-    return test_result;
+    test_end();
 }

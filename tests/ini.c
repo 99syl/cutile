@@ -4,6 +4,8 @@
 
 int main(int ac, char** av)
 {
+    test_begin();
+
     initialize_global_default_heap_allocator();
     const char ini_data[] =
         "foo=123\n"
@@ -57,5 +59,5 @@ int main(int ac, char** av)
     }
     destroy_ini_parsed_data(&result);
     
-    return test_result;
+    test_end();
 }
