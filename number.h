@@ -76,15 +76,16 @@ maybe_inline s64 get_u64_digits(u64 nb)
     if (nb < 10000000) return 7;
     if (nb < 100000000) return 8;
     if (nb < 1000000000) return 9;
-    if (nb < 10000000000) return 11;
-    if (nb < 100000000000) return 12;
-    if (nb < 1000000000000) return 13;
-    if (nb < 10000000000000) return 14;
-    if (nb < 100000000000000) return 15;
-    if (nb < 1000000000000000) return 16;
-    if (nb < 10000000000000000) return 17;
-    if (nb < 100000000000000000) return 18;
-    if (nb < 1000000000000000000) return 19;
+    if (nb < 10000000000) return 10;
+    if (nb < 100000000000) return 11;
+    if (nb < 1000000000000) return 12;
+    if (nb < 10000000000000) return 13;
+    if (nb < 100000000000000) return 14;
+    if (nb < 1000000000000000) return 15;
+    if (nb < 10000000000000000) return 16;
+    if (nb < 100000000000000000) return 17;
+    if (nb < 1000000000000000000) return 18;
+    if (nb < 10000000000000000000) return 19;
     return 20;
 }
     
@@ -100,14 +101,14 @@ maybe_inline s64 get_s64_digits(s64 nb)
     if (nb < 10000000) return 7;
     if (nb < 100000000) return 8;
     if (nb < 1000000000) return 9;
-    if (nb < 10000000000) return 11;
-    if (nb < 100000000000) return 12;
-    if (nb < 1000000000000) return 13;
-    if (nb < 10000000000000) return 14;
-    if (nb < 100000000000000) return 15;
-    if (nb < 1000000000000000) return 16;
-    if (nb < 10000000000000000) return 17;
-    if (nb < 100000000000000000) return 18;
-    if (nb < 1000000000000000000) return 19;
-    return 20;
+    if (nb < 10000000000) return 10;
+    if (nb < 100000000000) return 11;
+    if (nb < 1000000000000) return 12;
+    if (nb < 10000000000000) return 13;
+    if (nb < 100000000000000) return 14;
+    if (nb < 1000000000000000) return 15;
+    if (nb < 10000000000000000) return 16;
+    if (nb < 100000000000000000) return 17;
+    if (nb < 1000000000000000000) return 18;
+    return 19;
 }
