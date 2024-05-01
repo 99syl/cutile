@@ -3,7 +3,7 @@
 #include "cutile.h"
 #include "memory.h"
 
-// Represents an UTF-8 string.
+// String can be used to store textual data that we often refer to as "characters" or "code points".
 typedef struct string
 {
     u8* data;
@@ -24,11 +24,11 @@ CUTILE_C_API string create_str_from_buf(const u8* buf, u32 buf_len, allocator* a
 CUTILE_C_API void destroy_str(string* str);
 
 // String Modification:
-CUTILE_C_API void str_push_back(string* str, u32 c); // Equivalent to str_push_back_u32.
-CUTILE_C_API void str_push_back_u32(string* str, u32 c);
-CUTILE_C_API void str_push_back_s8(string* str, s8 c);
-CUTILE_C_API void str_insert_u32(string* str, u32 index, u32 c);
-CUTILE_C_API void str_insert_s8(string* str, u32 index, s8 c);
+// str_insert*: index must be in a valid range, aka [0, str->count-1].
+CUTILE_C_API void str_push_back(string* str, u8 c);
+CUTILE_C_API void str_push_back_utf8_cp(string* str, u32 c);
+CUTILE_C_API void str_insert(string* str, u32 index, u8 c);
+CUTILE_C_API void str_insert_utf8_cp(string* str, u32 index, u32 c);
 CUTILE_C_API void str_push_back_str(string* str, const string* rhs);
 CUTILE_C_API void str_push_back_cstr(string* str, const char* rhs);
 CUTILE_C_API void str_push_back_buf(string* str, u8* buf, u64 buf_size);
@@ -40,10 +40,14 @@ CUTILE_C_API void reverse_str(string* str);
 CUTILE_C_API void reverse_sub_str(string* str, u32 offset, u32 count);
 
 // String Lookup:
-CUTILE_C_API u8    str_at(const string* str, u32 index);
-CUTILE_C_API bool8 str_equals_cstr(const string* str, const char* cstr);
-CUTILE_C_API bool8 str_begins_with(const string* str, const char* val);
-CUTILE_C_API bool8 str_ends_with(const string* str, const char* val);
+// str_utf8_count: This function works for valid UTF-8 strings; do not use this function if you are unsure about the UTF-8 compliance of your string. Therefore you should check the compliance before using str_utf8_count.
+CUTILE_C_API u8  str_at(const string* str, u32 index);
+CUTILE_C_API b8  str_equals_cstr(const string* str, const char* cstr);
+CUTILE_C_API b8  str_equals_cstr2(string str, const char* cstr);
+CUTILE_C_API b8  str_begins_with(const string* str, const char* val);
+CUTILE_C_API b8  str_ends_with(const string* str, const char* val);
+CUTILE_C_API u32 str_utf8_count(const string* str);
+CUTILE_C_API b8  str_is_valid_utf8(const string* str);
 
 // CString Creation:
 CUTILE_C_API char* create_cstr_from_str(const string* str, allocator* allocator);
@@ -108,7 +112,7 @@ CUTILE_C_API char* s32_to_cstr(s32, allocator* allocator);
 CUTILE_C_API char* u64_to_cstr(u64, allocator* allocator);
 CUTILE_C_API char* s64_to_cstr(s64, allocator* allocator);
 
-// nb_into_str: Pushes the number at the end of the string.
+// nbxs_into_str: Pushes the number at the end of the string.
 CUTILE_C_API void u8_into_str(u8, string* out);
 CUTILE_C_API void s8_into_str(s8, string* out);
 CUTILE_C_API void u16_into_str(u16, string* out);
@@ -143,12 +147,12 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 
     string create_sized_empty_str(u32 size, allocator* allocator)
     {
-	string s;
-	s.data = (u8*)allocate(allocator, sizeof(u8) * size);
-	s.count = 0;
-	s.size = sizeof(u8)*size;
-	s.allocator = allocator;
-	return s;
+        string s;
+        s.data = (u8*)allocate(allocator, sizeof(u8) * size);
+        s.count = 0;
+        s.size = sizeof(u8)*size;
+        s.allocator = allocator;
+        return s;
     }
 
     string create_str_from_cstr(const char* cstr, allocator* allocator)
@@ -206,71 +210,105 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
         str->size = size;
     }
 
-    void str_push_back_u32(string* str, u32 c)
-    {
-	// TODO: THere is room for improvement !
-
-        u32 csize;
-        if (c <= 0x007F) csize = 1;
-        else if (c <= 0x07FF) csize = 2;
-        else if (c <= 0xFFFF) csize = 3;
-        else csize = 4;
-        if (str->count + csize >= str->size) resize_str(str, str->size + csize + CUTILE_STR_INCREMENT_COUNT);
-        for (u32 i = 0; i < csize; ++i)
-        {
-            str->data[str->count++] = (c >> (i * 8)) & 0xFF;
-        }
-    }
-
-    void str_push_back_s8(string* str, s8 c)
+    maybe_inline void str_push_back(string* str, u8 c)
     {
         if (str->count + 1 >= str->size) resize_str(str, str->size + 1 + CUTILE_STR_INCREMENT_COUNT);
         str->data[str->count++] = c;
     }
 
-    void str_insert_u32(string* str, u32 index, u32 c)
+    void str_push_back_utf8_cp(string* str, u32 c)
     {
-	// TODO: There is room for improvement !
-        // Insertion range is [0, str->count].
-        
-        u32 csize;
-        if (c <= 0x007F) csize = 1;
-        else if (c <= 0x07FF) csize = 2;
-        else if (c <= 0xFFFF) csize = 3;
-        else csize = 4;
-        if (str->count + csize > str->size) resize_str(str, str->size + csize + CUTILE_STR_INCREMENT_COUNT);
-        if (str->count)
+        if (c <= 0x007F) // One byte long.
         {
-            // Right to left copy.
-            for (u32 i = index; i < str->count; ++i)
-            {
-                u32 j = str->count - (i - index) - 1;
-                str->data[j + csize] = str->data[j];
-            }
+            str_push_back(str, (u8)c);
         }
-        for (u32 i = 0; i < csize; ++i)
+        else if (c <= 0x07FF) // Two bytes long.
         {
-            str->data[i + index] = (c >> (i * 8)) & 0xFF;
+            if (str->count + 2 >= str->size) resize_str(str, str->size + 2 + CUTILE_STR_INCREMENT_COUNT);
+            str->data[str->count++] = c & 0xFF;
+            str->data[str->count++] = (c >> 8) & 0xFF;
         }
-        str->count += csize;
+        else if (c <= 0xFFFF) // Three bytes long.
+        {
+            if (str->count + 3 >= str->size) resize_str(str, str->size + 3 + CUTILE_STR_INCREMENT_COUNT);
+            str->data[str->count++] = c & 0xFF;
+            str->data[str->count++] = (c >> 8) & 0xFF;
+            str->data[str->count++] = (c >> 16) & 0xFF;
+        }
+        else // Four bytes long
+        {
+            if (str->count + 4 >= str->size) resize_str(str, str->size + 4 + CUTILE_STR_INCREMENT_COUNT);
+            str->data[str->count++] = c & 0xFF;
+            str->data[str->count++] = (c >> 8) & 0xFF;
+            str->data[str->count++] = (c >> 16) & 0xFF;
+            str->data[str->count++] = (c >> 24) & 0xFF;
+        }
     }
 
-    void str_insert_s8(string* str, u32 index, s8 c)
+    void str_insert(string* str, u32 index, u8 c)
     {
-        // Insertion range is [0, str->count].
-        
         if (str->count + 1 > str->size) resize_str(str, str->size + CUTILE_STR_INCREMENT_COUNT);
-        if (str->count)
+        for (u32 i = index; i < str->count; ++i)
         {
-            // Right to left copy.
+            u32 j = str->count - (i - index) - 1;
+            str->data[j + 1] = str->data[j];
+        }
+        str->data[index] = c;
+        str->count += 1;
+    }
+
+    void str_insert_utf8_cp(string* str, u32 index, u32 c)
+    {
+        if (c <= 0x007F) // One byte long.
+        {
+            if (str->count + 1 >= str->size) resize_str(str, str->size + 1 + CUTILE_STR_INCREMENT_COUNT);
             for (u32 i = index; i < str->count; ++i)
             {
                 u32 j = str->count - (i - index) - 1;
                 str->data[j + 1] = str->data[j];
             }
+            str->data[index] = (u8)c;
+            str->count++;
         }
-	str->data[index] = c;
-        str->count += 1;
+        else if (c <= 0x07FF) // Two bytes long.
+        {
+            if (str->count + 2 >= str->size) resize_str(str, str->size + 2 + CUTILE_STR_INCREMENT_COUNT);
+            for (u32 i = index; i < str->count; ++i)
+            {
+                u32 j = str->count - (i - index) - 1;
+                str->data[j + 2] = str->data[j];
+            }
+            str->data[index] = c & 0xFF;
+            str->data[index+1] = (c >> 8) & 0xFF;
+            str->count += 2;
+        }
+        else if (c <= 0xFFFF) // Three bytes long.
+        {
+            if (str->count + 3 >= str->size) resize_str(str, str->size + 3 + CUTILE_STR_INCREMENT_COUNT);
+            for (u32 i = index; i < str->count; ++i)
+            {
+                u32 j = str->count - (i - index) - 1;
+                str->data[j + 3] = str->data[j];
+            }
+            str->data[index] = c & 0xFF;
+            str->data[index+1] = (c >> 8) & 0xFF;
+            str->data[index+2] = (c >> 16) & 0xFF;
+            str->count += 3;
+        }
+        else // Four bytes long
+        {
+            if (str->count + 4 >= str->size) resize_str(str, str->size + 4 + CUTILE_STR_INCREMENT_COUNT);
+            for (u32 i = index; i < str->count; ++i)
+            {
+                u32 j = str->count - (i - index) - 1;
+                str->data[j + 4] = str->data[j];
+            }
+            str->data[index] = c & 0xFF;
+            str->data[index+1] = (c >> 8) & 0xFF;
+            str->data[index+2] = (c >> 16) & 0xFF;
+            str->data[index+3] = (c >> 24) & 0xFF;
+            str->count += 4;
+        }
     }
 
     void str_push_back_str(string* str, const string* rhs)
@@ -315,25 +353,170 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
         return str->data[index];
     }
   
-    bool8 str_equals_cstr(const string* str, const char* cstr)
+    maybe_inline b8 str_equals_cstr(const string* str, const char* cstr)
     {
         u32 clen = cstr_length(cstr);
         if (clen != str->count) return bool8_false;
         return u8_memory_equals(str->data, (u8*)cstr, clen);
     }
-    
-    bool8 str_begins_with(const string* str, const char* val)
+
+    b8 str_equals_cstr2(string str, const char* cstr)
+    {
+        return str_equals_cstr(&str, cstr);
+    }
+
+    b8 str_begins_with(const string* str, const char* val)
     {
         u32 count = cstr_length(val);
         if (count > str->count) return bool8_false;
         return u8_memory_equals(str->data, (u8*)val, count);
     }
     
-    bool8 str_ends_with(const string* str, const char* val)
+    b8 str_ends_with(const string* str, const char* val)
     {
         u32 count = cstr_length(val);
         if (count > str->count) return bool8_false;
         return u8_memory_equals(str->data + str->count - count, (u8*)val, count);
+    }
+
+    /* Here are some rules from the RFC regarding bytes sequences in an UTF-8 string:
+    
+    https://www.rfc-editor.org/rfc/rfc3629#section-4
+    
+    Copyright Notice
+    
+       Copyright (C) The Internet Society (2003).  All Rights Reserved.
+    
+    4.  Syntax of UTF-8 Byte Sequences
+    
+       For the convenience of implementors using ABNF, a definition of UTF-8
+       in ABNF syntax is given here.
+    
+       A UTF-8 string is a sequence of octets representing a sequence of UCS
+       characters.  An octet sequence is valid UTF-8 only if it matches the
+       following syntax, which is derived from the rules for encoding UTF-8
+       and is expressed in the ABNF of [RFC2234].
+    
+       UTF8-octets = *( UTF8-char )
+       UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
+       UTF8-1      = %x00-7F
+       UTF8-2      = %xC2-DF UTF8-tail
+    
+       UTF8-3      = %xE0 %xA0-BF UTF8-tail / %xE1-EC 2( UTF8-tail ) /
+                     %xED %x80-9F UTF8-tail / %xEE-EF 2( UTF8-tail )
+       UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
+                     %xF4 %x80-8F 2( UTF8-tail )
+       UTF8-tail   = %x80-BF
+    */
+
+
+    u32 str_utf8_count(const string* str)
+    {
+        // This function does not check for any UTF-8 corruption into the given string, obviously for speed reasons !!!
+
+        u32 count = 0;
+        for (u32 i = 0; i < str->count;)
+        {
+            if (str->data[i] <= 0x007F) i += 1;
+            else if (str->data[i] <= 0xDF) i += 2;
+            else if (str->data[i] <= 0xEF) i += 3;
+            else i += 4;
+            ++count;
+        }
+        return count;
+    }
+
+    b8 str_is_valid_utf8(const string* str)
+    {
+        for (u32 i = 0; i < str->count; ++i)
+        {
+            if (str->data[i] <= 0x7F) continue;
+
+            else if (str->data[i] >= 0xC2 && str->data[i] <= 0xDF) // UTF8-2 (2 bytes)
+            {
+                ++i;
+                if (i >= str->count) return b8_false;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] == 0xE0) // UTF8-3 (3 bytes)
+            {
+                if (i + 2 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0xA0 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] >= 0xE1 && str->data[i] <= 0xEC) // UTF8-3 (3 bytes)
+            {
+                if (i + 2 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] == 0xED) // UTF8-3 (3 bytes)
+            {
+                if (i + 2 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0x9F) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] >= 0xEE && str->data[i] <= 0xEF) // UTF8-3 (3 bytes)
+            {
+                if (i + 2 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] == 0xF0) // UTF8-4 (4 bytes)
+            {
+                if (i + 3 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x90 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] >= 0xF1 && str->data[i] <= 0xF3) // UTF8-3 (3 bytes)
+            {
+                if (i + 3 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+
+            else if (str->data[i] == 0xF4) // UTF8-4 (4 bytes)
+            {
+                if (i + 3 >= str->count) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0x8F) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                ++i;
+                if (str->data[i] < 0x80 || str->data[i] > 0xBF) return b8_false;
+                continue;
+            }
+        }
+        return b8_true;
     }
 
     char* create_cstr_from_str(const string* str, allocator* allocator)
@@ -372,7 +555,7 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
             if (!(*lhs) && !(*rhs)) break;
             if (*lhs++ != *rhs++) return bool8_false;
         }
-        return bool8_true;
+        return b8_true;
     }
 
     char* concat_cstrs(const char* lhs, const char* rhs, allocator* allocator)
@@ -400,31 +583,31 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
     }
 
     #define sub_str_to_unsigned_nb_m(res, str, offset, count) \
-    {							      \
-        res = 0;					      \
-	u32 i = offset;					      \
-	for (; i < count + offset; ++i)			      \
-	{						      \
-            res *= 10;					      \
-	    res += str->data[i] - '0';			      \
-	}						      \
-    }						              \
+    {                                                         \
+        res = 0;                                              \
+        u32 i = offset;                                       \
+        for (; i < count + offset; ++i)                       \
+        {                                                     \
+            res *= 10;                                        \
+            res += str->data[i] - '0';                        \
+        }                                                     \
+    }                                                         \
     
     #define sub_str_to_signed_nb_m(res, str, offset, count) \
-    {							    \
-        res = 0;					    \
-        u32 i = offset;					    \
-        bool8 neg = bool8_false;			    \
-        if (str_at(s, i) == '-') {			    \
-            neg = bool8_true;				    \
-            ++i;					    \
-        }						    \
-        for (; i < count + offset; ++i) {		    \
-            res *= 10;					    \
-            res += s->data[i] - '0';			    \
-        }						    \
-        res = neg ? -res : res;			            \
-    }						            \
+    {                                                       \
+        res = 0;                                            \
+        u32 i = offset;                                     \
+        bool8 neg = bool8_false;                            \
+        if (str_at(s, i) == '-') {                          \
+            neg = bool8_true;                               \
+            ++i;                                            \
+        }                                                   \
+        for (; i < count + offset; ++i) {                   \
+            res *= 10;                                      \
+            res += s->data[i] - '0';                        \
+        }                                                   \
+        res = neg ? -res : res;                             \
+    }                                                       \
 
     maybe_inline u8  sub_str_to_u8(const string* s, u32 offset, u32 count) { u8 res; sub_str_to_unsigned_nb_m(res, s, offset, count); return res; }
 
@@ -477,89 +660,96 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 
     #include "number.h"
 
-    #define unsigned_nb_to_str_m(nb, digits, allocator) 		\
-    {									\
-        string out = create_sized_empty_str(digits, allocator);		\
-	out.count = digits;						\
-        for (u32 i = digits; i > 0; --i)				\
-        {								\
-            out.data[i - 1] = nb % 10 + '0';				\
-            nb /= 10;							\
-        }								\
-	return out;							\
-    }									\
+    #define unsigned_nb_to_str_m(nb, digits, allocator)                 \
+    {                                                                   \
+        string out = create_sized_empty_str(digits, allocator);         \
+        for (u32 i = digits; i > 0; --i)                                \
+        {                                                               \
+            out.data[i - 1] = nb % 10 + '0';                            \
+            nb /= 10;                                                   \
+        }                                                               \
+        out.count = digits;                                             \
+        return out;                                                     \
+    }                                                                   \
 
-    #define signed_nb_to_str_m(nb, digits, allocator)    	        \
-    {									\
-        u32 shift;							\
-        string out;							\
+    #define signed_nb_to_str_m(nb, digits, allocator)                   \
+    {                                                                   \
+        s32 neg;                                                        \
+        s32 mul;                                                        \
+        string out;                                                     \
         if (nb < 0)                                                     \
         {                                                               \
-            out = create_sized_empty_str(digits+1, allocator);		\
-            out.data[0] = '-';						\
-            shift = 1;                                                  \
+            out = create_sized_empty_str(digits+1, allocator);          \
+            out.data[0] = '-';                                          \
+            neg = 1;                                                    \
+            mul = -1;                                                   \
         }                                                               \
         else                                                            \
         {                                                               \
-            out = create_sized_empty_str(digits, allocator);		\
-            shift = 0;                                                  \
+            out = create_sized_empty_str(digits, allocator);            \
+            neg = 0;                                                    \
+            mul = 1;                                                    \
         }                                                               \
         for (u32 i = digits; i > 0; --i)                                \
         {                                                               \
-            out.data[i - 1 + shift] = nb % 10 + '0';			\
+            out.data[i - 1 + neg] = ((nb % 10) * mul) + '0';            \
             nb /= 10;                                                   \
         }                                                               \
-        out.count = digits + shift;					\
-	return out;							\
-    }								        \
+        out.count = digits + neg;                                       \
+        return out;                                                     \
+    }                                                                   \
 
-    string u8_to_str(u8 nb, allocator* allocator) { unsigned_nb_to_str_m(nb, get_u8_digits(nb), allocator); }
+    string u8_to_str(u8 nb, allocator* allocator) { u32 digits = get_u8_digits(nb); unsigned_nb_to_str_m(nb, digits, allocator); }
 
-    string s8_to_str(s8 nb, allocator* allocator) { signed_nb_to_str_m(nb, get_s8_digits(nb), allocator); }
+    string s8_to_str(s8 nb, allocator* allocator) { u32 digits = get_s8_digits(nb); signed_nb_to_str_m(nb, digits, allocator); }
 
-    string u16_to_str(u16 nb, allocator* allocator) { unsigned_nb_to_str_m(nb, get_u16_digits(nb), allocator); }
+    string u16_to_str(u16 nb, allocator* allocator) { u32 digits = get_u16_digits(nb); unsigned_nb_to_str_m(nb, digits, allocator); }
 
-    string s16_to_str(s16 nb, allocator* allocator) { signed_nb_to_str_m(nb, get_s16_digits(nb), allocator); }
+    string s16_to_str(s16 nb, allocator* allocator) { u32 digits = get_s16_digits(nb); signed_nb_to_str_m(nb, digits, allocator); }
 
-    string u32_to_str(u32 nb, allocator* allocator) { unsigned_nb_to_str_m(nb, get_u32_digits(nb), allocator); }
+    string u32_to_str(u32 nb, allocator* allocator) { u32 digits = get_u32_digits(nb); unsigned_nb_to_str_m(nb, digits, allocator); }
 
-    string s32_to_str(s32 nb, allocator* allocator) { signed_nb_to_str_m(nb, get_s32_digits(nb), allocator); }
+    string s32_to_str(s32 nb, allocator* allocator) { u32 digits = get_s32_digits(nb); signed_nb_to_str_m(nb, digits, allocator); }
 
-    string u64_to_str(u64 nb, allocator* allocator) { unsigned_nb_to_str_m(nb, get_u64_digits(nb), allocator); }
+    string u64_to_str(u64 nb, allocator* allocator) { u32 digits = get_u64_digits(nb); unsigned_nb_to_str_m(nb, digits, allocator); }
 
-    string s64_to_str(s64 nb, allocator* allocator) { signed_nb_to_str_m(nb, get_s64_digits(nb), allocator); }
+    string s64_to_str(s64 nb, allocator* allocator) { u32 digits = get_s64_digits(nb); signed_nb_to_str_m(nb, digits, allocator); }
 
-    #define unsigned_nb_to_cstr_m(nb, digits, allocator) 		\
-    {									\
-        char* out = allocate_many_m(allocator, char, digits+1);		\
-	out[digits] = '\0';						\
-        for (u32 i = digits; i > 0; --i)				\
-        {								\
-            out[i - 1] = nb % 10 + '0';				        \
-            nb /= 10;							\
-        }								\
-	return out;							\
-    }									\
-
-    #define signed_nb_to_cstr_m(nb, digits, allocator)			\
+    #define unsigned_nb_to_cstr_m(nb, digits, allocator)                \
     {                                                                   \
-        u32 shift;                                                      \
-        char* out;							\
-        if (nb < 0)							\
+        char* out = allocate_many_m(allocator, char, digits+1);         \
+        out[digits] = '\0';                                             \
+        for (u32 i = digits; i > 0; --i)                                \
+        {                                                               \
+            out[i - 1] = nb % 10 + '0';                                 \
+            nb /= 10;                                                   \
+        }                                                               \
+        return out;                                                     \
+    }                                                                   \
+
+    #define signed_nb_to_cstr_m(nb, digits, allocator)                  \
+    {                                                                   \
+        u32 neg;                                                        \
+        s32 mul;                                                        \
+        char* out;                                                      \
+        if (nb < 0)                                                     \
         {                                                               \
             out = allocate_many_m(allocator, char, digits+2);           \
             out[0] = '-';                                               \
-            shift = 1;                                                  \
             out[digits+1] = '\0';                                       \
+            neg = 1;                                                    \
+            mul = -1;                                                   \
         }                                                               \
         else                                                            \
         {                                                               \
             out = allocate_many_m(allocator, char, digits+1);           \
-            shift = 0;                                                  \
+            out[digits] = '\0';                                         \
+            neg = 0;                                                    \
+            mul = 1;                                                    \
         }                                                               \
         for (u32 i = digits; i > 0; --i)                                \
         {                                                               \
-            out[i - 1 + shift] = nb % 10 + '0';                         \
+            out[i - 1 + neg] = ((nb % 10) * mul) + '0';                 \
             nb /= 10;                                                   \
         }                                                               \
         return out;                                                     \
@@ -597,43 +787,70 @@ CUTILE_C_API void s64_into_sub_str(s64, string* out, u32 index);
 
     void s64_into_str(s64 nb, string* out) { s64_into_sub_str(nb, out, out->count); }
 
-    #define unsigned_nb_into_sub_str(nb, str, index)		   \
-        do							   \
-	{							   \
-	    s8 remainder = nb % 10;				   \
-            nb /= 10;						   \
-            str_insert_s8(str, index, remainder + '0');		   \
-	} while (nb);					           \
+    #define unsigned_nb_into_sub_str(nb, digits, str_ptr, index)                        \
+    {                                                                                   \
+        if (index + digits >= str_ptr->count) resize_str(str_ptr, index + digits);      \
+        for (u32 i = index; i < str_ptr->count; ++i)                                    \
+        {                                                                               \
+            str_ptr->data[i + digits] = str_ptr->data[i];                               \
+        }                                                                               \
+        for (u32 i = index + digits; i > index; --i)                                    \
+        {                                                                               \
+            str_ptr->data[i - 1] = nb % 10 + '0';                                       \
+            nb /= 10;                                                                   \
+        }                                                                               \
+        str_ptr->count += digits;                                                       \
+    }                                                                                   \
 
-    #define signed_nb_into_sub_str(nb, str, index)	           \
-    {   							   \
-        if (nb < 0)						   \
-	{						           \
-	    str_insert_s8(out, index++, '-');			   \
-            nb = -nb;						   \
-	}							   \
-        do							   \
-	{							   \
-	    s8 remainder = nb % 10;				   \
-            nb /= 10;						   \
-            str_insert_s8(str, index, remainder + '0');		   \
-	} while (nb);					           \
-    }							           \
+    #define signed_nb_into_sub_str(nb, digits, str_ptr, index)                          \
+    {                                                                                   \
+        u32 neg;                                                                        \
+        s32 mul;                                                                        \
+        if (nb < 0)                                                                     \
+        {                                                                               \
+            if (index + digits + 1 >= str_ptr->count)                                   \
+                resize_str(str_ptr, index + digits + 1);                                \
+            for (u32 i = index; i < str_ptr->count; ++i)                                \
+            {                                                                           \
+                str_ptr->data[i + digits + 1] = str_ptr->data[i];                       \
+            }                                                                           \
+            str_ptr->data[index] = '-';                                                 \
+            neg = 1;                                                                    \
+            mul = -1;                                                                   \
+        }                                                                               \
+        else                                                                            \
+        {                                                                               \
+            if (index + digits >= str_ptr->count)                                       \
+                resize_str(str_ptr, index + digits);                                    \
+            for (u32 i = index; i < str_ptr->count; ++i)                                \
+            {                                                                           \
+                str_ptr->data[i + digits] = str_ptr->data[i];                           \
+            }                                                                           \
+            neg = 0;                                                                    \
+            mul = 1;                                                                    \
+        }                                                                               \
+        for (u32 i = index + digits; i > index; --i)                                    \
+        {                                                                               \
+            str_ptr->data[i - 1 + neg] = ((nb % 10) * mul) + '0';                       \
+            nb /= 10;                                                                   \
+        }                                                                               \
+        str_ptr->count += digits + neg;                                                 \
+    }                                                                                   \
 
-    maybe_inline void u8_into_sub_str(u8 nb, string* out, u32 index) { unsigned_nb_into_sub_str(nb, out, index); }
+    maybe_inline void u8_into_sub_str(u8 nb, string* out, u32 index) { u32 digits = get_u8_digits(nb); unsigned_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void s8_into_sub_str(s8 nb, string* out, u32 index) { signed_nb_into_sub_str(nb, out, index); }
+    maybe_inline void s8_into_sub_str(s8 nb, string* out, u32 index) { u32 digits = get_s8_digits(nb); signed_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void u16_into_sub_str(u16 nb, string* out, u32 index) { unsigned_nb_into_sub_str(nb, out, index); }
+    maybe_inline void u16_into_sub_str(u16 nb, string* out, u32 index) { u32 digits = get_u16_digits(nb); unsigned_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void s16_into_sub_str(s16 nb, string* out, u32 index) { signed_nb_into_sub_str(nb, out, index); }
+    maybe_inline void s16_into_sub_str(s16 nb, string* out, u32 index) { u32 digits = get_s16_digits(nb); signed_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void u32_into_sub_str(u32 nb, string* out, u32 index) { unsigned_nb_into_sub_str(nb, out, index); }
+    maybe_inline void u32_into_sub_str(u32 nb, string* out, u32 index) { u32 digits = get_u32_digits(nb); unsigned_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void s32_into_sub_str(s32 nb, string* out, u32 index) { signed_nb_into_sub_str(nb, out, index); }
+    maybe_inline void s32_into_sub_str(s32 nb, string* out, u32 index) { u32 digits = get_s32_digits(nb); signed_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void u64_into_sub_str(u64 nb, string* out, u32 index) { unsigned_nb_into_sub_str(nb, out, index); }
+    maybe_inline void u64_into_sub_str(u64 nb, string* out, u32 index) { u32 digits = get_u64_digits(nb); unsigned_nb_into_sub_str(nb, digits, out, index); }
 
-    maybe_inline void s64_into_sub_str(s64 nb, string* out, u32 index) { signed_nb_into_sub_str(nb, out, index); }
+    maybe_inline void s64_into_sub_str(s64 nb, string* out, u32 index) { u32 digits = get_s64_digits(nb); signed_nb_into_sub_str(nb, digits, out, index); }
 
 #endif // CUTILE_IMPLEM
