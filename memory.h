@@ -421,7 +421,9 @@ CUTILE_C_API void initialize_global_default_heap_allocator();
         return ptr;
     }
 
-    void arena_free(arena*, void*) { }
+    void arena_free(arena* a, void* f)
+    { 
+    }
 
     u8* dump_u8_memory(const u8* in, u32 count, allocator* allocator)
     {
