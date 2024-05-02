@@ -20,4 +20,4 @@
         if (__cutile_test_result) exit_process(__cutile_test_result); \
     }
 
-#define test_end() return __cutile_test_result;
+#define test_end() println_cstr(__cutile_test_result ? "Test failed !" : "Test success !"); return __cutile_test_result;
