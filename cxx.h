@@ -1,7 +1,4 @@
-// This file aims to add more tools to C/C++ languages.
-
-#ifndef CUTILE_CXX_H
-#define CUTILE_CXX_H
+#pragma once
 
 #include "cutile.h"
 
@@ -107,5 +104,3 @@ CUTILE_C_API void println_cstr(const char* cstr);
 #define stringify2_m(x) #x
 
 #define current_line_cstr_m stringify_m(__LINE__)
-
-#endif // !CUTILE_CXX_H

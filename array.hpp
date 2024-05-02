@@ -1,5 +1,4 @@
-#ifndef CUTILE_ARRAY_HPP
-#define CUTILE_ARRAY_HPP
+#pragma once
 
 #include "array.h"
 #include "memory.h"
@@ -12,14 +11,14 @@ struct array
     u32 count;     // Number of elements currently contained in the array.
     u32 size;      // Number of elements that the array is able to contain.
 
-    u32 increment; // How much more space we want to reserve each time a resize is needed.
-                   // Value is expressed in number of elements.
+    u32 increment; // How much more space we want to reserve each time a resize is needed when pushing data.
+                   // Value is expressed in number of elements (sizeof(T)*increment).
 
     allocator* allocator;
 };
 
 template <typename T>
-maybe_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &global_default_heap_allocator);
+maybe_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &default_allocator);
 
 template <typename T>
 maybe_inline void destroy_array(array<T>* array);
@@ -67,14 +66,14 @@ template <typename T>
 maybe_inline array<T> create_array(u32 size, u32 incr, allocator* allocator)
 {
     array<T> result;
-    init_array_macro(result, T, size, incr, allocator);
+    init_array_m(result, T, size, incr, allocator);
     return result;
 }
 
 template <typename T>
 maybe_inline void destroy_array(array<T>* array)
 {
-    destroy_array_macro(array);
+    destroy_array_m(array);
 }
 
 template <typename T>
@@ -109,13 +108,13 @@ maybe_inline void resize_array(array<T>* array, u32 new_size)
 template <typename T>
 maybe_inline void array_push(array<T>* array, T val)
 {
-    array_push_macro(array, T, val);
+    array_push_m(array, T, val);
 }
 
 template <typename T>
 maybe_inline void array_push_repeated(array<T>* array, T val, u32 count)
 {
-    array_push_repeated_macro(array, T, val, count);
+    array_push_repeated_m(array, T, val, count);
 }
 
 template <typename T>
@@ -149,31 +148,31 @@ maybe_inline void array_push_array(array<T>* out, const array<T>* in)
 template <typename T>
 maybe_inline void array_pop(array<T>* array)
 {
-    array_pop_macro(array);
+    array_pop_m(array);
 }
 
 template <typename T>
 maybe_inline void clear_array(array<T>* array)
 {
-    clear_array_macro(array);
+    clear_array_m(array);
 }
 
 template <typename T>
 maybe_inline void clear_array_deeply(array<T>* array, void (*destroy_elem_func)(T* elem))
 {
-    clear_array_macro_deeply(array, destroy_elem_func);
+    clear_array_deeply_m(array, destroy_elem_func);
 }
 
 template <typename T>
 maybe_inline void reverse_array(array<T>* array)
 {
-    reverse_array_macro(array, T);
+    reverse_array_m(array, T);
 }
 
 template <typename T>
 maybe_inline void reverse_array_slice(array<T>* array, u32 offset, u32 count)
 {
-    reverse_array_slice_macro(array, T, offset, count);
+    reverse_array_slice_m(array, T, offset, count);
 }
 
 template <typename T>
@@ -205,5 +204,3 @@ maybe_inline void copy_array_slice_to_buffer(const array<T>* in, T* out, u32 off
         out[i] = in[i + offset];
     }
 }
-
-#endif // !CUTILE_ARRAY_HPP
