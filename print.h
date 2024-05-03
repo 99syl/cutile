@@ -1,5 +1,4 @@
-#ifndef CUTILE_PRINT_H
-#define CUTILE_PRINT_H
+#pragma once
 
 #include "cutile.h"
 
@@ -91,5 +90,3 @@ CUTILE_C_API void println_str_view(string_view* view);
     }
 
 #endif // CUTILE_IMPLEM
-
-#endif // !CUTILE_PRINT_H

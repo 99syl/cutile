@@ -1,20 +1,21 @@
-#ifndef CUTILE_H
-#define CUTILE_H
+#pragma once
 
 #ifdef __cplusplus
     #define CUTILE_CPP
-#else // !__cplusplus
+#elif defined(__STDC_VERSION__)
     #define CUTILE_C
+#else
+    #error "cutile could not tell if you are using C or C++."
 #endif
 
-#ifdef CUTILE_CPP
-    // TODO: Check if it's cpp20 at least.
+#if defined(CUTILE_CPP)
+    #if __cplusplus < 202002L
+        #error "C++ versions prior to C++20 are not supported."
+    #endif
 #elif defined(CUTILE_C)
     #if __STDC_VERSION__ < 201112L
-        #error "Only C11 and next versions are supported by cutile."
+        #error "C versions prior to C11 are not supported."
     #endif
-#else
-    #error "cutile could not tell if this is C or C++. Please define yourself CUTILE_CPP or CUTILE_C."
 #endif
 
 #ifdef _WIN32
@@ -51,5 +52,3 @@
         #define CUTILE_C_API extern
     #endif
 #endif
-
-#endif // !CUTILE_H
