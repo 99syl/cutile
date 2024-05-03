@@ -78,6 +78,8 @@ int main(int ac, char** av)
 
     // Number to string conversions tests.
     {
+	string s;
+
         test_assert(str_to_u8(&s) == 255);
         s = create_str_from_cstr("0", &allocator);
         test_assert(str_to_u8(&s) == 0);
