@@ -88,15 +88,6 @@ CUTILE_C_API void println_cstr(const char* cstr);
     #define nullptr 0
 #endif
 
-#ifdef CUTILE_CPP
-    template <typename T, typename U>
-    struct duple
-    {
-        T _1;
-        U _2;
-    };
-#endif
-
 // field_offset
 #define field_offset(type, member) ((u64)(&((type*)0x0)->member))
 
