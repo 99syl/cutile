@@ -4,15 +4,20 @@
 
 test_begin();
 
+allocator* default_allocator;
+
 void depth_two()
 {
-    stacktrace st = get_stacktrace(0, U16_MAX, &global_default_heap_allocator);
+    stacktrace st = get_stacktrace(0, U16_MAX, default_allocator);
     destroy_stacktrace(&st);
 }
 
 void depth_one()
 {
-    stacktrace st = get_stacktrace(0, U16_MAX, &global_default_heap_allocator);
+    heap_allocator heapall = create_default_heap_allocator();
+    default_allocator = (allocator*)&heapall;
+
+    stacktrace st = get_stacktrace(0, U16_MAX, default_allocator);
     {
         stacktrace_elem* st_elem;
         
@@ -31,7 +36,6 @@ void depth_one()
 
 int main(void)
 {
-    initialize_global_default_heap_allocator();
     depth_one();
     test_end();
 }

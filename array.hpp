@@ -18,7 +18,7 @@ struct array
 };
 
 template <typename T>
-maybe_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = &default_allocator);
+maybe_inline array<T> create_array(u32 size, u32 increment, allocator* allocator = default_allocator);
 
 template <typename T>
 maybe_inline void destroy_array(array<T>* array);

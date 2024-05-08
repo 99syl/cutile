@@ -9,8 +9,10 @@
 #endif
 
 #if defined(CUTILE_CPP)
-    #if __cplusplus < 202002L
-        #error "C++ versions prior to C++20 are not supported."
+    #if defined(_MSVC_LANG)
+        #if _MSVC_LANG < 202002L
+            #error "C++ versions prior to C++20 are not supported."
+        #endif
     #endif
 #elif defined(CUTILE_C)
     #if __STDC_VERSION__ < 201112L
