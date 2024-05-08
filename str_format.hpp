@@ -20,25 +20,7 @@ maybe_inline string format_str(const string* fmt, Args ...args);
 template <typename ...Args>
 maybe_inline void   format_str(string* out, const string* fmt, Args ...args);
 
-// Implement this function if you want to be able to give your custom types !
-// Already existing implementations (need to compile this file with CUTILE_IMPLEM preprocessor define):
-//   u8
-//   s8
-//   u16
-//   s16
-//   u32
-//   s32
-//   u64
-//   s64
-//   char*
-//   const char*
-//   string
-//   string*
-//   const string*
-//   string_view
-//   string_view*
-//   const string_view*
-//   void*
+// Implement this function if you want to be able to format other types.
 template <typename Arg>
 CUTILE_CPP_API void format_arg_into_str(string* out, Arg);
 template <> CUTILE_CPP_API void format_arg_into_str<u8>(string*, u8);
