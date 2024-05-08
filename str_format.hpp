@@ -71,7 +71,7 @@ maybe_inline string format_str(allocator* allocator, const char* fmt, Args ...ar
 template <typename ...Args>
 maybe_inline string format_str(const char* fmt, Args ...args)
 {
-    return format_str(&default_allocator, fmt, args...);
+    return format_str(default_allocator, fmt, args...);
 }
 
 template <typename ...Args>
@@ -93,7 +93,7 @@ maybe_inline string format_str(allocator* allocator, const string* fmt, Args ...
 template <typename ...Args>
 maybe_inline string format_str(const string* fmt, Args ...args)
 {
-    return format_str(&default_allocator, fmt, args...);
+    return format_str(default_allocator, fmt, args...);
 }
 
 template <typename ...Args>

@@ -9,7 +9,7 @@ template <typename NumberType>
 maybe_inline NumberType sub_str_to_nb(const string* s, u32 offset, u32 count);
 
 template <typename NumberType>
-maybe_inline string nb_to_str(NumberType val, allocator* = &default_allocator);
+maybe_inline string nb_to_str(NumberType val, allocator* = default_allocator);
 
 template <typename NumberType>
 maybe_inline void nb_into_str(NumberType val, string* out);

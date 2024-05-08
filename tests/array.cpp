@@ -2,13 +2,14 @@
 #include "../array.hpp"
 #include "../test.h"
 
-allocator default_allocator;
+allocator* default_allocator;
 
 int main()
 {
     test_begin();
 
-    default_allocator = create_default_heap_allocator();
+    heap_allocator heapall = create_default_heap_allocator();
+    default_allocator = (allocator*)&heapall;
 
     auto arr = create_array<int>(5, 5);
     
