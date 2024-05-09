@@ -20,6 +20,12 @@ maybe_inline string format_str(const string* fmt, Args ...args);
 template <typename ...Args>
 maybe_inline void   format_str(string* out, const string* fmt, Args ...args);
 
+struct format_memory_to_str
+{
+    u8* buffer;
+    u64 size;
+};
+
 // Implement this function if you want to be able to format other types.
 template <typename Arg>
 CUTILE_CPP_API void format_arg_into_str(string* out, Arg);
@@ -37,6 +43,7 @@ template <> CUTILE_CPP_API void format_arg_into_str<string*>(string*, string*);
 template <> CUTILE_CPP_API void format_arg_into_str<const string*>(string*, const string*);
 template <> CUTILE_CPP_API void format_arg_into_str<string_view>(string*, string_view);
 template <> CUTILE_CPP_API void format_arg_into_str<const string_view*>(string*, const string_view*);
+template <> CUTILE_CPP_API void format_arg_into_str<format_memory_to_str>(string*, format_memory_to_str);
 
 // IMPLEMENTATION BELOW:
 
@@ -54,7 +61,7 @@ maybe_inline void format_next_arg_into_str(const char* fmt, string* out, Arg arg
         }
         else
         {
-            str_push_back_s8(out, c);
+            str_push_back(out, c);
             ++(*i);
         }
     }
@@ -80,6 +87,10 @@ maybe_inline void format_str(string* out, const char* fmt, Args ...args)
     u32 i = 0;
     u32 fmt_len = cstr_length(fmt);
     (format_next_arg_into_str(fmt, out, args, &i, fmt_len), ...);
+    if (i < fmt_len)
+    {
+        str_push_back_buf(out, (u8*)fmt + i, fmt_len - i);
+    }
 }
 
 template <typename ...Args>
@@ -188,6 +199,12 @@ maybe_inline void format_str(string* out, const string* fmt, Args ...args)
     void format_arg_into_str<void*>(string* out, void* arg)
     {
         format_arg_into_str(out, (u64)arg);
+    }
+
+    template <> 
+    void format_arg_into_str<format_memory_to_str>(string* out, format_memory_to_str arg)
+    {
+        str_push_back_buf(out, arg.buffer, arg.size);
     }
 
 #endif // CUTILE_IMPLEM
