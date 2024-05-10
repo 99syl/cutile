@@ -41,7 +41,7 @@
     CUTILE_C_API bool8 s64_memory_equals(const s64* lhs, const s64* rhs, u32 count);
     
     CUTILE_C_API b8 memory_equals(u8* lhs, u64 lhs_size, u8* rhs, u64 rhs_size);
-    
+
     // Size is in data_type size unit.
     #define declare_memory_view_of_m(data_type)      \
         typedef struct data_type##_memory_view       \
@@ -115,8 +115,10 @@
     
     #ifdef CUTILE_DEFAULT_ALLOCATOR_NAME
         CUTILE_C_API allocator* CUTILE_DEFAULT_ALLOCATOR_NAME;
+        #define set_default_allocator_m(allocator_ptr) CUTILE_DEFAULT_ALLOCATOR_NAME = (allocator*)allocator_ptr
     #else
         CUTILE_C_API allocator* default_allocator;
+        #define set_default_allocator_m(allocator_ptr) default_allocator = (allocator*)allocator_ptr
     #endif
     
     #ifdef CUTILE_IMPLEM
