@@ -199,6 +199,10 @@
         clear_array_m(array_ptr);                                       \
     }                                                                   \
     
+    #if defined(__clang__) || defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wchanges-meaning"
+    #endif
+
     // Generate some array types.
     declare_array_of_m(s8);
     declare_array_of_m(u8);
@@ -209,6 +213,10 @@
     declare_array_of_m(s64);
     declare_array_of_m(u64);
     
+    #if defined(__clang__) || defined(__GNUC__)
+        #pragma GCC diagnostic pop
+    #endif
+
     typedef struct array_view
     {
         const u8* data;

@@ -2,17 +2,27 @@
 
     #include "cutile.h"
     #include "memory.h"
+
+
+    // WTF let me name my variables however I want, this is a dumb warning seriously.
+    #if defined(__clang__) || defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wchanges-meaning"
+    #endif
     
     // String can be used to store textual data that we often refer to as "characters" or "code points".
     typedef struct string
     {
-        u8* data;
-        u32 count;
-        u32 size;
-    
+        u8*        data;
+        u32        count;
+        u32        size;
+
         allocator* allocator;
     } string;
     
+    #if defined(__clang__) || defined(__GNUC__)
+        #pragma GCC diagnostic pop
+    #endif
+
     // String Creation:
     CUTILE_C_API string create_empty_str(allocator* allocator);
     CUTILE_C_API string create_sized_empty_str(u32 size, allocator*);
