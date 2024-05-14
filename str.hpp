@@ -43,7 +43,7 @@ template <>
 maybe_inline s64 sub_str_to_nb<s64>(const string* s, u32 offset, u32 count) { return sub_str_to_s64(s, offset, count); }
 
 template <typename NumberType>
-maybe_inline string nb_to_str(NumberType val, allocator*)
+maybe_inline string nb_to_str(NumberType val, allocator* allocator)
 {
     string result = create_empty_str(allocator);
     nb_into_str(val, &result);
