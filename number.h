@@ -64,7 +64,7 @@ maybe_inline s32 get_s32_digits(s32 nb)
     if (nb < 1000000000) return 9;
     return 10;
 }
-    
+   
 maybe_inline s64 get_u64_digits(u64 nb)
 {
     if (nb < 10) return 1;
@@ -85,7 +85,7 @@ maybe_inline s64 get_u64_digits(u64 nb)
     if (nb < 10000000000000000) return 16;
     if (nb < 100000000000000000) return 17;
     if (nb < 1000000000000000000) return 18;
-    if (nb < 10000000000000000000) return 19;
+    if (nb < 10000000000000000000ULL) return 19;
     return 20;
 }
     
