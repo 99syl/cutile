@@ -1,12 +1,14 @@
 #define CUTILE_IMPLEM
-#include "../ini.h"
 #include "../test.h"
+#include "../ini.h"
 
 int main(int ac, char** av)
 {
-    test_begin();
+    cutile_test_begin_m();
 
-    initialize_global_default_heap_allocator();
+    cutile_heap_allocator heap_allocator = cutile_create_default_heap_allocator();
+    cutile_allocator* allocator = (cutile_allocator*)&heap_allocator;
+
     const char ini_data[] =
         "foo=123\n"
         "bar=Value\n"
@@ -15,49 +17,71 @@ int main(int ac, char** av)
         ";; comment\n"
         "oof=uelaV";
 
-    parse_ini_result result = parse_ini((const u8*)ini_data, sizeof(ini_data)/sizeof(char) - 1 /*  */, &global_default_heap_allocator);
-    ini_entry_value_result entry_value;
-    entry_value = get_ini_global_entry_value("foo", &result);
+    cutile_parse_ini_result result = cutile_parse_ini((const u8*)ini_data, sizeof(ini_data)/sizeof(char) - 1 /*  */, allocator);
+
+    cutile_test_assert_m(result.error.msg == nullptr);
+    if (result.error.msg)
     {
-        test_assert(entry_value.found == bool8_true);
-        test_assert(entry_value.value_start[0] == '1');
-        test_assert(entry_value.value_size == 3);
+        println_cstr(result.error.msg);
+        cutile_test_end_m();
     }
-    entry_value = get_ini_global_entry_value("bar", &result);
+
+    cutile_ini_entry_value_result entry_value;
+    entry_value = cutile_get_ini_global_entry_value("foo", &result);
     {
-        test_assert(entry_value.found == bool8_true);
-        test_assert(entry_value.value_start[0] == 'V');
-        test_assert(entry_value.value_size == 5);
+        cutile_test_assert_m(entry_value.found == b8_true);
+        if (entry_value.found)
+        {
+            cutile_test_assert_m(entry_value.value_start[0] == '1');
+            cutile_test_assert_m(entry_value.value_start[1] == '2');
+            cutile_test_assert_m(entry_value.value_start[2] == '3');
+            cutile_test_assert_m(entry_value.value_size == 3);
+        }
     }
-    entry_value = get_ini_entry_value("SectionA", "rab", &result);
+    entry_value = cutile_get_ini_global_entry_value("bar", &result);
     {
-        test_assert(entry_value.found == bool8_true);
-        test_assert(entry_value.value_start[0] == '3');
-        test_assert(entry_value.value_size == 3);
+        cutile_test_assert_m(entry_value.found == b8_true);
+        if (entry_value.found)
+        {
+            cutile_test_assert_m(entry_value.value_start[0] == 'V');
+            cutile_test_assert_m(entry_value.value_size == 5);
+        }
     }
-    entry_value = get_ini_entry_value("SectionA", "oof", &result);
+    entry_value = cutile_get_ini_entry_value("SectionA", "rab", &result);
     {
-        test_assert(entry_value.found == bool8_true);
-        test_assert(entry_value.value_start[0] == 'u');
-        test_assert(entry_value.value_size == 5);
+        cutile_test_assert_m(entry_value.found == b8_true);
+        if (entry_value.found)
+        {
+            cutile_test_assert_m(entry_value.value_start[0] == '3');
+            cutile_test_assert_m(entry_value.value_size == 3);
+        }
     }
-    entry_value = get_ini_entry_value("SectionA", "bar", &result);
+    entry_value = cutile_get_ini_entry_value("SectionA", "oof", &result);
     {
-        test_assert(entry_value.found == bool8_false);
+        cutile_test_assert_m(entry_value.found == b8_true);
+        if (entry_value.found)
+        {
+            cutile_test_assert_m(entry_value.value_start[0] == 'u');
+            cutile_test_assert_m(entry_value.value_size == 5);
+        }
     }
-    entry_value = get_ini_entry_value("SectionC", "oof", &result);
+    entry_value = cutile_get_ini_entry_value("SectionA", "bar", &result);
     {
-        test_assert(entry_value.found == bool8_false);
+        cutile_test_assert_m(entry_value.found == b8_false);
     }
-    entry_value = get_ini_global_entry_value("oof", &result);
+    entry_value = cutile_get_ini_entry_value("SectionC", "oof", &result);
     {
-        test_assert(entry_value.found == bool8_false);
+        cutile_test_assert_m(entry_value.found == b8_false);
     }
-    entry_value = get_ini_global_entry_value("not_existing_entry", &result);
+    entry_value = cutile_get_ini_global_entry_value("oof", &result);
     {
-        test_assert(entry_value.found == bool8_false);
+        cutile_test_assert_m(entry_value.found == b8_false);
     }
-    destroy_ini_parsed_data(&result);
+    entry_value = cutile_get_ini_global_entry_value("not_existing_entry", &result);
+    {
+        cutile_test_assert_m(entry_value.found == b8_false);
+    }
+    cutile_destroy_ini_parsed_data(&result);
     
-    test_end();
+    cutile_test_end_m();
 }

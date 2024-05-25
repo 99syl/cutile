@@ -1,92 +1,107 @@
-#pragma once
+#ifndef CUTILE_PRINT_H
 
-#include "cutile.h"
+    // This API has optional functions using cutile_string.
+    // In order to compile them you need to define CUTILE_IMPLEM_PRINT_STRING_API.
 
-// Types defined in str.h:
-typedef struct string string;
-typedef struct string_view string_view;
+    #include "cutile.h"
 
-CUTILE_C_API void print(const string* str);
-CUTILE_C_API void print_cstr(const char* cstr);
-CUTILE_C_API void print_str_view(string_view* view);
-CUTILE_C_API void println(const string* str);
-CUTILE_C_API void println_cstr(const char* cstr);
-CUTILE_C_API void println_str_view(string_view* view);
+    // Type defined in str.h:
+    typedef struct cutile_string    cutile_string;
 
-#ifdef CUTILE_IMPLEM
+    CUTILE_C_API void cutile_print_cstr(const char* cstr);
+    CUTILE_C_API void cutile_print_str(const cutile_string* str);
+    CUTILE_C_API void cutile_println_cstr(const char* cstr);
+    CUTILE_C_API void cutile_println_str(const cutile_string* str);
 
-    #ifdef _WIN32
-        #include <windows.h>
-    #elif defined(__unix__) || defined(__APPLE__)
-        #include <unistd.h>
+    #ifdef CUTILE_CPP
+        namespace cutile
+        {
+            struct string;
+            struct allocator;
+
+            maybe_inline void print(string* s)        { cutile_print_str(s); }
+            maybe_inline void print(const char* s)    { cutile_print_cstr(s); }
+            maybe_inline void println(string* s)      { cutile_println_str(s); }
+            maybe_inline void println(const char* s)  { cutile_println_cstr(s); }
+
+            template <typename ...Args>
+            maybe_inline void print_fmt(const char* fmt, Args ...args);
+            template <typename ...Args>
+            maybe_inline void print_fmt(allocator* allocator, const char* fmt, Args ...args);
+
+            template <typename ...Args>
+            maybe_inline void println_fmt(const char* fmt, Args ...args);
+            template <typename ...Args>
+            maybe_inline void println_fmt(allocator* allocator, const char* fmt, Args ...args);
+        }
     #endif
 
-    #include "str.h"
+    #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
+        #define print_cstr(param)   cutile_print_cstr(param);
+        #define print_str(param)    cutile_print_str(param);
+        #define println_cstr(param) cutile_println_cstr(param);
+        #define println_str(param)  cutile_println_str(param);
+    #endif
 
-    void print(const string* str)
-    {
-        #ifdef _WIN32
-            HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (out && out != INVALID_HANDLE_VALUE) 
-            {
-                DWORD written;
-                WriteConsoleA(out, str->data, str->count, &written, NULL);
-            }
-        #elif defined(__unix__) || defined(__APPLE__)
-            write(1, str->data, str->count);
-        #else
-            #error "Unsupported platform."
+    #ifdef CUTILE_IMPLEM
+        #include "cxx.h"
+
+        #if WINDOWS
+            #include <windows.h>
+        #elif UNIX_LIKE
+            #include <unistd.h>
         #endif
-    }
 
-    void print_cstr(const char* cstr)
-    {
-        #ifdef _WIN32
-            HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (out && out != INVALID_HANDLE_VALUE) 
-            {
-                DWORD written;
-                WriteConsoleA(out, cstr, cstr_length(cstr), &written, NULL);
-            }
-        #elif defined(__unix__) || defined(__APPLE__)
-            write(1, cstr, cstr_length(cstr));
-        #else
-            #error "Unsupported platform."
-        #endif
-    }
+        void cutile_print_cstr(const char* cstr)
+        {
+            u32 len = 0; while(cstr[len]) len++;
+            #if WINDOWS
+                HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (out && out != INVALID_HANDLE_VALUE) 
+                {
+                    DWORD written;
+                    WriteConsoleA(out, cstr, len, &written, NULL);
+                }
+            #elif UNIX_LIKE
+                write(1, cstr, len);
+            #else
+                #error "Unsupported platform."
+            #endif
+        }
 
-    void print_str_view(string_view* view)
-    {
-        #ifdef _WIN32
-            HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (out && out != INVALID_HANDLE_VALUE) 
-            {
-                DWORD written;
-                WriteConsoleA(out, view->data, view->count, &written, NULL);
-            }
-        #elif defined(__unix__) || defined(__APPLE__)
-            write(1, view->data, view->count);
-        #else
-            #error "Unsupported platform."
-        #endif
-    }
+        void cutile_println_cstr(const char* cstr)
+        {
+            cutile_print_cstr(cstr);
+            cutile_print_cstr("\n");
+        }
 
-    void println(const string* str)
-    {
-        print(str);
-        print_cstr("\n");
-    }
+    #endif // CUTILE_IMPLEM
 
-    void println_cstr(const char* cstr)
-    {
-        print_cstr(cstr);
-        print_cstr("\n");
-    }
+    #ifdef CUTILE_IMPLEM_PRINT_STRING_API
     
-    void println_str_view(string_view* view)
-    {
-        print_str_view(view);
-        print_cstr("\n");
-    }
+        void cutile_print_str(const cutile_string* str)
+        {
+            #if WINDOWS
+                HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (out && out != INVALID_HANDLE_VALUE) 
+                {
+                    DWORD written;
+                    WriteConsoleA(out, str->data, str->count, &written, NULL);
+                }
+            #elif UNIX_LIKE
+                write(1, str->data, str->count);
+            #else
+                #error "Unsupported platform."
+            #endif
+        }
 
-#endif // CUTILE_IMPLEM
+        void cutile_println_str(const cutile_string* str)
+        {
+            cutile_print_str(str);
+            cutile_print_cstr("\n");
+        }
+
+    #endif // CUTILE_IMPLEM_PRINT_STRING_API
+
+    #define CUTILE_PRINT_H
+#endif

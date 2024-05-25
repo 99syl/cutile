@@ -1,65 +1,77 @@
 #ifndef CUTILE_SHARED_LIBRARY_H
-#define CUTILE_SHARED_LIBRARY_H
 
-#include "./cxx.h"
+    #include "cxx.h"
 
-typedef struct shared_library
-{
-    void* handle;
-} shared_library;
+    typedef struct cutile_shared_library
+    {
+        void* handle;
+    } cutile_shared_library;
 
-CUTILE_C_API shared_library  load_shared_library(const char* shared_library_path);
-CUTILE_C_API void            unload_shared_library(shared_library);
+    // On Windows and Linux, sets shared_library.handle to nullptr if the function fails.
+    CUTILE_C_API cutile_shared_library  cutile_load_shared_library(const char* shared_library_path);
+    CUTILE_C_API void                   cutile_unload_shared_library(cutile_shared_library*);
 
-CUTILE_C_API void* get_shared_library_proc(shared_library, const char* proc_name);
-#ifdef CUTILE_CPP
-    template <typename ProcType>
-    CUTILE_CPP_API force_inline ProcType get_shared_library_proc(shared_library, const char* proc_name);
-#endif // CUTILE_CPP
+    // On Windows and Linux, returns nullptr if the function fails.
+    CUTILE_C_API void* cutile_get_shared_library_proc(cutile_shared_library*, const char* proc_name);
 
-#ifdef CUTILE_IMPLEM
-    #ifdef _WIN32
-        #include <windows.h>
+    #ifdef CUTILE_CPP
+        namespace cutile
+        {
+            using shared_library = cutile_shared_library;
+
+            template <typename ProcType>
+            maybe_inline ProcType get_shared_library_proc(shared_library* sl, const char* proc_name) { return (ProcType)cutile_get_shared_library_proc(sl, proc_name); }
+        }
+    #endif // CUTILE_CPP
+
+    #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
+        typedef cutile_shared_library shared_library;
+
+        #define load_shared_library(path) cutile_load_shared_library(path)
+        #define unload_shared_library(sl) cutile_unload_shared_library(sl)
+
+        #define get_shared_library_proc(sl) cutile_get_shared_library_proc(sl, proc_name)
     #endif
+
+    #ifdef CUTILE_IMPLEM
+        #if WINDOWS
+            #include <windows.h>
+        #elif LINUX
+            #include <dlfcn.h>
+        #else
+            #error "shared_library.h: Unsupported platform."
+        #endif
+        
+        cutile_shared_library cutile_load_shared_library(const char* shared_library_path)
+        {
+            cutile_shared_library result;
+            #if WINDOWS
+                result.handle = LoadLibraryA(shared_library_path);
+            #elif LINUX
+                result.handle = dlopen(shared_library_path, RTLD_LAZY); /* RTLD_NOW is also possible but I still don't understand how it works. What are the pros and cons of lazy loading and immediate loading ? */
+            #endif
+
+            return result;
+        }
     
-    shared_library load_shared_library(const char* shared_library_path)
-    {
-        shared_library result;
-        #ifdef _WIN32
-            result.handle = LoadLibraryA(shared_library_path);
-        #else
-            // TODO: Implement for other platforms.
-            result.handle = nullptr;
-        #endif
+        void cutile_unload_shared_library(cutile_shared_library* sl)
+        {
+            #if WINDOWS
+                FreeLibrary((HMODULE)sl->handle);
+            #elif LINUX
+                dlclose(sl->handle);
+            #endif
+        }
+    
+        void* cutile_get_shared_library_proc(cutile_shared_library* sl, const char* proc_name)
+        {
+            #if WINDOWS
+                return GetProcAddress((HMODULE)sl->handle, proc_name);
+            #elif LINUX
+                return dlsym(sl->handle, proc_name);
+            #endif
+        }
+    #endif // CUTILE_IMPLEM
 
-        return result;
-    }
-
-    void unload_shared_library(shared_library sl)
-    {
-        #ifdef _WIN32
-            FreeLibrary((HMODULE)sl.handle);
-        #else
-            // TODO: Implement for other platforms.
-        #endif
-    }
-
-    void* get_shared_library_proc(shared_library sl, const char* proc_name)
-    {
-        #ifdef _WIN32
-            return GetProcAddress((HMODULE)sl.handle, proc_name);
-        #else
-            // TODO: Implement for other platforms.
-            return nullptr;
-        #endif
-    }
-
-#endif // CUTILE_IMPLEM
-
-#ifdef CUTILE_CPP
-    template <typename ProcType>
-    force_inline ProcType get_shared_library_proc(shared_library sl, const char* proc_name) { return (ProcType)get_shared_library_proc(sl, proc_name); }
-#endif // CUTILE_CPP
-
-
-#endif // !CUTILE_SHARED_LIBRARY_H
+    #define CUTILE_SHARED_LIBRARY_H
+#endif
