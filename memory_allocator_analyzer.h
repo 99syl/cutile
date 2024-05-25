@@ -10,22 +10,22 @@
 
     typedef enum
     {
-        allocation_info_status_available,
-        allocation_info_status_unavailable,
-        allocation_info_status_invalid_address,
-        allocation_info_status_double_free,
-    } allocation_info_status;
+        cutile_allocation_info_status_available,
+        cutile_allocation_info_status_unavailable,
+        cutile_allocation_info_status_invalid_address,
+        cutile_allocation_info_status_double_free,
+    } cutile_allocation_info_status;
     
     typedef struct
     {
         void*                  address;
         u64                    size;
     
-        stacktrace             stacktrace;
-        stacktrace_array       free_stacktraces;
+        cutile_stacktrace             stacktrace;
+        cutile_stacktrace_array       free_stacktraces;
     
-        allocation_info_status status;
-    } allocation_info;
+        cutile_allocation_info_status status;
+    } cutile_allocation_info;
     
     declare_array_of_m(allocation_info);
     

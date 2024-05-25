@@ -6,20 +6,20 @@
 
     #include "array.h"
 
-    typedef struct stacktrace_elem
+    typedef struct cutile_stacktrace_elem
     {
-        u32         line;
-        char*       filename;
-        char*       symbol_name;
-        allocator*  allocator;
-    } stacktrace_elem;
+        u32               line;
+        char*             filename;
+        char*             symbol_name;
+        cutile_allocator* allocator;
+    } cutile_stacktrace_elem;
     
     declare_array_of_m(stacktrace_elem);
     
-    typedef struct stacktrace
+    typedef struct cutile_stacktrace
     {
-        stacktrace_elem_array calls;
-    } stacktrace;
+        cutile_stacktrace_elem_array calls;
+    } cutile_stacktrace;
     
     declare_array_of_m(stacktrace);
     

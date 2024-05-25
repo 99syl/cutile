@@ -4,7 +4,7 @@
 
 int main(int ac, char** av)
 {
-    test_begin();
+    cutile_test_begin_m();
 
     heap_allocator heapalloc = create_default_heap_allocator();
     allocator* heap = (allocator*)&heapalloc;
@@ -21,18 +21,45 @@ int main(int ac, char** av)
     const char etext4[] = "bGlnaHQgdw==";
     const char etext5[] = "bGlnaHQgd28=";
     const char etext6[] = "YWVmamtsZmVhYWFhYQ==";
-    
-    u64 len = 0;
-    test_assert(u8_memory_equals(base64_encode_cstr(text1, &len, heap), (u8*)etext1, len));
-    test_assert(u8_memory_equals(base64_encode_cstr(text2, &len, heap), (u8*)etext2, len));
-    test_assert(u8_memory_equals(base64_encode_cstr(text3, &len, heap), (u8*)etext3, len));
-    test_assert(u8_memory_equals(base64_encode_cstr(text4, &len, heap), (u8*)etext4, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext1, &len, heap), (u8*)text1, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext2, &len, heap), (u8*)text2, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext3, &len, heap), (u8*)text3, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext4, &len, heap), (u8*)text4, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext5, &len, heap), (u8*)text5, len));
-    test_assert(u8_memory_equals(base64_decode_cstr(etext6, &len, heap), (u8*)text6, len));
 
-    test_end();
+    u64 len;
+    u8* buf;
+
+    buf = base64_encode_cstr(text1, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext1, len));
+
+    buf = base64_encode_cstr(text2, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext2, len));
+
+    buf = base64_encode_cstr(text3, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext3, len));
+
+    buf = base64_encode_cstr(text4, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext4, len));
+
+    buf = base64_encode_cstr(text5, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext5, len));
+
+    buf = base64_encode_cstr(text6, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)etext6, len));
+
+    buf = base64_decode_cstr(etext1, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text1, len));
+
+    buf = base64_decode_cstr(etext2, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text2, len));
+
+    buf = base64_decode_cstr(etext3, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text3, len));
+
+    buf = base64_decode_cstr(etext4, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text4, len));
+
+    buf = base64_decode_cstr(etext5, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text5, len));
+
+    buf = base64_decode_cstr(etext6, &len, heap);
+    cutile_test_assert_m(memory_equals(buf, (u8*)text6, len));
+
+    cutile_test_end_m();
 }

@@ -1,31 +1,31 @@
 #ifndef CUTILE_PROCESS_H
-#define CUTILE_PROCESS_H
 
 #include "cxx.h"
 
-CUTILE_C_API void exit_process(unsigned int exit_code);
+CUTILE_C_API void cutile_exit_process(unsigned int exit_code);
 
-#ifdef CUTILE_IMPLEM
-    #ifdef _WIN32
-        #include <processthreadsapi.h>
-    #elif defined(__unix__) || defined(__APPLE__)
-        #include <unistd.h>
-    #endif
-    
-    void exit_process(unsigned int exit_code)
-    {
-        #ifdef _WIN32
-        {
-            ExitProcess(exit_code);
-        } // _WIN32
-        #elif defined(__unix__) || defined(__APPLE__)
-        {
-            _exit(exit_code);
-        } // __unix__
-        #else
-            #error "exit_process: Unsupported platform."
+    #ifdef CUTILE_IMPLEM
+        #if WINDOWS
+            #include <processthreadsapi.h>
+        #elif UNIX_LIKE
+            #include <unistd.h>
         #endif
-    }
-#endif
 
-#endif // !CUTILE_PROCESS_H
+        void cutile_exit_process(unsigned int exit_code)
+        {
+            #if WINDOWS
+            {
+                ExitProcess(exit_code);
+            }
+            #elif UNIX_LIKE
+            {
+                _exit(exit_code);
+            }
+            #else
+                #error "exit_process: Unsupported platform."
+            #endif
+        }
+    #endif
+
+    #define CUTILE_PROCESS_H
+#endif

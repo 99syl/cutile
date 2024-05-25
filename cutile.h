@@ -1,5 +1,11 @@
 #ifndef CUTILE_H
 
+    #define CUTILE_MAJOR_VER    0
+    #define CUTILE_MINOR_VER    1
+    #define CUTILE_PATCH        0
+
+    #define CUTILE_VERSION_CSTR #CUTILE_MAJOR_VER "." #CUTILE_MINOR_VER "." #CUTILE_PATCH "."
+
     #ifdef __cplusplus
         #define CUTILE_CPP
     #elif defined(__STDC_VERSION__)
