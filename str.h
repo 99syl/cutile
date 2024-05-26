@@ -67,6 +67,11 @@
     CUTILE_C_API u32 cutile_str_utf8_count(const cutile_string* str);
     CUTILE_C_API b8  cutile_str_is_valid_utf8(const cutile_string* str);
 
+    #ifdef CUTILE_CPP
+        maybe_inline b8 cutile_str_equals(const cutile_string* str, const char* cstr) { return cutile_str_equals_cstr(str, cstr); }
+        maybe_inline b8 cutile_str_equals(cutile_string str, const char* cstr) { return cutile_str_equals_cstr2(str, cstr); }
+    #endif
+
     // CString Creation:
     CUTILE_C_API char* cutile_create_cstr_from_str(const cutile_string*, cutile_allocator*);
     CUTILE_C_API char* cutile_create_cstr_from_cstr(const char*, cutile_allocator*);
@@ -199,6 +204,9 @@
         #define str_ends_with(str_ptr, cstr_pattern)    cutile_str_ends_with(str_ptr, cstr_pattern)
         #define str_utf8_count(str_ptr)                 cutile_str_utf8_count(str_ptr)
         #define str_is_valid_utf8(str_ptr)              cutile_str_is_valid_utf8(str_ptr)
+        #ifdef CUTILE_CPP
+            #define str_equals(...)                     cutile_str_equals(__VA_ARGS__)
+        #endif
 
         #define create_cstr_from_str(str_ptr, allocator_ptr)    cutile_create_cstr_from_str(str_ptr, allocator_ptr)
         #define create_cstr_from_cstr(cstr_ptr, allocator_ptr)  cutile_create_cstr_from_cstr(cstr_ptr, allocator_ptr)
