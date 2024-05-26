@@ -15,11 +15,9 @@ int main()
     cutile_test_require_m(sl.handle);
 
     void (*proc)();
-    #if defined(CUTILE_C)
-        proc = cutile_get_shared_library_proc(&sl, "dummy_func");
-    #elif defined(CUTILE_CPP)
-        proc = cutile::get_shared_library_proc(&sl, "dummy_func");
-    #endif
+    proc = cutile_get_shared_library_T_proc(void(*)(), &sl, "dummy_func");
+    cutile_test_require_m(proc);
+    proc = get_shared_library_T_proc(void(*)(), &sl, "dummy_func");
     cutile_test_require_m(proc);
 
     cutile_test_end_m();

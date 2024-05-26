@@ -56,29 +56,29 @@
         cutile_destroy_array_m(array);                                      \
     }
 
-    #define cutile_resize_array_m(type, array, new_size)                        \
-    {                                                                           \
-        type* new_data =                                                        \
-            cutile_allocate_m(array.allocator, sizeof(type) * (new_size));      \
-        if (new_size < array.count)                                             \
-        {                                                                       \
-            for (u32 i = 0; i < new_size; ++i)                                  \
-            {                                                                   \
-                new_data[i] = array.data[i];                                    \
-            }                                                                   \
-            array.count = new_size;                                             \
-        }                                                                       \
-        else                                                                    \
-        {                                                                       \
-            for (u32 i = 0; i < array.count; ++i)                               \
-            {                                                                   \
-                new_data[i] = array.data[i];                                    \
-            }                                                                   \
-        }                                                                       \
-        cutile_deallocate_m(array.allocator, array.data);                       \
-        array.data = new_data;                                                  \
-        array.size = new_size;                                                  \
-    }                                                                           \
+    #define cutile_resize_array_m(type, array, new_size)                            \
+    {                                                                               \
+        type* new_data =                                                            \
+            (type*)cutile_allocate_m(array.allocator, sizeof(type) * (new_size));   \
+        if (new_size < array.count)                                                 \
+        {                                                                           \
+            for (u32 i = 0; i < new_size; ++i)                                      \
+            {                                                                       \
+                new_data[i] = array.data[i];                                        \
+            }                                                                       \
+            array.count = new_size;                                                 \
+        }                                                                           \
+        else                                                                        \
+        {                                                                           \
+            for (u32 i = 0; i < array.count; ++i)                                   \
+            {                                                                       \
+                new_data[i] = array.data[i];                                        \
+            }                                                                       \
+        }                                                                           \
+        cutile_deallocate_m(array.allocator, array.data);                           \
+        array.data = new_data;                                                      \
+        array.size = new_size;                                                      \
+    }                                                                               \
  
     #define cutile_array_push_m(type, array, val)                               \
     {                                                                           \

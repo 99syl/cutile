@@ -55,8 +55,8 @@
     CUTILE_C_API char* cutile_create_cstr_from_sub_cstr(const char*, u32 pos, u32 count, cutile_allocator*);
 
     // CString Lookup:
-    CUTILE_C_API u32   cutile_cstr_length(const char* cstr);
-    CUTILE_C_API bool8 cutile_cstr_equals(const char* lhs, const char* rhs);
+    CUTILE_C_API u32 cutile_cstr_length(const char* cstr);
+    CUTILE_C_API b8  cutile_cstr_equals(const char* lhs, const char* rhs);
 
     CUTILE_C_API char* cutile_concat_cstrs(const char* lhs, const char* rhs, cutile_allocator*);
 
@@ -719,7 +719,7 @@
         {                                                               \
             res = 0;                                                    \
             u32 i = offset;                                             \
-            bool8 neg = cutile_b8_false;                                \
+            b8 neg = cutile_b8_false;                                   \
             if (str_at(s, i) == '-') {                                  \
                 neg = cutile_b8_true;                                   \
                 ++i;                                                    \

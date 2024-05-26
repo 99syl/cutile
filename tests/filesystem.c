@@ -10,6 +10,7 @@ int main()
     cutile_heap_allocator heap_allocator = cutile_create_default_heap_allocator();
     cutile_allocator* allocator = (cutile_allocator*)&heap_allocator;
 
+
     cutile_string program_dir_path = cutile_get_current_executable_dir_path_str(allocator);
     cutile_string test_dir_name = create_str_from_cstr("filesystem_test_dir", allocator);
     cutile_string dummy_file_name = create_str_from_cstr("dummy_file.txt", allocator);
