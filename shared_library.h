@@ -13,16 +13,7 @@
 
     // On Windows and Linux, returns nullptr if the function fails.
     CUTILE_C_API void* cutile_get_shared_library_proc(cutile_shared_library*, const char* proc_name);
-
-    #ifdef CUTILE_CPP
-        namespace cutile
-        {
-            using shared_library = cutile_shared_library;
-
-            template <typename ProcType>
-            maybe_inline ProcType get_shared_library_proc(shared_library* sl, const char* proc_name) { return (ProcType)cutile_get_shared_library_proc(sl, proc_name); }
-        }
-    #endif // CUTILE_CPP
+    #define            cutile_get_shared_library_T_proc(T, sl, name) (T)cutile_get_shared_library_proc(sl, name)
 
     #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
         typedef cutile_shared_library shared_library;
@@ -30,7 +21,8 @@
         #define load_shared_library(path) cutile_load_shared_library(path)
         #define unload_shared_library(sl) cutile_unload_shared_library(sl)
 
-        #define get_shared_library_proc(sl) cutile_get_shared_library_proc(sl, proc_name)
+        #define get_shared_library_proc(sl, proc_name) cutile_get_shared_library_proc(sl, proc_name)
+        #define get_shared_library_T_proc(T, sl, proc_name) cutile_get_shared_library_T_proc(T, sl, proc_name)
     #endif
 
     #ifdef CUTILE_IMPLEM

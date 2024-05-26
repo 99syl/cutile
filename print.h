@@ -14,26 +14,24 @@
     CUTILE_C_API void cutile_println_str(const cutile_string* str);
 
     #ifdef CUTILE_CPP
-        namespace cutile
-        {
-            struct string;
-            struct allocator;
+        #include "cxx.h" // maybe_inline
 
-            maybe_inline void print(string* s)        { cutile_print_str(s); }
-            maybe_inline void print(const char* s)    { cutile_print_cstr(s); }
-            maybe_inline void println(string* s)      { cutile_println_str(s); }
-            maybe_inline void println(const char* s)  { cutile_println_cstr(s); }
+        typedef struct cutile_allocator cutile_allocator; // Defined in memory.h
 
-            template <typename ...Args>
-            maybe_inline void print_fmt(const char* fmt, Args ...args);
-            template <typename ...Args>
-            maybe_inline void print_fmt(allocator* allocator, const char* fmt, Args ...args);
+        maybe_inline void cutile_print(cutile_string* s)   { cutile_print_str(s); }
+        maybe_inline void cutile_print(const char* s)      { cutile_print_cstr(s); }
+        maybe_inline void cutile_println(cutile_string* s) { cutile_println_str(s); }
+        maybe_inline void cutile_println(const char* s)    { cutile_println_cstr(s); }
 
-            template <typename ...Args>
-            maybe_inline void println_fmt(const char* fmt, Args ...args);
-            template <typename ...Args>
-            maybe_inline void println_fmt(allocator* allocator, const char* fmt, Args ...args);
-        }
+        template <typename ...Args>
+        maybe_inline void cutile_print_fmt(const char* fmt, Args ...args);
+        template <typename ...Args>
+        maybe_inline void cutile_print_fmt(cutile_allocator* allocator, const char* fmt, Args ...args);
+
+        template <typename ...Args>
+        maybe_inline void cutile_println_fmt(const char* fmt, Args ...args);
+        template <typename ...Args>
+        maybe_inline void cutile_println_fmt(cutile_allocator* allocator, const char* fmt, Args ...args);
     #endif
 
     #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
@@ -41,6 +39,13 @@
         #define print_str(param)    cutile_print_str(param);
         #define println_cstr(param) cutile_println_cstr(param);
         #define println_str(param)  cutile_println_str(param);
+
+        #ifdef CUTILE_CPP
+            #define print(str_ptr)   cutile_print(str_ptr)
+            #define print(cstr)      cutile_print(cstr)
+            #define println(str_ptr) cutile_println(str_ptr)
+            #define println(cstr)    cutile_println(cstr)
+        #endif
     #endif
 
     #ifdef CUTILE_IMPLEM

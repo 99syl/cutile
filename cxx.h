@@ -158,9 +158,7 @@
     typedef float   f32;
     typedef double  f64;
 
-    typedef u8  bool8;
     typedef u8  b8;
-    typedef u32 bool32;
     typedef u32 b32;
 
     #define cutile_b8_true  0x01

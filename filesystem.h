@@ -1,6 +1,7 @@
 #ifndef CUTILE_FILESYSTEM_H
 
     // This API has optional functions using cutile_string.
+    // In order to get the symbols you need to define CUTILE_FILESYSTEM_STRING_API
     // In order to compile them you need to define CUTILE_IMPLEM_FILESYSTEM_STRING_API.
 
     #include "cxx.h"
@@ -60,14 +61,8 @@
     CUTILE_C_API char*         cutile_get_current_executable_path(cutile_allocator* allocator);
     CUTILE_C_API char*         cutile_get_current_executable_dir_path(cutile_allocator* allocator);
 
-    // If the function failed, string.data will be null.
-    CUTILE_C_API cutile_string cutile_get_current_executable_path_str(cutile_allocator* allocator);
-    CUTILE_C_API cutile_string cutile_get_current_executable_dir_path_str(cutile_allocator* allocator);
-
     CUTILE_C_API void  cutile_concat_file_paths_into_cstr(const char* lhs, u32 lsize, const char* rhs, u32 rsize, char* out);
     CUTILE_C_API char* cutile_concat_file_paths(const char* lhs, const char* rhs, cutile_allocator* allocator);
-
-    CUTILE_C_API cutile_string cutile_concat_file_paths_str(const cutile_string* lhs, const cutile_string* rhs, cutile_allocator* allocator);
 
     // Returns a pointer to the last element of a path.
     // Elements can be separated by path separators '\' or '/'.
@@ -77,6 +72,17 @@
     // Returns null if filename does not have any.
     // This function does not allocate any memory, it returns a pointer to the starting position of the extension.
     CUTILE_C_API const char* cutile_get_filename_extension(const char* file_path);
+
+    // cutile_string API
+    #ifdef CUTILE_FILESYSTEM_STRING_API
+        #include "str.h"
+
+        // If the function failed, string.data will be null.
+        CUTILE_C_API cutile_string cutile_get_current_executable_path_str(cutile_allocator*);
+        CUTILE_C_API cutile_string cutile_get_current_executable_dir_path_str(cutile_allocator*);
+
+        CUTILE_C_API cutile_string cutile_concat_file_paths_str(const cutile_string* lhs, const cutile_string* rhs, cutile_allocator* allocator);
+    #endif
 
     #ifdef CUTILE_IMPLEM
 
@@ -327,7 +333,7 @@
                     if (exe_path[i] == '/') last_sep_index = i;
                 #endif
             }
-            char* exe_dir = cutile_allocate_m(allocator, last_sep_index + 1);
+            char* exe_dir = (char*)cutile_allocate_m(allocator, last_sep_index + 1);
             cutile_copy_memory_m(exe_dir, exe_path, last_sep_index);
             exe_dir[last_sep_index] = '\0';
             cutile_deallocate_m(allocator, exe_path);
@@ -399,7 +405,7 @@
 
         b8 cutile_file_exists_str_(cutile_string* path)
         {
-            char* cpath = cutile_default_allocate(path->count + 1);
+            char* cpath = (char*)cutile_default_allocate(path->count + 1);
             cutile_copy_memory_m(cpath, path->data, path->count);
             cpath[path->count] = '\0';
             b8 res = cutile_file_exists(cpath);
@@ -417,7 +423,7 @@
 
         b8 cutile_directory_exists_str_(cutile_string* path)
         {
-            char* cpath = cutile_default_allocate(path->count + 1);
+            char* cpath = (char*)cutile_default_allocate(path->count + 1);
             cutile_copy_memory_m(cpath, path->data, path->count);
             cpath[path->count] = '\0';
             b8 res = cutile_directory_exists(cpath);
@@ -457,7 +463,7 @@
             #else
                 #error "Unsupported platform"
             #endif
-            result = cutile_create_str_from_buf(tmp, path_len, allocator);
+            result = cutile_create_str_from_buf((u8*)tmp, path_len, allocator);
             return result;
 
         }
