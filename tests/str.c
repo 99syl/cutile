@@ -84,6 +84,7 @@ int main(int ac, char** av)
     {
         cutile_string s;
 
+        s = create_str_from_cstr("255", default_allocator);
         cutile_test_assert_m(str_to_u8(&s) == 255);
         s = create_str_from_cstr("0", default_allocator);
         cutile_test_assert_m(str_to_u8(&s) == 0);
