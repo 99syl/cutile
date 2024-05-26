@@ -283,26 +283,27 @@
                     if (section.fields.count == 0) section.content_start = next_tok.start; // Represents begin of content if this is the first field.
                     cutile_parse_ini_entry(&next_tok, state, &section, result);
                     break;
-    
+
+                // '[' has been encountered, let's finish with this section and parse a new one.
                 case cutile_ini_parser_token_kind_separator:
                     if (section.fields.count == 0) section.content_start = next_tok.start - 1; // Begin of content equals end of content if there is no field.
                     section.content_end = next_tok.start - 1;
                     cutile_parse_ini_section(&next_tok, state, result);
+                    loop = 0;
                     break;
-    
+
                 case cutile_ini_parser_token_kind_end:
                     section.content_end = state->data + state->data_size - 1;
                     if (section.fields.count == 0) section.content_start = section.content_end; // Begin of content equals end of content if there is no field.
                     loop = 0;
                     break;
-                    
+
                 default:
                     result->error.msg = "Encounter an unknown token!";
                     result->error.line = state->line;
                     break;
                 }
             }
-    
             cutile_array_push_m(cutile_ini_section, result->sections, section);
         }
     
@@ -328,11 +329,12 @@
                 switch (tok.kind)
                 {
     
-                    // New section. No more in global section.
+                // '[' has been encountered, let's finish with this section and parse a new one.
+                // New section. No more in global section.
                 case cutile_ini_parser_token_kind_separator:
-                    if (result->sections.count == 0) result->global_section.content_end = tok.start - 1;
+                    result->global_section.content_end = tok.start - 1;
                     cutile_parse_ini_section(&tok, state, result);
-                    break;
+                    return;
     
                 case cutile_ini_parser_token_kind_name_or_value:
                     cutile_parse_ini_entry(&tok, state, &result->global_section, result);
