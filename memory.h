@@ -105,11 +105,11 @@
     #undef  cutile_memory_equals_m
     #define cutile_memory_equals_m(lhs, rhs, count, out)        \
     {                                                           \
+        out = cutile_b8_true;                                   \
         for (u32 i = 0; i < count; ++i)                         \
         {                                                       \
             if ((lhs)[i] != (rhs)[i]) out = cutile_b8_false;    \
         }                                                       \
-        out = cutile_b8_true;                                   \
     }                                                           \
 
     #ifdef CUTILE_IMPLEM
@@ -153,7 +153,7 @@
         {
             cutile_heap_allocator* allocator = (cutile_heap_allocator*)opaque_allocator;
             #ifdef _WIN32
-                return = HeapAlloc(allocator->heap, 0, size);
+                return HeapAlloc(allocator->heap, 0, size);
             #else
                 return malloc(size); // TODO: Implement for other platforms.
             #endif
