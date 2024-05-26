@@ -13,9 +13,14 @@ int main(int ac, char** av)
 
     // UTF-8
     {
-        cutile_string s1 = create_str_from_cstr("こんにちは！", default_allocator);
-        cutile_string s2 = create_str_from_cstr("プログラミングが好き。", default_allocator);
-        cutile_string s3 = create_str_from_cstr("ASCIIとUTF-8.", default_allocator);
+        #ifdef CUTILE_CPP
+            string s1 = create_str("こんにちは！", default_allocator);
+            cutile_string s2 = cutile_create_str("プログラミングが好き。", default_allocator);
+        #else
+            string s1 = create_str_from_cstr("こんにちは！", default_allocator);
+            cutile_string s2 = cutile_create_str_from_cstr("プログラミングが好き。", default_allocator);
+        #endif
+        cutile_string s3 = cutile_create_str_from_cstr("ASCIIとUTF-8.", default_allocator);
 
         cutile_test_assert_m(str_is_valid_utf8(&s1));
         cutile_test_assert_m(str_is_valid_utf8(&s2));

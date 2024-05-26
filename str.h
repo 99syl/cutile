@@ -17,8 +17,16 @@
     CUTILE_C_API cutile_string cutile_create_empty_str(cutile_allocator* allocator);
     CUTILE_C_API cutile_string cutile_create_sized_empty_str(u32 size, cutile_allocator*);
     CUTILE_C_API cutile_string cutile_create_str_from_cstr(const char* cstr, cutile_allocator* allocator);
-    CUTILE_C_API cutile_string cutile_copy_str(const cutile_string* original, cutile_allocator* allocator);
+    CUTILE_C_API cutile_string cutile_copy_str(const cutile_string* str, cutile_allocator* allocator);
     CUTILE_C_API cutile_string cutile_create_str_from_buf(const u8* buf, u32 buf_len, cutile_allocator* allocator);
+
+    #ifdef CUTILE_CPP
+        maybe_inline cutile_string cutile_create_str(cutile_allocator* allocator) { return cutile_create_empty_str(allocator); }
+        maybe_inline cutile_string cutile_create_str(u32 size, cutile_allocator* allocator) { return cutile_create_sized_empty_str(size, allocator); }
+        maybe_inline cutile_string cutile_create_str(const char* cstr, cutile_allocator* allocator) { return cutile_create_str_from_cstr(cstr, allocator); }
+        maybe_inline cutile_string cutile_create_str(const cutile_string* str, cutile_allocator* allocator) { return cutile_copy_str(str, allocator); }
+        maybe_inline cutile_string cutile_create_str(const u8* buf, u32 buf_len, cutile_allocator* allocator) { return cutile_create_str_from_buf(buf, buf_len, allocator); }
+    #endif
 
     // String Destruction:
     CUTILE_C_API void cutile_destroy_str(cutile_string* str);
@@ -35,9 +43,19 @@
     CUTILE_C_API void cutile_str_pop_back(cutile_string* str);
     CUTILE_C_API void cutile_resize_str(cutile_string* str, u32 size);
 
+    #ifdef CUTILE_CPP
+        maybe_inline void cutile_str_push_back(cutile_string* str, const cutile_string* rhs) { cutile_str_push_back(str, rhs); }
+        maybe_inline void cutile_str_push_back(cutile_string* str, const char* rhs) { cutile_str_push_back(str, rhs); }
+        maybe_inline void cutile_str_push_back(cutile_string* str, u8* buf, u64 buf_size) { cutile_str_push_back(str, buf, buf_size); }
+    #endif
+
     // String Transformation:
     CUTILE_C_API void cutile_reverse_str(cutile_string* str);
     CUTILE_C_API void cutile_reverse_sub_str(cutile_string* str, u32 offset, u32 count);
+
+    #ifdef CUTILE_CPP
+        maybe_inline void cutile_reverse_str(cutile_string* str, u32 offset, u32 count) { cutile_reverse_sub_str(str, offset, count); }
+    #endif
 
     // String Lookup:
     // str_utf8_count: This function works for valid UTF-8 strings; do not use this function if you are unsure about the UTF-8 compliance of your string. You can check the compliance by using str_utf8_is_valid_utf8.
@@ -53,6 +71,12 @@
     CUTILE_C_API char* cutile_create_cstr_from_str(const cutile_string*, cutile_allocator*);
     CUTILE_C_API char* cutile_create_cstr_from_cstr(const char*, cutile_allocator*);
     CUTILE_C_API char* cutile_create_cstr_from_sub_cstr(const char*, u32 pos, u32 count, cutile_allocator*);
+
+    #ifdef CUTILE_CPP
+        maybe_inline void cutile_create_cstr(const cutile_string* str, cutile_allocator* allocator) { cutile_create_cstr_from_str(str, allocator); }
+        maybe_inline void cutile_create_cstr(const char* cstr, cutile_allocator* allocator) { cutile_create_cstr_from_cstr(cstr, allocator); }
+        maybe_inline void cutile_create_cstr(const char* cstr, u32 pos, u32 count, cutile_allocator* allocator) { cutile_create_cstr_from_sub_cstr(cstr, pos, count, allocator); }
+    #endif
 
     // CString Lookup:
     CUTILE_C_API u32 cutile_cstr_length(const char* cstr);
@@ -141,9 +165,17 @@
         #define copy_str(str, allocator_ptr)                     cutile_copy_str(str, allocator_ptr)
         #define create_str_from_buf(buf, buf_len, allocator_ptr) cutile_create_str_from_buf(buf, buf_len, allocator_ptr)
 
+        #ifdef CUTILE_CPP
+            #define create_str(...) cutile_create_str(__VA_ARGS__)
+        #endif
+
         #define destroy_str(str) cutile_destroy_str(str)
 
-        #define str_push_back(str, c)                 cutile_str_push_back(str, c)
+        #ifdef CUTILE_CPP
+            #define str_push_back(...)                cutile_str_push_back(__VA_ARGS__)
+        #else
+            #define str_push_back(str, c)             cutile_str_push_back(str, c)
+        #endif
         #define str_push_back_utf8_cp(str, cp)        cutile_str_push_back_utf8_cp(str, cp)
         #define str_insert(str, index, c)             cutile_str_insert(str, index, c)
         #define str_insert_utf8_cp(str, index, cp)    cutile_str_insert_utf8_cp(str, index, cp)
@@ -153,7 +185,11 @@
         #define str_pop_back(str)                     cutile_str_pop_back(str)
         #define resize_str(str, size)                 cutile_resize_str(str, size)
 
-        #define reverse_str(str)                    cutile_resize_str(str)
+        #ifdef CUTILE_CPP
+            #define reverse_str(...)                cutile_reverse_str(__VA_ARGS__)
+        #else
+            #define reverse_str(str)                cutile_resize_str(str)
+        #endif
         #define reverse_sub_str(str, offset, count) cutile_reverse_sub_str(str, offset, count)
 
         #define str_at(str_ptr, index)                  cutile_str_at(str_ptr, index)
@@ -167,6 +203,9 @@
         #define create_cstr_from_str(str_ptr, allocator_ptr)    cutile_create_cstr_from_str(str_ptr, allocator_ptr)
         #define create_cstr_from_cstr(cstr_ptr, allocator_ptr)  cutile_create_cstr_from_cstr(cstr_ptr, allocator_ptr)
         #define create_cstr_from_sub_cstr(cstr_ptr, pos, count) cutile_create_cstr_from_sub_cstr(cstr_ptr, pos, count)
+        #ifdef CUTILE_CPP
+            #define create_cstr(...)                            cutile_create_cstr(__VA_ARGS__)
+        #endif
 
         #define cstr_length(cstr_ptr)   cutile_cstr_length(cstr_ptr)
         #define cstr_equals(lhs, rhs)   cutile_cstr_equals(lhs, rhs)
