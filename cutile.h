@@ -38,19 +38,19 @@
         #define CUTILE_API_IMPORT_SL
     #endif
 
-    #if defined(COMPILE_CUTILE_DLL)
+    #if defined(CUTILE_COMPILE_SHARED_LIBRARY)
         #ifdef CUTILE_CPP
             #define CUTILE_C_API extern "C" CUTILE_API_SL_EXPORT
             #define CUTILE_CPP_API extern CUTILE_API_SL_EXPORT
         #else
             #define CUTILE_C_API extern CUTILE_API_SL_EXPORT
         #endif
-    #elif defined(IMPORT_CUTILE_DLL)
+    #elif defined(CUTILE_IMPORT_SHARED_LIBRARY)
         #ifdef CUTILE_CPP
-            #define CUTILE_C_API extern "C" CUTILE_API_IMPORT_SL
-            #define CUTILE_CPP_API extern CUTILE_API_IMPORT_SL
+            #define CUTILE_C_API extern "C" CUTILE_SL_IMPORT_DLL
+            #define CUTILE_CPP_API extern CUTILE_SL_IMPORT_DLL
         #else
-            #define CUTILE_C_API extern CUTILE_API_IMPORT_SL
+            #define CUTILE_C_API extern CUTILE_SL_IMPORT_DLL
         #endif
     #else
         #ifdef CUTILE_CPP
