@@ -2,8 +2,8 @@
 
     #include "cxx.h"
     
-    CUTILE_C_API const s8 base64_table[64];
-    CUTILE_C_API const u8 base64_dtable[255];
+    CUTILE_C_API const s8 cutile_base64_table[64];
+    CUTILE_C_API const u8 cutile_base64_dtable[255];
 
     typedef struct cutile_allocator cutile_allocator; // memory.h
 
@@ -18,7 +18,7 @@
     #define cutile_base64_encode_(in, len, out_len)   cutile_base64_encode(in, len, out_len, cutile_default_allocator)
     #define cutile_base64_encode_cstr_(cstr, out_len) cutile_base64_encode_cstr(cstr, out_len, cutile_default_allocator)
     #define cutile_base64_decode_(in, len, out_len)   cutile_base64_decode(in, len, out_len, cutile_default_allocator)
-    #define cutile_base64_decode_cstr_(cstr, out_len)  cutile_base64_decode_cstr(cstr, out_len, cutile_default_allocator)
+    #define cutile_base64_decode_cstr_(cstr, out_len) cutile_base64_decode_cstr(cstr, out_len, cutile_default_allocator)
 
     #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
         #define base64_encode(...)      cutile_base64_encode(__VA_ARGS__)
@@ -34,7 +34,7 @@
 
         #include "memory.h"
 
-        const s8 const cutile_base64_table[] =
+        const s8 cutile_base64_table[] =
         {
             'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
             'P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d',
@@ -101,7 +101,7 @@
             // Calculates the length of the output. TODO: This might be wrong and not efficient, check that later.
             *out_len = (len / 4) * 3;
             if (in[len-1] == '=') { (*out_len)--; len--; }
-            if (in[len-2] == '=') { (*out_len)--; len--; }
+            if (in[len-1] == '=') { (*out_len)--; len--; }
             
             // Generates output.
             u8* out = (u8*)cutile_allocate_m(allocator, *out_len);
@@ -127,7 +127,7 @@
             {
                 u8 c1 = cutile_base64_dtable[*in];
                 u8 c2 = cutile_base64_dtable[in[1]];
-                u8 c3 = cutile_base64_dtable[in[3]];
+                u8 c3 = cutile_base64_dtable[in[2]];
                 *pos++ = (c1 << 2) | (c2 >> 4);
                 *pos = (c2 << 4) | (c3 >> 2);
             }
