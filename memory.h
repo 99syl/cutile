@@ -103,14 +103,14 @@
     }                                                       \
 
     #undef  cutile_memory_equals_m
-    #define cutile_memory_equals_m(lhs, rhs, count, out)        \
-    {                                                           \
-        out = cutile_b8_true;                                   \
-        for (u32 i = 0; i < count; ++i)                         \
-        {                                                       \
-            if ((lhs)[i] != (rhs)[i]) out = cutile_b8_false;    \
-        }                                                       \
-    }                                                           \
+    #define cutile_memory_equals_m(lhs, rhs, count, out)                \
+    {                                                                   \
+        out = cutile_b8_true;                                           \
+        for (u32 i = 0; i < count; ++i)                                 \
+        {                                                               \
+            if ((lhs)[i] != (rhs)[i]) { out = cutile_b8_false; break; } \
+        }                                                               \
+    }                                                                   \
 
     #ifdef CUTILE_IMPLEM
         #ifdef _WIN32
