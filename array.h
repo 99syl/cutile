@@ -45,13 +45,13 @@
 
     #define cutile_create_array__m(type, size, increment, out) cutile_create_array_m(type, size, increment, cutile_default_allocator, out)
 
-    #define cutile_destroy_array_m(array) deallocate_m(array.allocator, array.data)
+    #define cutile_destroy_array_m(array) deallocate_m((array).allocator, (array).data)
 
     #define cutile_destroy_array_deeply_m(array, destroy_array_elem_func)   \
     {                                                                       \
-        for (u32 i = 0; i < array.count; ++i)                               \
+        for (u32 i = 0; i < (array).count; ++i)                             \
         {                                                                   \
-            destroy_array_elem_func(&(array.data[i]));                      \
+            destroy_array_elem_func(&((array).data[i]));                    \
         }                                                                   \
         cutile_destroy_array_m(array);                                      \
     }
@@ -59,63 +59,63 @@
     #define cutile_resize_array_m(type, array, new_size)                            \
     {                                                                               \
         type* new_data =                                                            \
-            (type*)cutile_allocate_m(array.allocator, sizeof(type) * (new_size));   \
-        if (new_size < array.count)                                                 \
+            (type*)cutile_allocate_m((array).allocator, sizeof(type) * (new_size)); \
+        if (new_size < (array).count)                                               \
         {                                                                           \
             for (u32 i = 0; i < new_size; ++i)                                      \
             {                                                                       \
-                new_data[i] = array.data[i];                                        \
+                new_data[i] = (array).data[i];                                      \
             }                                                                       \
-            array.count = new_size;                                                 \
+            (array).count = new_size;                                               \
         }                                                                           \
         else                                                                        \
         {                                                                           \
             for (u32 i = 0; i < array.count; ++i)                                   \
             {                                                                       \
-                new_data[i] = array.data[i];                                        \
+                new_data[i] = (array).data[i];                                      \
             }                                                                       \
         }                                                                           \
-        cutile_deallocate_m(array.allocator, array.data);                           \
-        array.data = new_data;                                                      \
-        array.size = new_size;                                                      \
+        cutile_deallocate_m((array).allocator, (array).data);                       \
+        (array).data = new_data;                                                    \
+        (array).size = new_size;                                                    \
     }                                                                               \
  
-    #define cutile_array_push_m(type, array, val)                               \
-    {                                                                           \
-        if (array.count >= array.size)                                          \
-        {                                                                       \
-            cutile_resize_array_m(type, array, array.count + array.increment);  \
-        }                                                                       \
-        array.data[array.count] = val;                                          \
-        array.count++;                                                          \
-    }                                                                           \
+    #define cutile_array_push_m(type, array, val)                                   \
+    {                                                                               \
+        if (array.count >= (array).size)                                            \
+        {                                                                           \
+            cutile_resize_array_m(type, array, (array).count + array.increment);    \
+        }                                                                           \
+        (array).data[(array).count] = val;                                          \
+        (array).count++;                                                            \
+    }                                                                               \
 
-    #define cutile_array_push_empty_m(type, array)                      \
-    {                                                                   \
-        if (array.count >= array.size)                                  \
-        {                                                               \
-            cutile_resize_array(array, array.count + array.increment);  \
-        }                                                               \
-        array.count++;                                                  \
-    }                                                                   \
-
-    #define cutile_array_push_repeated_m(type, array, val, _count)          \
+    #define cutile_array_push_empty_m(type, array)                          \
     {                                                                       \
-        if (array.count + _count >= array.size)                             \
+        if ((array).count >= (array).size)                                  \
         {                                                                   \
-            cutile_resize_array_m(type, array, array.count + (_count));     \
+            cutile_resize_array(array, (array).count + array.increment);    \
         }                                                                   \
-        for (u32 i = 0; i < _count; ++i) array.data[array.count++] = val;   \
+        (array).count++;                                                    \
     }                                                                       \
 
-    #define cutile_array_push_buffer_m(type, array, buf, n)             \
-    {                                                                   \
-        if (array.count + n >= array.size)                              \
-        {                                                               \
-            cutile_resize_array_m(type, array, array.count + (n));      \
-        }                                                               \
-        for (u32 i = 0; i < n; ++i) array.data[array.count++] = buf[i]; \
-    }                                                                   \
+    #define cutile_array_push_repeated_m(type, array, val, _count)              \
+    {                                                                           \
+        if (array.count + _count >= array.size)                                 \
+        {                                                                       \
+            cutile_resize_array_m(type, array, (array).count + (_count));       \
+        }                                                                       \
+        for (u32 i = 0; i < _count; ++i) (array).data[(array).count++] = val;   \
+    }                                                                           \
+
+    #define cutile_array_push_buffer_m(type, array, buf, n)                 \
+    {                                                                       \
+        if (array.count + n >= (array).size)                                \
+        {                                                                   \
+            cutile_resize_array_m(type, (array), (array).count + (n));      \
+        }                                                                   \
+        for (u32 i = 0; i < n; ++i) (array).data[(array).count++] = buf[i]; \
+    }                                                                       \
 
     #define cutile_array_push_array_m(type, out_array, in_array) cutile_array_push_buffer_m(type, out_array, in_array.data, in_array.count)
 
@@ -125,7 +125,7 @@
     {                                                   \
         for (u32 i = index; i < array.count - 1; ++i)   \
         {                                               \
-            array.data[i] = array.data[i + 1];          \
+            (array).data[i] = (array).data[i + 1];      \
         }                                               \
         array.count -= 1;                               \
     }                                                   \
@@ -136,7 +136,7 @@
     {                                                                   \
         for (u32 i = 0; i < array.count; ++i)                           \
         {                                                               \
-            destroy_array_elem_func(&array.data[i]);                    \
+            destroy_array_elem_func(&(array).data[i]);                  \
         }                                                               \
         cutile_clear_array_m(array);                                    \
     }
@@ -148,8 +148,8 @@
         {                                                               \
             type dump = array.data[i];                                  \
             u32 rhs_i = (count) - 1 - i;                                \
-            array.data[i] = array.data[rhs_i];                          \
-            array.data[rhs_i] = dump;                                   \
+            (array).data[i] = (array).data[rhs_i];                      \
+            (array).data[rhs_i] = dump;                                 \
         }                                                               \
     }                                                                   \
 
