@@ -10,6 +10,7 @@ int main()
     #if LINUX
         sl = cutile_load_shared_library("shared_library_sample.so");
     #elif WINDOWS
+        sl = cutile_load_shared_library("shared_library_sample.dll");
     #endif
     cutile_test_require_m(sl.handle);
 
