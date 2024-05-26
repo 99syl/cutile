@@ -202,6 +202,10 @@
         #define cutile_bswap_u16_m(val) __builtin_bswap16(val)
         #define cutile_bswap_u32_m(val) __builtin_bswap32(val)
         #define cutile_bswap_u64_m(val) __builtin_bswap64(val)
+    #elif defined(_WIN32)
+        #define cutile_bswap_u16_m(val) _byteswap_ushort(val)
+        #define cutile_bswap_u32_m(val) _byteswap_ulong(val)
+        #define cutile_bswap_u64_m(val) _byteswap_uint64(val)
     #endif
 
     #if (!defined(CUTILE_API_NO_SHORT_NAMES) && !defined(CUTILE_BSWAP_API_NO_SHORT_NAMES)) || defined(CUTILE_BSWAP_API_SHORT_NAMES)
