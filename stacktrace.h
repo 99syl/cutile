@@ -6,51 +6,52 @@
 
     #include "array.h"
 
-    typedef struct cutile_stacktrace_elem
+    #ifndef     CUTILE_STACKTRACE_FRAME_FILENAME_MAX_LEN
+        #define CUTILE_STACKTRACE_FRAME_FILENAME_MAX_LEN 512
+    #endif
+    #ifndef     CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN
+        #define CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN 64
+    #endif
+
+    typedef struct
     {
         u32               line;
-        char*             filename;
-        char*             symbol_name;
-        cutile_allocator* allocator;
-    } cutile_stacktrace_elem;
-    
-    declare_array_of_m(stacktrace_elem);
-    
-    typedef struct cutile_stacktrace
+        s8                filename[CUTILE_STACKTRACE_FRAME_FILENAME_MAX_LEN];
+        s8                symbol_name[CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN];
+
+        u16               filename_length;
+        u16               symbol_name_length;
+    } cutile_stacktrace_frame; 
+    // I really have no idea how I should name this thing 
+
+    typedef struct
     {
-        cutile_stacktrace_elem_array calls;
+        cutile_generate_array_content_m(cutile_stacktrace_frame)
     } cutile_stacktrace;
-    
-    declare_array_of_m(stacktrace);
-    
-    stacktrace  get_stacktrace(u16 skip, u16 depth, allocator* allocator);
-    b8          fill_stacktrace(stacktrace* stacktrace, u16 skip, u16 depth);
-    void        clear_stacktrace(stacktrace* stacktrace);
-    void        destroy_stacktrace(stacktrace* stacktrace);
-    
+
+    cutile_stacktrace cutile_get_stacktrace(u16 skip, u16 depth, cutile_allocator* allocator);
+    b8                cutile_fill_stacktrace(cutile_stacktrace* stacktrace, u16 skip, u16 depth);
+    void              cutile_destroy_stacktrace(cutile_stacktrace* stacktrace);
+
     #ifdef CUTILE_IMPLEM
-    
+
         #ifdef _WIN32
             #include <windows.h>
             #ifdef _MSC_VER
                 #pragma comment(lib, "DbgHelp.lib")
             #endif
             #include <dbghelp.h>
-            #include "print.h"
-            // str.h:
-            CUTILE_C_API char* create_cstr_from_cstr(const char*, allocator*);
-            CUTILE_C_API char* create_cstr_from_sub_cstr(const char*, u32, u32, allocator*);
         #endif
-    
-        stacktrace get_stacktrace(u16 skip, u16 depth, allocator* allocator)
+
+        cutile_stacktrace cutile_get_stacktrace(u16 skip, u16 depth, cutile_allocator* allocator)
         {
-            stacktrace result;
-            result.calls = create_stacktrace_elem_array(500, 5, allocator);
-            fill_stacktrace(&result, skip + 1, depth);
+            cutile_stacktrace result;
+            cutile_create_array_m(cutile_stacktrace_frame, 500, 5, allocator, result);
+            cutile_fill_stacktrace(&result, skip + 1, depth);
             return result;
         }
-    
-        b8 fill_stacktrace(stacktrace* stacktrace, u16 skip, u16 depth)
+
+        b8 cutile_fill_stacktrace(cutile_stacktrace* stacktrace, u16 skip, u16 depth)
         {
             u16 current_skip = 0;
             u16 current_depth = 0;
@@ -58,8 +59,8 @@
                 persist HANDLE current_process = nullptr;
                 HANDLE current_thread = GetCurrentThread();
                 CONTEXT context;
-                STACKFRAME64 stackframe;
-                
+                STACKFRAME64 stackframe = {0};
+
                 if (!current_process)
                 {
                     current_process = GetCurrentProcess();
@@ -69,14 +70,13 @@
                     }
                 }
                 RtlCaptureContext(&context);
-                fill_s8_memory((s8*)&stackframe, sizeof(STACKFRAME64), 0);
                 stackframe.AddrPC.Offset = context.Rip;
                 stackframe.AddrPC.Mode = AddrModeFlat;
                 stackframe.AddrFrame.Offset = context.Rbp;
                 stackframe.AddrFrame.Mode = AddrModeFlat;
                 stackframe.AddrStack.Offset = context.Rsp;
                 stackframe.AddrStack.Mode = AddrModeFlat;
-    
+
                 do
                 {
                     if (StackWalk(IMAGE_FILE_MACHINE_AMD64, current_process, current_thread, &stackframe, &context, nullptr, &SymFunctionTableAccess64, &SymGetModuleBase64, nullptr))
@@ -86,28 +86,34 @@
                             ++current_skip;
                             continue;
                         }
-                        
+
                         if (current_depth < depth) ++current_depth;
                         else break;
     
                         DWORD64         displacement;
                         DWORD           line_displacement;
-                        s8              symbol_info[sizeof(SYMBOL_INFO) + 255];
+                        s8              symbol_info[sizeof(SYMBOL_INFO) + CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN];
                         IMAGEHLP_LINE64 line_info;
                         PSYMBOL_INFO    psymbol_info = (PSYMBOL_INFO)symbol_info;
                         
                         psymbol_info->SizeOfStruct = sizeof(SYMBOL_INFO);
-                        psymbol_info->MaxNameLen = 255;
+                        psymbol_info->MaxNameLen = CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN;
                         line_info.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
                         if (SymFromAddr(current_process, stackframe.AddrPC.Offset, &displacement, (PSYMBOL_INFO)symbol_info) &&
                             SymGetLineFromAddr(current_process, stackframe.AddrPC.Offset, &line_displacement, &line_info))
                         {
-                            stacktrace_elem stacktrace_elem;
-                            stacktrace_elem.line = line_info.LineNumber;
-                            stacktrace_elem.allocator = stacktrace->calls.allocator;
-                            stacktrace_elem.filename = create_cstr_from_cstr(line_info.FileName, stacktrace_elem.allocator);
-                            stacktrace_elem.symbol_name = create_cstr_from_sub_cstr(psymbol_info->Name, 0, psymbol_info->NameLen, stacktrace_elem.allocator);
-                            stacktrace_elem_array_push(&stacktrace->calls, stacktrace_elem);
+                            cutile_stacktrace_frame frame = {0};
+                            frame.line = line_info.LineNumber;
+                            while (line_info.FileName[frame.filename_length]) frame.filename_length++;
+                            if (frame.filename_length > CUTILE_STACKTRACE_FRAME_FILENAME_MAX_LEN) frame.filename_length = CUTILE_STACKTRACE_FRAME_FILENAME_MAX_LEN;
+                            cutile_copy_memory_m((u8*)frame.filename, (u8*)line_info.FileName, frame.filename_length);
+                            if (psymbol_info->NameLen > CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN)
+                                frame.symbol_name_length = CUTILE_STACKTRACE_FRAME_SYMBOL_NAME_MAX_LEN;
+                            else
+                                frame.symbol_name_length = psymbol_info->NameLen;
+                            cutile_copy_memory_m(frame.symbol_name, psymbol_info->Name, frame.symbol_name_length);
+
+                            cutile_array_push_m(cutile_stacktrace_frame, (*stacktrace), frame);
                         }
                         else break;
                     }
@@ -119,23 +125,9 @@
             #endif
         }
     
-        internal void destroy_stacktrace_elem(stacktrace_elem* e)
+        void cutile_destroy_stacktrace(cutile_stacktrace* stacktrace)
         {
-            deallocate(e->allocator, e->filename);
-            e->filename = nullptr;
-            deallocate(e->allocator, e->symbol_name);
-            e->symbol_name = nullptr;
-            e->allocator = nullptr;
-        }
-    
-        void clear_stacktrace(stacktrace* stacktrace)
-        {
-            clear_stacktrace_elem_array_deeply(&stacktrace->calls, &destroy_stacktrace_elem);
-        }
-    
-        void destroy_stacktrace(stacktrace* stacktrace)
-        {
-            destroy_stacktrace_elem_array_deeply(&stacktrace->calls, &destroy_stacktrace_elem);
+            cutile_destroy_array_m(*stacktrace);
         }
     
     #endif // CUTILE_IMPLEM
