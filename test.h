@@ -20,8 +20,7 @@
         if (__cutile_test_result) cutile_exit_process(__cutile_test_result);    \
     }
 
-    #define cutile_test_end_m() println_cstr(__cutile_test_result ? "Test failed !" : "Test success !"); return __cutile_test_result;
+    #define cutile_test_end_m() cutile_println_cstr(__cutile_test_result ? "Test failed !" : "Test success !"); return __cutile_test_result;
 
     #define CUTILE_TEST_H
-
 #endif

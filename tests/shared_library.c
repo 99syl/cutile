@@ -8,7 +8,7 @@ int main()
 
     cutile_shared_library sl = {0};
     #if LINUX
-        sl = cutile_load_shared_library("shared_library_sample.so");
+        sl = cutile_load_shared_library("./shared_library_sample.so");
     #elif WINDOWS
         sl = cutile_load_shared_library("shared_library_sample.dll");
     #endif

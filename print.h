@@ -41,10 +41,8 @@
         #define println_str(param)  cutile_println_str(param);
 
         #ifdef CUTILE_CPP
-            #define print(str_ptr)   cutile_print(str_ptr)
-            #define print(cstr)      cutile_print(cstr)
-            #define println(str_ptr) cutile_println(str_ptr)
-            #define println(cstr)    cutile_println(cstr)
+            #define print(...)   cutile_print(__VA_ARGS__)
+            #define println(...) cutile_println(__VA_ARGS__)
         #endif
     #endif
 
