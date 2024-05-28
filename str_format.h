@@ -1,4 +1,4 @@
-#ifndef CUTILE_STR_CUTILE_FORMAT_H
+#ifndef CUTILE_STR_FORMAT_H
 
     #include "str.h"
 
@@ -220,5 +220,4 @@
     }
 
     #define CUTILE_STR_FORMAT_H
-
 #endif
