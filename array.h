@@ -201,4 +201,5 @@
     cutile_generate_array_m(s64);
     cutile_generate_array_m(u64);
 
+    #define CUTILE_ARRAY_H
 #endif
