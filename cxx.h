@@ -59,10 +59,10 @@
     // Gets the line where this macro is called as a cstring.
     #define cutile_current_line_cstr_m
 
-    // Swap bytes of the given parameter.
-    #define cutile_bswap_u16_m(nb) // -> returns u16
-    #define cutile_bswap_u32_m(nb) // -> returns u32
-    #define cutile_bswap_u64_m(nb) // -> returns u64
+    // Returns swapped bytes of the given parameter.
+    maybe_inline u16 cutile_bswap_u16(u16 val);
+    maybe_inline u32 cutile_bswap_u32(u32 val);
+    maybe_inline u64 cutile_bswap_u64(u64 val);
 
     // Targeted Operating Systems:
     // 0 or 1 according to what operating system you are targeting.
@@ -98,9 +98,9 @@
     // Short names for the bswap API. 
     // Define CUTILE_BSWAP_API_NO_SHORT_NAMES to only disable them.
     // Define CUTILE_BSWAP_API_SHORT_NAMES to force enable them no matter what.
-    #define bswap_u16_m(nb)
-    #define bswap_u32_m(nb)
-    #define bswap_u64_m(nb)
+    #define bswap_u16(nb)
+    #define bswap_u32(nb)
+    #define bswap_u64(nb)
 
 #endif
 
@@ -202,19 +202,21 @@
     #endif
 
     #if defined(__GNUC__)
-        #define cutile_bswap_u16_m(val) __builtin_bswap16(val)
-        #define cutile_bswap_u32_m(val) __builtin_bswap32(val)
-        #define cutile_bswap_u64_m(val) __builtin_bswap64(val)
-    #elif defined(_WIN32)
-        #define cutile_bswap_u16_m(val) _byteswap_ushort(val)
-        #define cutile_bswap_u32_m(val) _byteswap_ulong(val)
-        #define cutile_bswap_u64_m(val) _byteswap_uint64(val)
+        maybe_inline u16 cutile_bswap_u16(u16 val) { return __builtin_bswap16(val); }
+        maybe_inline u32 cutile_bswap_u32(u32 val) { return __builtin_bswap32(val); }
+        maybe_inline u64 cutile_bswap_u64(u64 val) { return __builtin_bswap64(val); }
+    #else
+        maybe_inline u16 cutile_bswap_u16(u16 val) { return (val << 8) | (val >> 8); }
+        maybe_inline u32 cutile_bswap_u32(u32 val) { return (val << 24) | ((val << 8) & 0x00FF0000) |
+                                                            ((val >> 8) & 0x0000FF00) | (val >> 24); }
+        maybe_inline u64 cutile_bswap_u64(u64 val) { return cutile_bswap_u32((u32)(val << 32)) |
+                                                            cutile_bswap_u32((u32)(val >> 32)); }
     #endif
 
     #if (!defined(CUTILE_API_NO_SHORT_NAMES) && !defined(CUTILE_BSWAP_API_NO_SHORT_NAMES)) || defined(CUTILE_BSWAP_API_SHORT_NAMES)
-        #define bswap_u16_m(nb) cutile_bswap_u16_m(nb)
-        #define bswap_u32_m(nb) cutile_bswap_u32_m(nb)
-        #define bswap_u64_m(nb) cutile_bswap_u64_m(nb)
+        #define bswap_u16(nb) cutile_bswap_u16(nb)
+        #define bswap_u32(nb) cutile_bswap_u32(nb)
+        #define bswap_u64(nb) cutile_bswap_u64(nb)
     #endif
 
     #ifdef __linux__
