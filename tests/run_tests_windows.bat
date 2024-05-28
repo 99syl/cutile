@@ -4,7 +4,7 @@ SET work_dir=%~dp0
 
 SET c_cflags=/std:c11 /Z7
 
-SET tests=(array base64 blowfish cxx filesystem hash_table ini shared_library socket stacktrace str)
+SET tests=(array base64 blowfish cxx filesystem hash_table ini memory_allocator_analyzer shared_library socket stacktrace str)
 SET cpp_tests=(str_format)
 
 REM Builds DLL for shared_library test.

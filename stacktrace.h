@@ -24,10 +24,7 @@
     } cutile_stacktrace_frame; 
     // I really have no idea how I should name this thing 
 
-    typedef struct
-    {
-        cutile_generate_array_content_m(cutile_stacktrace_frame)
-    } cutile_stacktrace;
+    cutile_generate_named_array_m(cutile_stacktrace_frame, cutile_stacktrace);
 
     cutile_stacktrace cutile_get_stacktrace(u16 skip, u16 depth, cutile_allocator* allocator);
     b8                cutile_fill_stacktrace(cutile_stacktrace* stacktrace, u16 skip, u16 depth);
@@ -46,7 +43,7 @@
         cutile_stacktrace cutile_get_stacktrace(u16 skip, u16 depth, cutile_allocator* allocator)
         {
             cutile_stacktrace result;
-            cutile_create_array_m(cutile_stacktrace_frame, 500, 5, allocator, result);
+            result = cutile_create_cutile_stacktrace(20, 20, allocator);
             cutile_fill_stacktrace(&result, skip + 1, depth);
             return result;
         }
@@ -113,7 +110,7 @@
                                 frame.symbol_name_length = psymbol_info->NameLen;
                             cutile_copy_memory_m(frame.symbol_name, psymbol_info->Name, frame.symbol_name_length);
 
-                            cutile_array_push_m(cutile_stacktrace_frame, (*stacktrace), frame);
+                            cutile_stacktrace_push(stacktrace, frame);
                         }
                         else break;
                     }
@@ -127,7 +124,7 @@
     
         void cutile_destroy_stacktrace(cutile_stacktrace* stacktrace)
         {
-            cutile_destroy_array_m(*stacktrace);
+            cutile_destroy_cutile_stacktrace(stacktrace);
         }
     
     #endif // CUTILE_IMPLEM
