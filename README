@@ -4,11 +4,11 @@ This is the toolbox I use when writing C or C++ code.
 
 It should compile on any compiler compatible with C11 or C++20.
 
-No build scripts/tools will be provided because it is not needed ! You just need to include this library in your C/C++ project !
+No build scripts/tools will be provided because it is not needed ! You just need to include "cutile.h", "cxx.h" and the other (non mandatory) files that you need into your project. Then read the section below:
 
 Interfaces and implementations are provided in the same .h file.
 The word "interface" refers to any function, struct, variable, preprocessor macro declaration. The word "implementation" refers to any function implementation.
-By default, including a .h will just provide you the interface unless you define "CUTILE_IMPLEM" before, then the implementation will also be provided. Those rules might not be followed everywhere (e.g. inline functions): the interface and the implementation will be provided by default, with or without predefining "CUTILE_IMPLEM".
+By default, including a .h will just provide you the interface unless you define "CUTILE_IMPLEM" before, then the implementation will also be provided. Those rules might not be followed everywhere, e.g. inline functions: the implementation is also included by default. However "CUTILE_IMPLEM" is not universal, some file might have an extension interface which requires another preprocessor definition. In those cases, please look inside the corresponding file for more information.
 
 Example:
 
@@ -24,5 +24,3 @@ Example:
     // Only interface is made available here
     
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    For example, you can have one source file that serves the purpose of building the cutile implementations you need.
