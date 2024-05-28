@@ -13,6 +13,7 @@
 
     // Suggests to the compiler that a function could be inlined.
     // Since C++17: can also suggest that a variable could be inlined.
+    // For GCC (only in C) the inlining is forced.
     #define maybe_inline
 
     // Performs assertion at compilation-time. A false assertion means a compilation error.
@@ -110,7 +111,11 @@
     #define internal static
     #define persist static
 
-    #define maybe_inline inline
+    #if defined(__GNUC__)
+        #define maybe_inline __attribute__((always_inline)) inline
+    #else
+        #define maybe_inline inline
+    #endif
 
     // cutile_compile_time_assert
     #ifdef CUTILE_CPP
