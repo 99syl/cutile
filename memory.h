@@ -23,11 +23,11 @@
 
     #define cutile_allocator_prelude_m cutile_allocator __allocator_base
 
-    #define cutile_allocate_m(allocator_ptr, size)            allocator_ptr->allocate(allocator_ptr, (size))
+    #define cutile_allocate_m(allocator_ptr, size)            (allocator_ptr)->allocate(allocator_ptr, (size))
     #define cutile_allocate_T_m(allocator_ptr, T)             (T*)cutile_allocate_m(allocator_ptr, sizeof(T))
     #define cutile_allocate_many_T_m(allocator_ptr, T, count) (T*)cutile_allocate_m(allocator_ptr, sizeof(T) * (count))
 
-    #define cutile_deallocate_m(allocator_ptr, ptr) allocator_ptr->deallocate(allocator_ptr, ptr)
+    #define cutile_deallocate_m(allocator_ptr, ptr) (allocator_ptr)->deallocate(allocator_ptr, ptr)
 
     // TODO: "heap_allocator" is a wrong name for the moment: it uses a heap on Win32 but this might not be the case for other platforms where we are using malloc/free which might not be implemented using a heap. Implement platform independant heap allocator.
     typedef struct
