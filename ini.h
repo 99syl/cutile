@@ -10,7 +10,7 @@
         const u8* val_end;          // Where the value ends.
     } cutile_ini_field;
 
-    cutile_generate_array_struct_m(cutile_ini_field);
+    cutile_generate_array_m(cutile_ini_field);
 
     typedef struct ini_section
     {
@@ -24,7 +24,7 @@
         cutile_ini_field_array fields;
     } cutile_ini_section;
 
-    cutile_generate_array_struct_m(cutile_ini_section);
+    cutile_generate_array_m(cutile_ini_section);
 
     typedef struct cutile_ini_error
     {
@@ -227,7 +227,7 @@
             field.val_start = value_tok.start;
             field.val_end = value_tok.end;
             
-            cutile_array_push_m(cutile_ini_field, section->fields, field);
+            cutile_cutile_ini_field_array_push(&section->fields, field);
         }
     
         internal void cutile_parse_ini_section(cutile_ini_parser_token* tok, cutile_ini_parser_state* state, cutile_parse_ini_result* result)
@@ -266,7 +266,7 @@
             section.decl_end = section_end_sep_tok.start;
             section.name = section_name_tok.start;
             section.name_size = section_name_tok.end - section.name + 1;
-            cutile_create_array_m(cutile_ini_field, 5, 5, result->sections.allocator, section.fields);
+            section.fields = cutile_create_cutile_ini_field_array(5, 5, result->sections.allocator);
     
             int loop = 1;
             while (loop)
@@ -304,7 +304,7 @@
                     break;
                 }
             }
-            cutile_array_push_m(cutile_ini_section, result->sections, section);
+            cutile_cutile_ini_section_array_push(&result->sections, section);
         }
     
         internal void cutile_parse_ini_global_section(cutile_ini_parser_state* state, cutile_parse_ini_result* result)
@@ -315,7 +315,7 @@
             result->global_section.content_end = state->data;
             result->global_section.name = nullptr;
             result->global_section.name_size = 0;
-            cutile_create_array_m(cutile_ini_field, 5, 5, result->sections.allocator, result->global_section.fields);
+            result->global_section.fields = cutile_create_cutile_ini_field_array(5, 5, result->sections.allocator);
             
             int loop = 1;
             while (loop)
@@ -358,7 +358,7 @@
         {
             cutile_parse_ini_result result;
             result.error.msg = nullptr;
-            cutile_create_array_m(cutile_ini_section, 5, 5, allocator, result.sections);
+            result.sections = cutile_create_cutile_ini_section_array(5, 5, allocator);
     
             cutile_ini_parser_state state;
             state.data = data;
@@ -418,12 +418,12 @@
     
         void cutile_destroy_ini_parsed_data(cutile_parse_ini_result* parsed_data)
         {
-            cutile_destroy_array_m(parsed_data->global_section.fields);
+            cutile_destroy_cutile_ini_field_array(&parsed_data->global_section.fields);
             for (u32 i = 0; i < parsed_data->sections.count; ++i)
             {
-                cutile_destroy_array_m(parsed_data->sections.data[i].fields);
+                cutile_destroy_cutile_ini_field_array(&parsed_data->sections.data[i].fields);
             }
-            cutile_destroy_array_m(parsed_data->sections);
+            cutile_destroy_cutile_ini_section_array(&parsed_data->sections);
         }
     
         b8 cutile_get_ini_field(u8* ini_data,

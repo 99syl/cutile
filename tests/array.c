@@ -11,17 +11,16 @@ int main(int ac, char** av)
     cutile_heap_allocator heap_allocator = create_default_heap_allocator();
     cutile_set_default_allocator_m(&heap_allocator);
 
-    cutile_array_m(s16) array;
-    cutile_create_array__m(s16, 10, 5, array);
+    array(s16) array = cutile_create_s16_array(10, 5, cutile_default_allocator);
 
-    cutile_array_push_m(s16, array, 5);
+    cutile_s16_array_push(&array, 5);
     {
         cutile_test_assert_m(array.count == 1);
         cutile_test_assert_m(array.size == 10);
         cutile_test_assert_m(array.data[0] == 5);
     }
 
-    cutile_array_push_repeated_m(s16, array, 10, 20);
+    cutile_s16_array_push_repeated(&array, 10, 20);
     {
         cutile_test_assert_m(array.count == 21);
         cutile_test_assert_m(array.size == 21);
@@ -33,7 +32,7 @@ int main(int ac, char** av)
     }
 
     s16 buf[] = { 7, 8, 9 };
-    cutile_array_push_buffer_m(s16, array, buf, cutile_fixed_array_length_m(buf));
+    s16_array_push_buffer(&array, buf, cutile_fixed_array_length_m(buf));
     {
         cutile_test_assert_m(array.count == 24);
         cutile_test_assert_m(array.size == 24);
