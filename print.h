@@ -15,6 +15,7 @@
 
     #ifdef CUTILE_CPP
         #include "cxx.h" // maybe_inline
+        #include "str_format.h"
 
         typedef struct cutile_allocator cutile_allocator; // Defined in memory.h
 
@@ -24,14 +25,24 @@
         maybe_inline void cutile_println(const char* s)    { cutile_println_cstr(s); }
 
         template <typename ...Args>
-        maybe_inline void cutile_print_fmt(const char* fmt, Args ...args);
+        maybe_inline void cutile_print_fmt(const char* fmt, Args ...args) { cutile_print_fmt(cutile_default_allocator, fmt, args...); }
         template <typename ...Args>
-        maybe_inline void cutile_print_fmt(cutile_allocator* allocator, const char* fmt, Args ...args);
+        maybe_inline void cutile_print_fmt(cutile_allocator* allocator, const char* fmt, Args ...args) 
+        {
+            string s = cutile_format_str(allocator, fmt, args...);
+            cutile_print(&s);
+            cutile_destroy_str(&s);
+        }
 
         template <typename ...Args>
-        maybe_inline void cutile_println_fmt(const char* fmt, Args ...args);
+        maybe_inline void cutile_println_fmt(const char* fmt, Args ...args) { cutile_println_fmt(cutile_default_allocator, fmt, args...); }
         template <typename ...Args>
-        maybe_inline void cutile_println_fmt(cutile_allocator* allocator, const char* fmt, Args ...args);
+        maybe_inline void cutile_println_fmt(cutile_allocator* allocator, const char* fmt, Args ...args)
+        {
+            string s = cutile_format_str(allocator, fmt, args...);
+            cutile_println(&s);
+            cutile_destroy_str(&s);
+        }
     #endif
 
     #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
