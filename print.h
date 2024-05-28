@@ -81,6 +81,7 @@
     #endif // CUTILE_IMPLEM
 
     #ifdef CUTILE_IMPLEM_PRINT_STRING_API
+        #include "str.h"
     
         void cutile_print_str(const cutile_string* str)
         {
