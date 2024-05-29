@@ -16,6 +16,16 @@
     // For GCC (only in C) the inlining is forced.
     #define maybe_inline
 
+    // Cast keyword like C cast, I find it easier to read than the usual C cast syntax.
+    #define cast(type, expression)
+
+    // Adds defer keyword for C++.
+    // Defers allows you to ensure that some instructions are executed when exiting a scope (e.g. functions, if, etc...).
+    // This is an alternative to RAII but this time you do not need to make any class with destructors.
+    #ifdef CUTILE_CPP
+        #define defer(expression)
+    #endif
+
     // Performs assertion at compilation-time. A false assertion means a compilation error.
     #define cutile_compile_time_assert(assertion)
 
@@ -115,6 +125,23 @@
         #define maybe_inline __attribute__((always_inline)) inline
     #else
         #define maybe_inline inline
+    #endif
+
+    #define cast(type, expression) ((type)(expression))
+
+    // defer implem
+    #ifdef CUTILE_CPP
+        template <typename Func>
+        struct __cutile_defer
+        {
+            Func f;
+            maybe_inline ~__cutile_defer() { f(); }
+        };
+
+        template <typename Func>
+        maybe_inline __cutile_defer<Func> __cutile_create_defer(Func f) { return __cutile_defer<Func>{f}; }
+
+        #define defer(expression) auto __cutile_defer__##__LINE__ = __cutile_create_defer([&]() { expression; })
     #endif
 
     // cutile_compile_time_assert

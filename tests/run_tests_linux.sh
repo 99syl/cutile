@@ -11,6 +11,11 @@ declare -a TESTS=(
     [7]="str"
 )
 
+declare -a CPP_TESTS=(
+    [0]="defer"
+    [1]="str_format"
+)
+
 # Builds .so for shared library test.
 gcc -c -fpic "$SCRIPT_DIR/shared_library_sample.c"
 gcc -shared -o "$SCRIPT_DIR/shared_library_sample.so" "$SCRIPT_DIR/shared_library_sample.o"
@@ -23,8 +28,20 @@ do
     g++ -std=c++20 -g3 $SRC -o "${OUTNAME}_cpp" 
 done
 
+for tes in ${CPP_TESTS[@]}
+do
+    SRC="$SCRIPT_DIR/$tes.c"
+    OUTNAME="$SCRIPT_DIR/$tes"
+    g++ -std=c++20 -g3 $SRC -o "${OUTNAME}_cpp" 
+done
+
 for tes in ${TESTS[@]}
 do
     "$SCRIPT_DIR/$tes"
+    "$SCRIPT_DIR/${tes}_cpp"
+done
+
+for tes in ${CPP_TESTS[@]}
+do
     "$SCRIPT_DIR/${tes}_cpp"
 done
