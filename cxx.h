@@ -209,7 +209,7 @@
         maybe_inline u16 cutile_bswap_u16(u16 val) { return (val << 8) | (val >> 8); }
         maybe_inline u32 cutile_bswap_u32(u32 val) { return (val << 24) | ((val << 8) & 0x00FF0000) |
                                                             ((val >> 8) & 0x0000FF00) | (val >> 24); }
-        maybe_inline u64 cutile_bswap_u64(u64 val) { return cutile_bswap_u32((u32)(val << 32)) |
+        maybe_inline u64 cutile_bswap_u64(u64 val) { return ((u64)(cutile_bswap_u32((u32)(val & 0xFFFFFFFF))) << 32) |
                                                             cutile_bswap_u32((u32)(val >> 32)); }
     #endif
 
