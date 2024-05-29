@@ -31,7 +31,7 @@
     #define cutile_deallocate_m(allocator_ptr, ptr) (allocator_ptr)->deallocate(allocator_ptr, ptr)
 
     maybe_inline void* cutile_allocate(cutile_allocator* allocator, u64 size) { return allocator->allocate(allocator, size); }
-    maybe_inline void* cutile_deallocate(cutile_allocator* allocator, void* ptr) { allocator->deallocate(allocator, ptr); }
+    maybe_inline void cutile_deallocate(cutile_allocator* allocator, void* ptr) { allocator->deallocate(allocator, ptr); }
 
     // TODO: "heap_allocator" is a wrong name for the moment: it uses a heap on Win32 but this might not be the case for other platforms where we are using malloc/free which might not be implemented using a heap. Implement platform independant heap allocator.
     typedef struct
@@ -81,7 +81,7 @@
         #define deallocate_m(allocator_ptr, ptr) cutile_deallocate_m(allocator_ptr, ptr)
 
         maybe_inline void* allocate(cutile_allocator* allocator, u64 size) { return cutile_allocate(allocator, size); }
-        maybe_inline void* deallocate(cutile_allocator* allocator, void* ptr) { cutile_deallocate(allocator, ptr); }
+        maybe_inline void  deallocate(cutile_allocator* allocator, void* ptr) { cutile_deallocate(allocator, ptr); }
 
         typedef cutile_heap_allocator heap_allocator;
 
