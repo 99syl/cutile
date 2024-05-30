@@ -93,8 +93,8 @@
         #define create_arena_allocator(buffer, buffer_size) cutile_create_arena_allocator(buffer, buffer_size)
         #define reset_arena_allocator(arena_allocator_ptr)  cutile_reset_arena_allocator(arena_allocator_ptr)
 
+        #define default_allocator cutile_default_allocator
         #define set_default_allocator_m(allocator_ptr) cutile_set_default_allocator_m(allocator_ptr)
-
     #endif
 
     #undef  cutile_fill_memory_m
