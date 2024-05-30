@@ -54,6 +54,9 @@
         #ifdef CUTILE_CPP
             #define print(...)   cutile_print(__VA_ARGS__)
             #define println(...) cutile_println(__VA_ARGS__)
+
+            #define print_fmt(...) cutile_print_fmt(__VA_ARGS__)
+            #define println_fmt(...) cutile_println_fmt(__VA_ARGS__)
         #endif
     #endif
 
