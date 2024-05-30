@@ -12,15 +12,9 @@
 
     // file_exists*: Tells if the path given corresponds to an existing file in your filesystem.
     CUTILE_C_API b8 cutile_file_exists(const char* path); 
-    // On Windows and Unix allocation is performed when using those variants because their filesystem API function requires a null-terminated string (cstring):
-    CUTILE_C_API b8 cutile_file_exists_str(cutile_string* path, cutile_allocator*);
-    CUTILE_C_API b8 cutile_file_exists_str_(cutile_string* path); // Uses default allocation. See memory.h for more information about this.
 
     // directory_exists*: Tells if the path given corresponds to an existing directory in your filesystem.
     CUTILE_C_API b8 cutile_directory_exists(const char* path);
-    // On Windows and Unix allocation is performed when using those variants because their filesystem API function requires a null-terminated string (cstring):
-    CUTILE_C_API b8 cutile_directory_exists_str(cutile_string* path, cutile_allocator*);
-    CUTILE_C_API b8 cutile_directory_exists_str_(cutile_string* path); // Uses default allocation. See memory.h for more information about this.
 
     // This function copies a file to a new path.
     // If the new path corresponds to an existing file, overwrite parameters tells if it should be overwritten. Therefore, if the new path already correponds to an existing file and overwritten is set to false, the function returns false.
@@ -77,11 +71,73 @@
     #ifdef CUTILE_FILESYSTEM_STRING_API
         #include "str.h"
 
+        // On Windows and Unix allocation is performed when using those variants because their filesystem API function requires a null-terminated string (cstring):
+        CUTILE_C_API b8 cutile_file_exists_str(cutile_string* path, cutile_allocator*);
+        CUTILE_C_API b8 cutile_file_exists_str_(cutile_string* path); // Uses default allocation. See memory.h for more information about this.
+
+        // On Windows and Unix allocation is performed when using those variants because their filesystem API function requires a null-terminated string (cstring):
+        CUTILE_C_API b8 cutile_directory_exists_str(cutile_string* path, cutile_allocator*);
+        CUTILE_C_API b8 cutile_directory_exists_str_(cutile_string* path); // Uses default allocation. See memory.h for more information about this.
+
         // If the function failed, string.data will be null.
         CUTILE_C_API cutile_string cutile_get_current_executable_path_str(cutile_allocator*);
         CUTILE_C_API cutile_string cutile_get_current_executable_dir_path_str(cutile_allocator*);
 
         CUTILE_C_API cutile_string cutile_concat_file_paths_str(const cutile_string* lhs, const cutile_string* rhs, cutile_allocator* allocator);
+    #endif
+
+    #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
+        #define file_exists(...)        cutile_file_exists(__VA_ARGS__)
+
+        #define directory_exists(...)       cutile_directory_exists(__VA_ARGS__)
+
+        #define copy_file(...) cutile_copy_file(__VA_ARGS__)
+
+        typedef cutile_file_access_mode     file_access_mode;
+        #define file_access_mode_read       cutile_file_access_mode_read
+        #define file_access_mode_write      cutile_file_access_mode_write
+        #define file_access_mode_read_write cutile_file_access_mode_read_write
+
+        typedef cutile_file_create_mode     file_create_mode;
+        #define file_create_if_not_exists   cutile_file_create_if_not_exists
+        #define file_always_create          cutile_file_always_create
+
+        typedef cutile_file file;
+
+        #define open_file(...)   cutile_open_file(__VA_ARGS__)
+        #define create_file(...) cutile_create_file(__VA_ARGS__)
+        #define close_file(...)  cutile_close_file(__VA_ARGS__)
+
+        #define get_file_content_from_path(...) cutile_get_file_content_from_path(__VA_ARGS__)
+        #define get_file_content(...) cutile_get_file_content(__VA_ARGS__)
+
+        #define read_from_file(...) cutile_read_from_file(__VA_ARGS__)
+        #define write_in_file(...)  cutile_write_in_file(__VA_ARGS__)
+
+        #define get_file_size(...)              cutile_get_file_size(__VA_ARGS__)
+        #define get_file_size_from_path(...)    cutile_get_file_size_from_path(__VA_ARGS__)
+
+        #define get_current_executable_path(...)        cutile_get_current_executable_path(__VA_ARGS__)
+        #define get_current_executable_dir_path(...)    cutile_get_current_executable_dir_path(__VA_ARGS__)
+
+        #define concat_file_paths_into_cstr(...)    cutile_concat_file_paths_into_cstr(__VA_ARGS__)
+        #define concat_file_paths(...)              cutile_concat_file_paths(__VA_ARGS__)
+
+        #define get_last_path_element(...) cutile_get_last_path_element(__VA_ARGS__)
+
+        #define get_filename_extension(...) cutile_get_filename_extension(__VA_ARGS__)
+
+        #ifdef CUTILE_FILESYSTEM_STRING_API
+            #define file_exists_str(...)    cutile_file_exists_str(__VA_ARGS__)
+            #define file_exists_str_(...)   cutile_file_exists_str_(__VA_ARGS__)
+            #define directory_exists_str(...)   cutile_directory_exists_str(__VA_ARGS__)
+            #define directory_exists_str_(...)  cutile_directory_exists_str_(__VA_ARGS__)
+
+            #define get_current_executable_path_str(...) cutile_get_current_executable_path_str(__VA_ARGS__)
+            #define get_current_executable_dir_path_str(...) cutile_get_current_executable_dir_path_str(__VA_ARGS__)
+
+            #define concat_file_paths_str(...) cutile_concat_file_paths_str(__VA_ARGS__)
+        #endif
     #endif
 
     #ifdef CUTILE_IMPLEM
