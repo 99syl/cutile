@@ -26,7 +26,7 @@
 
     struct cutile_format_memory_to_str
     {
-        u8* buffer;
+        const u8* buffer;
         u64 size;
     };
 

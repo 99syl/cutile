@@ -39,14 +39,14 @@
     CUTILE_C_API void cutile_str_insert_utf8_cp(cutile_string* str, u32 index, u32 cp);
     CUTILE_C_API void cutile_str_push_back_str(cutile_string* str, const cutile_string* rhs);
     CUTILE_C_API void cutile_str_push_back_cstr(cutile_string* str, const char* rhs);
-    CUTILE_C_API void cutile_str_push_back_buf(cutile_string* str, u8* buf, u64 buf_size);
+    CUTILE_C_API void cutile_str_push_back_buf(cutile_string* str, const u8* buf, u64 buf_size);
     CUTILE_C_API void cutile_str_pop_back(cutile_string* str);
     CUTILE_C_API void cutile_resize_str(cutile_string* str, u32 size);
 
     #ifdef CUTILE_CPP
         maybe_inline void cutile_str_push_back(cutile_string* str, const cutile_string* rhs) { cutile_str_push_back(str, rhs); }
         maybe_inline void cutile_str_push_back(cutile_string* str, const char* rhs) { cutile_str_push_back(str, rhs); }
-        maybe_inline void cutile_str_push_back(cutile_string* str, u8* buf, u64 buf_size) { cutile_str_push_back(str, buf, buf_size); }
+        maybe_inline void cutile_str_push_back(cutile_string* str, const u8* buf, u64 buf_size) { cutile_str_push_back(str, buf, buf_size); }
     #endif
 
     // String Transformation:
@@ -475,7 +475,7 @@
             str->count += rlen;
         }
     
-        void cutile_str_push_back_buf(cutile_string* str, u8* buf, u64 buf_size)
+        void cutile_str_push_back_buf(cutile_string* str, const u8* buf, u64 buf_size)
         {
             if (str->count + buf_size >= str->size) cutile_resize_str(str, str->size + buf_size);
             copy_memory_m(str->data + str->count, buf, buf_size);
