@@ -57,6 +57,24 @@
                                          const char* section_name, // NULL if no section (global section).
                                          const char* entry_name,
                                          cutile_ini_field* out);
+
+    #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
+        typedef cutile_ini_field   ini_field;
+        typedef cutile_ini_section ini_section;
+        typedef cutile_ini_error   ini_error;
+
+        typedef cutile_parse_ini_result      parse_ini_result;
+        #define parse_ini(...)               cutile_parse_ini(__VA_ARGS__)
+        #define destroy_ini_parsed_data(...) cutile_destroy_ini_parsed_data(__VA_ARGS__)
+
+
+        typedef cutile_ini_entry_value_result   ini_entry_value_result;
+        #define get_ini_global_entry_value(...) cutile_get_ini_global_entry_value(__VA_ARGS__)
+        #define get_ini_entry_value(...)        cutile_get_ini_entry_value(__VA_ARGS__)
+
+        #define get_ini_field(...) cutile_get_ini_field(__VA_ARGS__)
+    #endif
+
     #ifdef CUTILE_IMPLEM
         #include "memory.h"
     
