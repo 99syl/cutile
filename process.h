@@ -1,8 +1,12 @@
 #ifndef CUTILE_PROCESS_H
 
-#include "cxx.h"
+    #include "cxx.h"
 
-CUTILE_C_API void cutile_exit_process(unsigned int exit_code);
+    CUTILE_C_API void cutile_exit_process(unsigned int exit_code);
+
+    #ifndef NO_CUTILE_SHORT_INTERFACE_NAMES
+        #define exit_process(exit_code) cutile_exit_process(exit_code)
+    #endif
 
     #ifdef CUTILE_IMPLEM
         #if WINDOWS
@@ -22,7 +26,7 @@ CUTILE_C_API void cutile_exit_process(unsigned int exit_code);
                 _exit(exit_code);
             }
             #else
-                #error "exit_process: Unsupported platform."
+                #error "cutile_exit_process: Unsupported platform."
             #endif
         }
     #endif
