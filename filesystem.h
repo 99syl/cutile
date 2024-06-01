@@ -410,10 +410,10 @@
             out[lsize + rsize + 1] = '\0';
         }
 
-        char* concat_cstr_file_paths(const char* lhs, const char* rhs, cutile_allocator* allocator)
+        char* cutile_concat_file_paths(const char* lhs, const char* rhs, cutile_allocator* allocator)
         {
-            u32 lsize = 0; while (lhs[lsize++]);
-            u32 rsize = 0; while (rhs[rsize++]);
+            u32 lsize = 0; while (lhs[lsize]) lsize++;
+            u32 rsize = 0; while (rhs[rsize]) rsize++;
             char* result = (char*)cutile_allocate_m(allocator, sizeof(char) * (lsize + rsize + 2));
             cutile_concat_file_paths_into_cstr(lhs, lsize, rhs, rsize, result);
             return result;
