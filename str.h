@@ -133,6 +133,9 @@
     CUTILE_C_API cutile_string cutile_u64_to_str(u64, cutile_allocator* allocator);
     CUTILE_C_API cutile_string cutile_s64_to_str(s64, cutile_allocator* allocator);
 
+    CUTILE_C_API cutile_string cutile_f32_to_str(f32, cutile_allocator* allocator);
+    CUTILE_C_API cutile_string cutile_f64_to_str(f64, cutile_allocator* allocator);
+
     CUTILE_C_API char* cutile_u8_to_cstr(u8, cutile_allocator* allocator);
     CUTILE_C_API char* cutile_s8_to_cstr(s8, cutile_allocator* allocator);
     CUTILE_C_API char* cutile_u16_to_cstr(u16, cutile_allocator* allocator);
@@ -142,7 +145,7 @@
     CUTILE_C_API char* cutile_u64_to_cstr(u64, cutile_allocator* allocator);
     CUTILE_C_API char* cutile_s64_to_cstr(s64, cutile_allocator* allocator);
 
-    // nbxs_into_str: Pushes the number at the end of the string.
+    // nb_into_str: Pushes the number at the end of the string.
     CUTILE_C_API void cutile_u8_into_str(u8, cutile_string* out);
     CUTILE_C_API void cutile_s8_into_str(s8, cutile_string* out);
     CUTILE_C_API void cutile_u16_into_str(u16, cutile_string* out);
@@ -151,6 +154,9 @@
     CUTILE_C_API void cutile_s32_into_str(s32, cutile_string* out);
     CUTILE_C_API void cutile_u64_into_str(u64, cutile_string* out);
     CUTILE_C_API void cutile_s64_into_str(s64, cutile_string* out);
+
+    CUTILE_C_API void cutile_f32_into_str(f32, cutile_string* out);
+    CUTILE_C_API void cutile_f64_into_str(f64, cutile_string* out);
 
     CUTILE_C_API void cutile_u8_into_sub_str(u8, cutile_string* out, u32 index);
     CUTILE_C_API void cutile_s8_into_sub_str(s8, cutile_string* out, u32 index);
@@ -248,6 +254,9 @@
         #define u64_to_str(nb, allocator_ptr) cutile_u64_to_str(nb, allocator_ptr)
         #define s64_to_str(nb, allocator_ptr) cutile_s64_to_str(nb, allocator_ptr)
 
+        #define f32_to_str(nb, allocator_ptr) cutile_f32_to_str(nb, allocator_ptr)
+        #define f64_to_str(nb, allocator_ptr) cutile_f64_to_str(nb, allocator_ptr)
+
         #define u8_to_cstr(nb, allocator_ptr) cutile_u8_to_cstr(nb, allocator_ptr)
         #define s8_to_cstr(nb, allocator_ptr) cutile_s8_to_cstr(nb, allocator_ptr)
         #define u16_to_cstr(nb, allocator_ptr) cutile_u16_to_cstr(nb, allocator_ptr)
@@ -265,6 +274,9 @@
         #define s32_into_str(nb, str_out_ptr) cutile_s32_into_str(nb, str_out_ptr)
         #define u64_into_str(nb, str_out_ptr) cutile_u64_into_str(nb, str_out_ptr)
         #define s64_into_str(nb, str_out_ptr) cutile_s64_into_str(nb, str_out_ptr)
+
+        #define f32_into_str(nb, str_out_ptr) cutile_f32_into_str(nb, str_out_ptr)
+        #define f64_into_str(nb, str_out_ptr) cutile_f64_into_str(nb, str_out_ptr)
 
         #define u8_into_sub_str(nb, str_out_ptr, index) cutile_u8_into_sub_str(nb, str_out_ptr, index)
         #define s8_into_sub_str(nb, str_out_ptr, index) cutile_s8_into_sub_str(nb, str_out_ptr, index)
@@ -884,7 +896,59 @@
         cutile_string cutile_u64_to_str(u64 nb, cutile_allocator* allocator) { u32 digits; cutile_get_u64_digits_m(nb, digits); cutile_unsigned_nb_to_str_m(nb, digits, allocator); }
 
         cutile_string cutile_s64_to_str(s64 nb, cutile_allocator* allocator) { u32 digits; cutile_get_s64_digits_m(nb, digits); cutile_signed_nb_to_str_m(nb, digits, allocator); }
-    
+
+        cutile_string cutile_f32_to_str(f32 nb, cutile_allocator* allocator)
+        {
+            s32 integer_part = cast(s32, nb);
+            f32 float_part = nb - cast(f32, integer_part);
+            // 7 decimal places.
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+
+            cutile_string result = create_empty_str(allocator);
+            cutile_s32_into_str(integer_part, &result);
+            cutile_str_push_back(&result, '.');
+            cutile_s32_into_str(cast(s64, float_part), &result);
+
+            return result;
+        }
+
+        cutile_string cutile_f64_to_str(f64 nb, cutile_allocator* allocator)
+        {
+            s64 integer_part = cast(s64, nb);
+            f64 float_part = nb - cast(f64, integer_part);
+            // 17 decimal places.
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+
+            cutile_string result = create_empty_str(allocator);
+            cutile_s64_into_str(integer_part, &result);
+            cutile_str_push_back(&result, '.');
+            cutile_s64_into_str(cast(s64, float_part), &result);
+
+            return result;
+        }
+
         #define cutile_unsigned_nb_to_cstr_m(nb, digits, allocator)         \
         {                                                                   \
             char* out = cutile_allocate_many_T_m(allocator, char, digits+1);\
@@ -950,13 +1014,59 @@
         void cutile_s16_into_str(s16 nb, cutile_string* out) { cutile_s16_into_sub_str(nb, out, out->count); }
     
         void cutile_u32_into_str(u32 nb, cutile_string* out) { cutile_u32_into_sub_str(nb, out, out->count); }
-    
+
         void cutile_s32_into_str(s32 nb, cutile_string* out) { cutile_s32_into_sub_str(nb, out, out->count); }
-    
+
         void cutile_u64_into_str(u64 nb, cutile_string* out) { cutile_u64_into_sub_str(nb, out, out->count); }
-    
+
         void cutile_s64_into_str(s64 nb, cutile_string* out) { cutile_s64_into_sub_str(nb, out, out->count); }
-    
+
+        void cutile_f32_into_str(f32 nb, cutile_string* out)
+        {
+            s32 integer_part = cast(s32, nb);
+            f32 float_part = nb - cast(f32, integer_part);
+            // 7 decimal places.
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+
+            cutile_s32_into_str(integer_part, out);
+            cutile_str_push_back(out, '.');
+            cutile_s32_into_str(cast(s64, float_part), out);
+        }
+
+        void cutile_f64_into_str(f64 nb, cutile_string* out)
+        {
+            s64 integer_part = cast(s64, nb);
+            f64 float_part = nb - cast(f64, integer_part);
+            // 17 decimal places.
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+            float_part *= 10;
+
+            cutile_s64_into_str(integer_part, out);
+            cutile_str_push_back(out, '.');
+            cutile_s64_into_str(cast(s64, float_part), out);
+        }
+
         #define cutile_unsigned_nb_into_sub_str(nb, digits, str_ptr, index)    \
         {                                                                      \
             if (str_ptr->count + digits >= str_ptr->size)                      \
