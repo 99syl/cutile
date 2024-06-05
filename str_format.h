@@ -48,6 +48,8 @@
     template <> maybe_inline void cutile_format_arg_into_str<s32>(cutile_string*, s32);
     template <> maybe_inline void cutile_format_arg_into_str<u64>(cutile_string*, u64);
     template <> maybe_inline void cutile_format_arg_into_str<s64>(cutile_string*, s64);
+    template <> maybe_inline void cutile_format_arg_into_str<f32>(cutile_string*, f32);
+    template <> maybe_inline void cutile_format_arg_into_str<f64>(cutile_string*, f64);
     template <> maybe_inline void cutile_format_arg_into_str<const char*>(cutile_string*, const char*);
     template <> maybe_inline void cutile_format_arg_into_str<cutile_string>(cutile_string*, cutile_string);
     template <> maybe_inline void cutile_format_arg_into_str<cutile_string*>(cutile_string*, cutile_string*);
@@ -169,6 +171,16 @@
     maybe_inline void cutile_format_arg_into_str<s8>(cutile_string* out, s8 arg)
     {
         cutile_s8_into_str(arg, out);
+    }
+
+    template <> maybe_inline void cutile_format_arg_into_str<f32>(cutile_string* out, f32 arg)
+    {
+        cutile_f32_into_str(arg, out);
+    }
+
+    template <> maybe_inline void cutile_format_arg_into_str<f64>(cutile_string* out, f64 arg)
+    {
+        cutile_f64_into_str(arg, out);
     }
 
     template <>
