@@ -27,5 +27,18 @@ int main()
         cutile_test_assert_m(cast(u16, nb) == 0xFFFF);
     }
 
+    // packed_struct
+    {
+        packed_struct(packed_test
+        {
+            char  a;
+            int   b;
+            short c;
+            char  d;
+        });
+
+        cutile_test_assert_m(sizeof(struct packed_test) == 8);
+    }
+
     cutile_test_end_m();
 }

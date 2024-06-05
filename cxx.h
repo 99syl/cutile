@@ -19,6 +19,9 @@
     // Cast keyword like C cast, I find it easier to read than the usual C cast syntax.
     #define cast(type, expression)
 
+    // Defines a packed structure.
+    #define packed_struct(declaration)
+
     // Adds defer keyword for C++.
     // Defers allows you to ensure that some instructions are executed when exiting a scope (e.g. functions, if, etc...).
     // This is an alternative to RAII but this time you do not need to make any class with destructors.
@@ -128,6 +131,14 @@
     #endif
 
     #define cast(type, expression) ((type)(expression))
+
+    // packed_struct:
+
+    #if defined(__GNUC__)
+        #define packed_struct(declaration) struct declaration __attribute__((__packed__))
+    #elif defined(_MSC_VER)
+        #define packed_struct(declaration) __pragma(pack(push, 1)) struct declaration __pragma(pack(pop))
+    #endif
 
     // defer implem
     #ifdef CUTILE_CPP
