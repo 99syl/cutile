@@ -4,11 +4,13 @@ declare -a TESTS=(
     [0]="array"
     [1]="base64"
     [2]="blowfish"
-    [3]="filesystem"
-    [4]="hash_table"
-    [5]="ini"
-    [6]="shared_library"
-    [7]="str"
+    [3]="cxx"
+    [4]="filesystem"
+    [5]="hash_table"
+    [6]="ini"
+    [7]="shared_library"
+    [8]="network"
+    [9]="str"
 )
 
 declare -a CPP_TESTS=(

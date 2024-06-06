@@ -4,7 +4,7 @@
 
     typedef struct
     {
-        u32 handle;
+        s32 handle;
     } cutile_net_socket;
 
     typedef enum
@@ -29,7 +29,7 @@
     {
         cutile_net_no_error = 0,
     
-        #ifdef _WIN32
+        #if WINDOWS
             cutile_net_win32_wsa_not_ready,
             cutile_net_win32_wsa_not_initialized,              // WSAStartup() has not been called yet!
             cutile_net_win32_wsa_ver_not_supported,
@@ -57,14 +57,65 @@
             cutile_net_win32_wsa_invalid_address,
             cutile_net_win32_wsa_socket_already_connected,
             cutile_net_win32_wsa_unsupported_operation,
-        #endif // _WIN32
+
+        #elif LINUX
+            cutile_net_linux_open_socket_eacces,
+            cutile_net_linux_open_socket_eafnosupport,
+            cutile_net_linux_open_socket_einval,
+            cutile_net_linux_open_socket_emfile,
+            cutile_net_linux_open_socket_enfile,
+            cutile_net_linux_open_socket_enobufs,
+            cutile_net_linux_open_socket_enomem,
+            cutile_net_linux_open_socket_eprotonosupport,
+            cutile_net_linux_close_socket_ebadf,
+            cutile_net_linux_close_socket_eintr,
+            cutile_net_linux_close_socket_eio,
+            cutile_net_linux_close_socket_enospc,
+            cutile_net_linux_close_socket_edquot,
+            cutile_net_linux_bind_socket_eacces,
+            cutile_net_linux_bind_socket_eaddrinuse,
+            cutile_net_linux_bind_socket_ebadf,
+            cutile_net_linux_bind_socket_einval,
+            cutile_net_linux_bind_socket_enotsock,
+            cutile_net_linux_bind_socket_eaddrnotavail,
+            cutile_net_linux_bind_socket_efault,
+            cutile_net_linux_bind_socket_eloop,
+            cutile_net_linux_bind_socket_enametoolong,
+            cutile_net_linux_bind_socket_enoent,
+            cutile_net_linux_bind_socket_enomem,
+            cutile_net_linux_bind_socket_enotdir,
+            cutile_net_linux_bind_socket_erofs,
+            cutile_net_linux_socket_listen_eaddrinuse,
+            cutile_net_linux_socket_listen_ebadf,
+            cutile_net_linux_socket_listen_enotsock,
+            cutile_net_linux_socket_listen_eopnotsupp,
+            cutile_net_linux_send_to_socket_eacces,
+            cutile_net_linux_send_to_socket_eagain_ewouldblock,
+            cutile_net_linux_send_to_socket_ealready,
+            cutile_net_linux_send_to_socket_ebadf,
+            cutile_net_linux_send_to_socket_econnreset,
+            cutile_net_linux_send_to_socket_edestaddrreq,
+            cutile_net_linux_send_to_socket_efault,
+            cutile_net_linux_send_to_socket_eintr,
+            cutile_net_linux_send_to_socket_einval,
+            cutile_net_linux_send_to_socket_eisconn,
+            cutile_net_linux_send_to_socket_emsgsize,
+            cutile_net_linux_send_to_socket_enobufs,
+            cutile_net_linux_send_to_socket_enomem,
+            cutile_net_linux_send_to_socket_enotconn,
+            cutile_net_linux_send_to_socket_enotsock,
+            cutile_net_linux_send_to_socket_eopnotsupp,
+            cutile_net_linux_send_to_socket_epipe,
+        #endif
         
         cutile_net_unknown_err
     } cutile_net_error;
-    
+
     CUTILE_C_API cutile_net_error  cutile_open_net_socket(cutile_net_socket_kind kind, cutile_net_address_family family, cutile_net_protocol protocol, cutile_net_socket* out);
     CUTILE_C_API cutile_net_error  cutile_close_net_socket(cutile_net_socket* socket);
     
+    // Net endpoints bytes are already ordered for network order if you created them using the helper functions below (e.g. cutile_create_ipv4_endpoint).
+
     typedef struct
     {
         cutile_net_address_family   family;
@@ -104,7 +155,6 @@
     CUTILE_C_API cutile_net_error cutile_net_socket_listen(cutile_net_socket* socket, u32 backlog);
     
     CUTILE_C_API cutile_net_error cutile_send_to_net_socket(cutile_net_socket* dest_socket, u8* data, u64 len);
-    CUTILE_C_API cutile_net_error cutile_receive_from_net_socket(cutile_net_socket* src_socket, u8* data, u64 data_max_len, u64* len);
 
     CUTILE_C_API const char* cutile_get_net_error_msg(cutile_net_error err);
 
@@ -126,7 +176,7 @@
         typedef cutile_net_error net_error;
         #define net_no_error                                     cutile_net_no_error
         #define net_unknown_err                                  cutile_net_unknown_err
-        #ifdef _WIN32
+        #if WINDOWS
             #define net_win32_wsa_not_ready                      cutile_net_win32_wsa_not_ready
             #define net_win32_wsa_not_initialized                cutile_net_win32_wsa_not_initialized
             #define net_win32_wsa_ver_not_supported              cutile_net_win32_wsa_ver_not_supported
@@ -154,7 +204,55 @@
             #define net_win32_wsa_invalid_address                cutile_net_win32_wsa_invalid_address
             #define net_win32_wsa_socket_already_connected       cutile_net_win32_wsa_socket_already_connected
             #define net_win32_wsa_unsupported_operation          cutile_net_win32_wsa_unsupported_operation
-        #endif // _WIN32
+        #elif LINUX
+            #define net_linux_open_socket_eacces                cutile_net_linux_open_socket_eacces                 
+            #define net_linux_open_socket_eafnosupport          cutile_net_linux_open_socket_eafnosupport         
+            #define net_linux_open_socket_einval                cutile_net_linux_open_socket_einval               
+            #define net_linux_open_socket_emfile                cutile_net_linux_open_socket_emfile               
+            #define net_linux_open_socket_enfile                cutile_net_linux_open_socket_enfile               
+            #define net_linux_open_socket_enobufs               cutile_net_linux_open_socket_enobufs              
+            #define net_linux_open_socket_enomem                cutile_net_linux_open_socket_enomem               
+            #define net_linux_open_socket_eprotonosupport       cutile_net_linux_open_socket_eprotonosupport      
+            #define net_linux_close_socket_ebadf                cutile_net_linux_close_socket_ebadf               
+            #define net_linux_close_socket_eintr                cutile_net_linux_close_socket_eintr               
+            #define net_linux_close_socket_eio                  cutile_net_linux_close_socket_eio                 
+            #define net_linux_close_socket_enospc               cutile_net_linux_close_socket_enospc              
+            #define net_linux_close_socket_edquot               cutile_net_linux_close_socket_edquot              
+            #define net_linux_bind_socket_eacces                cutile_net_linux_bind_socket_eacces               
+            #define net_linux_bind_socket_eaddrinuse            cutile_net_linux_bind_socket_eaddrinuse           
+            #define net_linux_bind_socket_ebadf                 cutile_net_linux_bind_socket_ebadf                
+            #define net_linux_bind_socket_einval                cutile_net_linux_bind_socket_einval               
+            #define net_linux_bind_socket_enotsock              cutile_net_linux_bind_socket_enotsock             
+            #define net_linux_bind_socket_eaddrnotavail         cutile_net_linux_bind_socket_eaddrnotavail        
+            #define net_linux_bind_socket_efault                cutile_net_linux_bind_socket_efault               
+            #define net_linux_bind_socket_eloop                 cutile_net_linux_bind_socket_eloop                
+            #define net_linux_bind_socket_enametoolong          cutile_net_linux_bind_socket_enametoolong         
+            #define net_linux_bind_socket_enoent                cutile_net_linux_bind_socket_enoent               
+            #define net_linux_bind_socket_enomem                cutile_net_linux_bind_socket_enomem               
+            #define net_linux_bind_socket_enotdir               cutile_net_linux_bind_socket_enotdir              
+            #define net_linux_bind_socket_erofs                 cutile_net_linux_bind_socket_erofs                
+            #define net_linux_socket_listen_eaddrinuse          cutile_net_linux_socket_listen_eaddrinuse         
+            #define net_linux_socket_listen_ebadf               cutile_net_linux_socket_listen_ebadf              
+            #define net_linux_socket_listen_enotsock            cutile_net_linux_socket_listen_enotsock           
+            #define net_linux_socket_listen_eopnotsupp          cutile_net_linux_socket_listen_eopnotsupp         
+            #define net_linux_send_to_socket_eacces             cutile_net_linux_send_to_socket_eacces            
+            #define net_linux_send_to_socket_eagain_ewouldblock cutile_net_linux_send_to_socket_eagain_ewouldblock
+            #define net_linux_send_to_socket_ealready           cutile_net_linux_send_to_socket_ealready          
+            #define net_linux_send_to_socket_ebadf              cutile_net_linux_send_to_socket_ebadf             
+            #define net_linux_send_to_socket_econnreset         cutile_net_linux_send_to_socket_econnreset        
+            #define net_linux_send_to_socket_edestaddrreq       cutile_net_linux_send_to_socket_edestaddrreq      
+            #define net_linux_send_to_socket_efault             cutile_net_linux_send_to_socket_efault            
+            #define net_linux_send_to_socket_eintr              cutile_net_linux_send_to_socket_eintr             
+            #define net_linux_send_to_socket_einval             cutile_net_linux_send_to_socket_einval            
+            #define net_linux_send_to_socket_eisconn            cutile_net_linux_send_to_socket_eisconn           
+            #define net_linux_send_to_socket_emsgsize           cutile_net_linux_send_to_socket_emsgsize          
+            #define net_linux_send_to_socket_enobufs            cutile_net_linux_send_to_socket_enobufs           
+            #define net_linux_send_to_socket_enomem             cutile_net_linux_send_to_socket_enomem            
+            #define net_linux_send_to_socket_enotconn           cutile_net_linux_send_to_socket_enotconn          
+            #define net_linux_send_to_socket_enotsock           cutile_net_linux_send_to_socket_enotsock          
+            #define net_linux_send_to_socket_eopnotsupp         cutile_net_linux_send_to_socket_eopnotsupp        
+            #define net_linux_send_to_socket_epipe              cutile_net_linux_send_to_socket_epipe             
+        #endif
 
         #define open_net_socket(kind, family, protocol, out) cutile_open_net_socket(kind, family, protocol, out)
         #define close_net_socket(socket)                     cutile_close_net_socket(socket)
@@ -167,6 +265,11 @@
         #define create_ipv4_endpoint(ip_cstr, port) cutile_create_ipv4_endpoint(ip_cstr, port)
 
         #define bind_net_socket(socket, endpoint) cutile_bind_net_socket(socket, endpoint)
+
+        #define net_socket_listen(socket, backlog)      cutile_net_socket_listen(socket, backlog)
+        #define send_to_net_socket(socket, data, len)   cutile_send_to_net_socket(socket, data, len)
+
+        #define get_net_error_msg(err)                  cutile_get_net_error_msg(err)
     #endif
     
     #ifdef CUTILE_IMPLEM
@@ -177,6 +280,12 @@
             #ifdef _MSC_VER
                 #pragma comment(lib, "Ws2_32.lib")
             #endif
+        #elif LINUX
+            #include <errno.h>
+            #include <sys/socket.h>
+            #include <arpa/inet.h>
+        #else
+            #error "socket.h: Unsupported platform."
         #endif
 
         cutile_net_error cutile_open_net_socket(cutile_net_socket_kind kind, cutile_net_address_family family, cutile_net_protocol protocol, cutile_net_socket* out)
@@ -185,7 +294,7 @@
             int type = 0;
             int proto = 0;
 
-            #ifdef _WIN32
+            #if WINDOWS
                 switch (family)
                 {
                     case cutile_net_af_ipv4: af = AF_INET; break;
@@ -201,11 +310,23 @@
                     case cutile_net_tcp_protocol: proto = IPPROTO_TCP; break;
                     case cutile_net_udp_protocol: proto = IPPROTO_UDP; break;
                 }
+            #elif UNIX_LIKE
+                switch (family)
+                {
+                    case cutile_net_af_ipv4: af = AF_INET; break;
+                    case cutile_net_af_ipv6: af = AF_INET6; break;
+                }
+                switch (kind)
+                {
+                    case cutile_net_socket_stream: type = SOCK_STREAM; break;
+                    case cutile_net_socket_datagram: type = SOCK_DGRAM; break;
+                }
+                proto = 0;
             #endif
 
             out->handle = socket(af, type, protocol);
 
-            #ifdef _WIN32
+            #if WINDOWS
                 if (out->handle == INVALID_SOCKET)
                 {
                     int err = WSAGetLastError();
@@ -227,14 +348,30 @@
                         default: return cutile_net_unknown_err;
                     }
                 }
-            #endif // _WIN32
+            #elif LINUX
+                if (out->handle == -1)
+                {
+                    switch (errno)
+                    {
+                        case EACCES: return cutile_net_linux_open_socket_eacces;
+                        case EAFNOSUPPORT: return cutile_net_linux_open_socket_eafnosupport;
+                        case EINVAL: return cutile_net_linux_open_socket_einval;
+                        case EMFILE: return cutile_net_linux_open_socket_emfile;
+                        case ENFILE: return cutile_net_linux_open_socket_enfile;
+                        case ENOBUFS: return cutile_net_linux_open_socket_enobufs;
+                        case ENOMEM: return cutile_net_linux_open_socket_enomem;
+                        case EPROTONOSUPPORT: return cutile_net_linux_open_socket_eprotonosupport;
+                        default: return cutile_net_unknown_err;
+                    }
+                }
+            #endif
 
             return cutile_net_no_error;
         }
 
         cutile_net_error cutile_close_net_socket(cutile_net_socket* socket)
         {
-            #ifdef _WIN32
+            #if WINDOWS
                 if (closesocket(socket->handle) == SOCKET_ERROR)
                 {
                     int err = WSAGetLastError();
@@ -249,7 +386,20 @@
                         default: return cutile_net_unknown_err;
                     }
                 }
-            #endif // _WIN32
+            #elif LINUX
+                if (close(socket->handle) == -1)
+                {
+                    switch (errno)
+                    {
+                        case EBADF: return cutile_net_linux_close_socket_ebadf;
+                        case EINTR: return cutile_net_linux_close_socket_eintr;
+                        case EIO: return cutile_net_linux_close_socket_eio;
+                        case ENOSPC: return cutile_net_linux_close_socket_enospc;
+                        case EDQUOT: return cutile_net_linux_close_socket_edquot;
+                        default: return cutile_net_unknown_err;
+                    }
+                }
+            #endif
 
             return cutile_net_no_error;
         }
@@ -316,11 +466,14 @@
                     ipv4_endpoint* v4_ep = (ipv4_endpoint*)endpoint;
                     addr.sin_family = AF_INET;
                     addr.sin_port = htons(v4_ep->port);
-                    #ifdef _WIN32
+                    #if WINDOWS
                         addr.sin_addr.S_un.S_un_b.s_b1 = v4_ep->bytes[0];
                         addr.sin_addr.S_un.S_un_b.s_b2 = v4_ep->bytes[1];
                         addr.sin_addr.S_un.S_un_b.s_b3 = v4_ep->bytes[2];
                         addr.sin_addr.S_un.S_un_b.s_b4 = v4_ep->bytes[3];
+                    #elif LINUX
+                        u32 ip_bytes = (u32)*v4_ep->bytes;
+                        addr.sin_addr.s_addr = ip_bytes;
                     #endif
                     res = bind(socket->handle, (struct sockaddr*)&addr, sizeof(addr));
                     break;
@@ -332,15 +485,47 @@
                     addr.sin6_family = AF_INET6;
                     addr.sin6_scope_id = 0;
                     addr.sin6_port = htons(v6_ep->port);
-                    #ifdef _WIN32
-                        for (u32 i = 0; i < 16; ++i) addr.sin6_addr.u.Byte[i] = v6_ep->bytes[i];
+                    #if WINDOWS
+                        addr.sin6_addr.u.Byte[0] = v6_ep->bytes[0];
+                        addr.sin6_addr.u.Byte[1] = v6_ep->bytes[1];
+                        addr.sin6_addr.u.Byte[2] = v6_ep->bytes[2];
+                        addr.sin6_addr.u.Byte[3] = v6_ep->bytes[3];
+                        addr.sin6_addr.u.Byte[4] = v6_ep->bytes[4];
+                        addr.sin6_addr.u.Byte[5] = v6_ep->bytes[5];
+                        addr.sin6_addr.u.Byte[6] = v6_ep->bytes[6];
+                        addr.sin6_addr.u.Byte[7] = v6_ep->bytes[7];
+                        addr.sin6_addr.u.Byte[8] = v6_ep->bytes[8];
+                        addr.sin6_addr.u.Byte[9] = v6_ep->bytes[9];
+                        addr.sin6_addr.u.Byte[10] = v6_ep->bytes[10];
+                        addr.sin6_addr.u.Byte[11] = v6_ep->bytes[11];
+                        addr.sin6_addr.u.Byte[12] = v6_ep->bytes[12];
+                        addr.sin6_addr.u.Byte[13] = v6_ep->bytes[13];
+                        addr.sin6_addr.u.Byte[14] = v6_ep->bytes[14];
+                        addr.sin6_addr.u.Byte[15] = v6_ep->bytes[15];
+                    #elif LINUX
+                        addr.sin6_addr.s6_addr[0] = v6_ep->bytes[0];
+                        addr.sin6_addr.s6_addr[1] = v6_ep->bytes[1];
+                        addr.sin6_addr.s6_addr[2] = v6_ep->bytes[2];
+                        addr.sin6_addr.s6_addr[3] = v6_ep->bytes[3];
+                        addr.sin6_addr.s6_addr[4] = v6_ep->bytes[4];
+                        addr.sin6_addr.s6_addr[5] = v6_ep->bytes[5];
+                        addr.sin6_addr.s6_addr[6] = v6_ep->bytes[6];
+                        addr.sin6_addr.s6_addr[7] = v6_ep->bytes[7];
+                        addr.sin6_addr.s6_addr[8] = v6_ep->bytes[8];
+                        addr.sin6_addr.s6_addr[9] = v6_ep->bytes[9];
+                        addr.sin6_addr.s6_addr[10] = v6_ep->bytes[10];
+                        addr.sin6_addr.s6_addr[11] = v6_ep->bytes[11];
+                        addr.sin6_addr.s6_addr[12] = v6_ep->bytes[12];
+                        addr.sin6_addr.s6_addr[13] = v6_ep->bytes[13];
+                        addr.sin6_addr.s6_addr[14] = v6_ep->bytes[14];
+                        addr.sin6_addr.s6_addr[15] = v6_ep->bytes[15];
                     #endif
                     res = bind(socket->handle, (struct sockaddr*)&addr, sizeof(addr));
                     break;
                 }
             }
 
-            #ifdef _WIN32
+            #if WINDOWS
                 if (res == SOCKET_ERROR)
                 {
                     int err = WSAGetLastError();
@@ -370,7 +555,28 @@
                             return cutile_net_unknown_err;
                     }
                 }
-            #endif // _WIN32
+            #elif LINUX
+                if (res == -1)
+                {
+                    switch (errno)
+                    {
+                        case EACCES:        return cutile_net_linux_bind_socket_eacces;
+                        case EADDRINUSE:    return cutile_net_linux_bind_socket_eaddrinuse;
+                        case EBADF:         return cutile_net_linux_bind_socket_ebadf;
+                        case EINVAL:        return cutile_net_linux_bind_socket_einval;
+                        case ENOTSOCK:      return cutile_net_linux_bind_socket_enotsock;
+                        case EADDRNOTAVAIL: return cutile_net_linux_bind_socket_eaddrnotavail;
+                        case EFAULT:        return cutile_net_linux_bind_socket_efault;
+                        case ELOOP:         return cutile_net_linux_bind_socket_eloop;
+                        case ENAMETOOLONG:  return cutile_net_linux_bind_socket_enametoolong;
+                        case ENOENT:        return cutile_net_linux_bind_socket_enoent;
+                        case ENOMEM:        return cutile_net_linux_bind_socket_enomem;
+                        case ENOTDIR:       return cutile_net_linux_bind_socket_enotdir;
+                        case EROFS:         return cutile_net_linux_bind_socket_erofs;
+                        default:            return cutile_net_unknown_err;
+                    }
+                }
+            #endif
             
             return cutile_net_no_error;
         }
@@ -379,7 +585,7 @@
         {
             int res = listen(socket->handle, backlog);
 
-            #ifdef _WIN32
+            #if WINDOWS
                 if (res == SOCKET_ERROR)
                 {
                     int err = WSAGetLastError();
@@ -409,50 +615,89 @@
                             return cutile_net_unknown_err;
                     }
                 }
+            #elif LINUX
+                if (res == -1)
+                {
+                    switch (errno)
+                    {
+                        case EADDRINUSE: return cutile_net_linux_socket_listen_eaddrinuse;
+                        case EBADF:      return cutile_net_linux_socket_listen_ebadf;     
+                        case ENOTSOCK:   return cutile_net_linux_socket_listen_enotsock;  
+                        case EOPNOTSUPP: return cutile_net_linux_socket_listen_eopnotsupp;
+                        default:         return cutile_net_unknown_err;
+                    }
+                }
             #endif
             return cutile_net_no_error;
         }
 
         cutile_net_error cutile_send_to_net_socket(cutile_net_socket* dest_socket, u8* data, u64 len)
         {
-            u32 sent;
-            u32 total = 0;
+            s32 sent;
+            s32 total = 0;
             while (total < len)
             {
                 sent = send(dest_socket->handle, (char*)data + total, len - total, 0);
-                #ifdef _WIN32
+                #if WINDOWS
                     if (sent == SOCKET_ERROR)
                     {
                         int err = WSAGetLastError();
                         switch (err)
                         {
-                        case WSANOTINITIALISED: return cutile_net_win32_wsa_not_initialized;
-                        case WSAENETDOWN: return cutile_net_win32_wsa_network_down;
-                        case WSAEACCES: return cutile_net_win32_wsa_permission_denied;
-                        case WSAEINTR: return cutile_net_win32_wsa_interrupted_call;
-                        case WSAEINPROGRESS: return cutile_net_win32_wsa_busy;
-                        case WSAEFAULT: return cutile_net_win32_wsa_invalid_data_address;
-                        case WSAENETRESET: return cutile_net_win32_wsa_drop_conn_on_network_reset;
-                        case WSAENOBUFS: return cutile_net_win32_wsa_insufficient_buffer_space;
-                        case WSAENOTCONN: return cutile_net_win32_wsa_socket_not_connected;
-                        case WSAENOTSOCK: return cutile_net_win32_wsa_not_a_sock;
-                        case WSAEWOULDBLOCK: return cutile_net_win32_unavailable_resource;
-                        // TODO: Handle other errors: https://learn.microsoft.com/fr-fr/windows/win32/api/winsock2/nf-winsock2-send
-                        default: return cutile_net_unknown_err;
+                            case WSANOTINITIALISED: return cutile_net_win32_wsa_not_initialized;
+                            case WSAENETDOWN: return cutile_net_win32_wsa_network_down;
+                            case WSAEACCES: return cutile_net_win32_wsa_permission_denied;
+                            case WSAEINTR: return cutile_net_win32_wsa_interrupted_call;
+                            case WSAEINPROGRESS: return cutile_net_win32_wsa_busy;
+                            case WSAEFAULT: return cutile_net_win32_wsa_invalid_data_address;
+                            case WSAENETRESET: return cutile_net_win32_wsa_drop_conn_on_network_reset;
+                            case WSAENOBUFS: return cutile_net_win32_wsa_insufficient_buffer_space;
+                            case WSAENOTCONN: return cutile_net_win32_wsa_socket_not_connected;
+                            case WSAENOTSOCK: return cutile_net_win32_wsa_not_a_sock;
+                            case WSAEWOULDBLOCK: return cutile_net_win32_unavailable_resource;
+                            // TODO: Handle other errors: https://learn.microsoft.com/fr-fr/windows/win32/api/winsock2/nf-winsock2-send
+                            default: return cutile_net_unknown_err;
                         }
                     }
-                #endif // _WIN32
+                #elif LINUX
+                    if (sent == -1)
+                    {
+                        switch (errno)
+                        {
+                            case EACCES:      return cutile_net_linux_send_to_socket_eacces;
+     
+                            case EAGAIN:      return cutile_net_linux_send_to_socket_eagain_ewouldblock;
+                            // same as EAGAIN case EWOULDBLOCK: return cutile_net_linux_send_to_socket_ewouldblock;
+
+                            case EALREADY:    return cutile_net_linux_send_to_socket_ealready;   
+                            case EBADF:       return cutile_net_linux_send_to_socket_ebadf;      
+                            case ECONNRESET:  return cutile_net_linux_send_to_socket_econnreset; 
+                            case EDESTADDRREQ: return cutile_net_linux_send_to_socket_edestaddrreq;
+                            case EFAULT:      return cutile_net_linux_send_to_socket_efault;     
+                            case EINTR:       return cutile_net_linux_send_to_socket_eintr;      
+                            case EINVAL:      return cutile_net_linux_send_to_socket_einval;     
+                            case EISCONN:     return cutile_net_linux_send_to_socket_eisconn;    
+                            case EMSGSIZE:    return cutile_net_linux_send_to_socket_emsgsize;   
+                            case ENOBUFS:     return cutile_net_linux_send_to_socket_enobufs;    
+                            case ENOMEM:      return cutile_net_linux_send_to_socket_enomem;     
+                            case ENOTCONN:    return cutile_net_linux_send_to_socket_enotconn;   
+                            case ENOTSOCK:    return cutile_net_linux_send_to_socket_enotsock;   
+                            case EOPNOTSUPP:  return cutile_net_linux_send_to_socket_eopnotsupp; 
+                            case EPIPE:       return cutile_net_linux_send_to_socket_epipe;      
+                        }
+                    }
+                #endif
                 total += sent;
             }
 
             return cutile_net_no_error;
         }
 
-        const char* get_net_error_msg(cutile_net_error err)
+        const char* cutile_get_net_error_msg(cutile_net_error err)
         {
             switch (err)
             {
-                #ifdef _WIN32 // Error messages taken from: https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
+                #if WINDOWS // Error messages taken from: https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
                     case cutile_net_win32_wsa_not_ready: return "The underlying network subsystem is not ready for network communication.";
                     case cutile_net_win32_wsa_ver_not_supported: return "Winsock.dll version out of range. The current Windows Sockets implementation does not support the Windows Sockets specification version requested by the application. Check that no old Windows Sockets DLL files are being accessed.";
                     case cutile_net_win32_wsa_busy: return "Operation now in progress. A blocking operation is currently executing. Windows Sockets only allows a single blocking operation—per- task or thread—to be outstanding, and if any other function call is made (whether or not it references that or any other socket) the function fails with the WSAEINPROGRESS error.";
@@ -479,7 +724,58 @@
                     case cutile_net_win32_wsa_invalid_address: return "Cannot assign requested address. The requested address is not valid in its context. This normally results from an attempt to bind to an address that is not valid for the local computer. This can also result from connect, sendto, WSAConnect, WSAJoinLeaf, or WSASendTo when the remote address or port is not valid for a remote computer (for example, address or port 0).";
                     case cutile_net_win32_wsa_socket_already_connected: return "Socket is already connected. A connect request was made on an already-connected socket. Some implementations also return this error if sendto is called on a connected SOCK_DGRAM socket (for SOCK_STREAM sockets, the to parameter in sendto is ignored) although other implementations treat this as a legal occurrence.";
                     case cutile_net_win32_wsa_unsupported_operation: return "Operation not supported. The attempted operation is not supported for the type of object referenced. Usually this occurs when a socket descriptor to a socket that cannot support this operation is trying to accept a connection on a datagram socket.";
-                #endif // _WIN32
+
+                #elif LINUX
+                    case cutile_net_linux_open_socket_eacces: return "EACCES: Permission to create a socket of the specified type and/or protocol is denied.";
+                    case cutile_net_linux_open_socket_eafnosupport: return "EAFNOSUPPORT: The implementation does not support the specified address family.";
+                    case cutile_net_linux_open_socket_einval: return "EINVAL: Unknown protocol, or protocol family not available / Invalid flags in type.";
+                    case cutile_net_linux_open_socket_emfile: return "EMFILE: The per-process limit on the number of open file descriptors has been reached.";
+                    case cutile_net_linux_open_socket_enfile: return "ENFILE: The system-wide limit on the total number of open files has been reached.";
+                    case cutile_net_linux_open_socket_enobufs:
+                    case cutile_net_linux_open_socket_enomem:
+                        return "ENOBUFS or ENOMEM: Insufficient memory is available.  The socket cannot be created until sufficient  resources are freed.";
+                    case cutile_net_linux_open_socket_eprotonosupport: return "PROTONOSUPPORT: The protocol type or the specified protocol is not supported within this domain.";
+                    case cutile_net_linux_close_socket_ebadf: return "EBADF: fd isn’t a valid open file descriptor.";
+                    case cutile_net_linux_close_socket_eintr: return "EINTR: The close() call was interrupted by a signal; see signal(7).";
+                    case cutile_net_linux_close_socket_eio: return "EIO: An I/O error occurred.";
+                    case cutile_net_linux_close_socket_enospc:
+                    case cutile_net_linux_close_socket_edquot: 
+                        return "ENOSPC or EDQUOT: On  NFS, these errors are not normally reported against the first write which exceeds the available storage space, but instead against a subsequent write(2), fsync(2), or close().";
+                    case cutile_net_linux_bind_socket_eacces: return "EACCES:\n\t- The address is protected, and the user is not the superuser.\n\t- UNIX domain (AF_UNIX) sockets: Search permission is denied on a component of the path prefix.  (See also path_resolution(7).)";
+                    case cutile_net_linux_bind_socket_eaddrinuse: return "EADDRINUSE: The given address is already in use. / (Internet domain sockets) The port number was specified as zero in the socket address structure, but, upon attempting to bind to an ephemeral port, it was determined that all port numbers in the ephemeral port range are currently in use. See the discussion of /proc/sys/net/ipv4/ip_local_port_range ip(7).";
+                    case cutile_net_linux_bind_socket_ebadf: return "EBADF: sockfd is not a valid file descriptor.";
+                    case cutile_net_linux_bind_socket_einval: return "EINVAL: The socket is already bound to an address. / addrlen is wrong, or addr is not a valid address for this socket’s domain.";
+                    case cutile_net_linux_bind_socket_enotsock: return "ENOTSOCK: The file descriptor sockfd does not refer to a socket.";
+                    case cutile_net_linux_bind_socket_eaddrnotavail: return "EADDRNOTAVAIL: UNIX domain (AF_UNIX) sockets: A nonexistent interface was requested or the requested address was not local.";
+                    case cutile_net_linux_bind_socket_efault: return "UNIX domain (AF_UNIX) sockets: EFAULT: addr points outside the user’s accessible address space.";
+                    case cutile_net_linux_bind_socket_eloop: return "UNIX domain (AF_UNIX) sockets: ELOOP: Too many symbolic links were encountered in resolving addr.";
+                    case cutile_net_linux_bind_socket_enametoolong: return "UNIX domain (AF_UNIX) sockets: ENAMETOOLONG: addr is too long.";
+                    case cutile_net_linux_bind_socket_enoent: return "UNIX domain (AF_UNIX) sockets: ENOENT: A component in the directory prefix of the socket pathname does not exist.";
+                    case cutile_net_linux_bind_socket_enomem: return "UNIX domain (AF_UNIX) sockets: ENOMEM: Insufficient kernel memory was available.";
+                    case cutile_net_linux_bind_socket_enotdir: return "UNIX domain (AF_UNIX) sockets: ENOTDIR: A component of the path prefix is not a directory.";
+                    case cutile_net_linux_bind_socket_erofs: return "UNIX domain (AF_UNIX) sockets: EROFS: The socket inode would reside on a read-only filesystem.";
+                    case cutile_net_linux_socket_listen_eaddrinuse: return "EADDRINUSE:\n\t- Another socket is already listening on the same port.\n\t- Internet domain sockets) The socket referred to by sockfd had  not  previously  been bound  to an address and, upon attempting to bind it to an ephemeral port, it was determined that all port numbers in the ephemeral port range are currently in use. See the discussion of /proc/sys/net/ipv4/ip_local_port_range in ip(7).";
+                    case cutile_net_linux_socket_listen_ebadf: return "EBADF: The argument sockfd is not a valid file descriptor.";
+                    case cutile_net_linux_socket_listen_enotsock: return "ENOTSOCK: The file descriptor sockfd does not refer to a socket.";
+                    case cutile_net_linux_socket_listen_eopnotsupp: return "EOPNOTSUPP: The socket is not of a type that supports the listen() operation.";
+                    case cutile_net_linux_send_to_socket_eacces: return "(For UNIX domain sockets, which are identified by pathname) Write permission is denied on the destination socket file, or search permission is denied for one of the directories the path prefix. (See path_resolution(7).)\n(For UDP sockets) An attempt was made to send to a network/broadcast address as though it was a unicast address.";     
+                    case cutile_net_linux_send_to_socket_eagain_ewouldblock: return "EAGAIN/EWOULDBLOCK:\n\t- The socket is marked nonblocking and the requested operation would block. POSIX.1-2001 allows either error to be returned for this case, and does not require these constants to have the same value, so a portable application should check for both possibilities.\n\t- (Internet domain datagram sockets) The socket referred to by sockfd  had  not  previously  been bound to an address and, upon attempting to bind it to an ephemeral port, it was determined that all port numbers in the ephemeral port range are currently in use. See the discussion of /proc/sys/net/ipv4/ip_local_port_range in ip(7).";     
+                    case cutile_net_linux_send_to_socket_ealready: return "EALREADY: Another Fast Open is in progress.";   
+                    case cutile_net_linux_send_to_socket_ebadf: return "EBADF: sockfd is not a valid open file descriptor.";      
+                    case cutile_net_linux_send_to_socket_econnreset: return "ECONNRESET: Connection reset by peer."; 
+                    case cutile_net_linux_send_to_socket_edestaddrreq: return "EDESTADDRREQ: The socket is not connection-mode, and no peer address is set.";
+                    case cutile_net_linux_send_to_socket_efault: return "EFAULT: An invalid user space address was specified for an argument.";     
+                    case cutile_net_linux_send_to_socket_eintr: return "EINTR: A signal occurred before any data was transmitted; see signal(7).";      
+                    case cutile_net_linux_send_to_socket_einval: return "EINVAL: Invalid argument passed.";     
+                    case cutile_net_linux_send_to_socket_eisconn: return "EISCONN: The connection-mode socket was connected already but a recipient was specified. (Now either this error is returned, or the recipient specification is ignored.)";    
+                    case cutile_net_linux_send_to_socket_emsgsize: return "EMSGSIZE: The socket type requires that message be sent atomically, and the size of the message to be sent made this impossible.";
+                    case cutile_net_linux_send_to_socket_enobufs: return "ENOBUFS: The output queue for a network interface was full.  This generally indicates that the interface has stopped sending, but may be caused by transient congestion.  (Normally, this does not occur in Linux. Packets are just silently dropped when a device queue overflows.)";    
+                    case cutile_net_linux_send_to_socket_enomem: return "ENOMEM: No memory available.";     
+                    case cutile_net_linux_send_to_socket_enotconn: return "ENOTCONN: The socket is not connected, and no target has been given.";   
+                    case cutile_net_linux_send_to_socket_enotsock: return "ENOTSOCK: The file descriptor sockfd does not refer to a socket.";   
+                    case cutile_net_linux_send_to_socket_eopnotsupp: return "EOPNOTSUPP: Some bit in the flags argument is inappropriate for the socket type."; 
+                    case cutile_net_linux_send_to_socket_epipe: return "EPIPE: The local end has been shut down on a connection oriented socket. In this case, the process will also receive a SIGPIPE unless MSG_NOSIGNAL is set.";      
+                #endif
                 
                 case cutile_net_unknown_err: return "An unknown network error occurred.";
                 

@@ -1,7 +1,10 @@
 #define CUTILE_IMPLEM
-#define WIN32_LEAN_AND_MEAN
 #include "../test.h"
+#if WINDOWS
+    #define WIN32_LEAN_AND_MEAN
+#endif
 #include "../network.h"
+#include "../print.h"
 
 int main()
 {
@@ -15,8 +18,12 @@ int main()
     #endif
 
     net_socket sock;
-    net_error err = open_net_socket(net_socket_stream, cutile_net_af_ipv4, net_udp_protocol, &sock);
+    net_error err = open_net_socket(net_socket_stream, cutile_net_af_ipv4, net_tcp_protocol, &sock);
     cutile_test_assert_m(err == net_no_error);
+    if (err != net_no_error)
+    {
+        println_cstr(cutile_get_net_error_msg(err));
+    }
 
     cutile_test_assert_m(cutile_is_ipv4_cstr_valid("127.0.0.1"));
 
@@ -27,11 +34,17 @@ int main()
         err = cutile_bind_net_socket(&sock, (cutile_net_endpoint*)&ipv4);
     #endif
     cutile_test_assert_m(err == net_no_error);
+    if (err)
+    {
+        println_cstr(cutile_get_net_error_msg(err));
+    }
 
     err = close_net_socket(&sock);
     cutile_test_assert_m(err == net_no_error);
 
-    WSACleanup();
+    #if WINDOWS
+        WSACleanup();
+    #endif
 
     cutile_test_end_m();
 }
