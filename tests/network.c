@@ -1,9 +1,9 @@
 #define CUTILE_IMPLEM
-#include "../test.h"
 #if WINDOWS
     #define WIN32_LEAN_AND_MEAN
 #endif
 #include "../network.h"
+#include "../test.h"
 #include "../print.h"
 
 int main()
