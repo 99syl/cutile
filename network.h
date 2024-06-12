@@ -284,6 +284,7 @@
             #include <errno.h>
             #include <sys/socket.h>
             #include <arpa/inet.h>
+            #include <unistd.h>
         #else
             #error "socket.h: Unsupported platform."
         #endif
