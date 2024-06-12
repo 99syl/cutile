@@ -1,0 +1,6 @@
+0.1.1 (2024/06/12 08:08 UTC+2h)
+- Add a way to easily iterate through an utf8 cutile_string. (str.h: cutile_str_create_utf8_iterator, cutile_str_utf8_iterate)
+- Create PATCHNOTES
+
+0.1.0 (2024/06/06 16:09 UTC+2h)
+- Initial release

@@ -58,6 +58,7 @@
     #endif
 
     // String Lookup:
+
     // str_utf8_count: This function works for valid UTF-8 strings; do not use this function if you are unsure about the UTF-8 compliance of your string. You can check the compliance by using str_utf8_is_valid_utf8.
     CUTILE_C_API u8  cutile_str_at(const cutile_string* str, u32 index);
     CUTILE_C_API b8  cutile_str_equals_cstr(const cutile_string* str, const char* cstr);
@@ -66,11 +67,29 @@
     CUTILE_C_API b8  cutile_str_ends_with(const cutile_string* str, const char* val);
     CUTILE_C_API u32 cutile_str_utf8_count(const cutile_string* str);
     CUTILE_C_API b8  cutile_str_is_valid_utf8(const cutile_string* str);
-
     #ifdef CUTILE_CPP
         maybe_inline b8 cutile_str_equals(const cutile_string* str, const char* cstr) { return cutile_str_equals_cstr(str, cstr); }
         maybe_inline b8 cutile_str_equals(cutile_string str, const char* cstr) { return cutile_str_equals_cstr2(str, cstr); }
     #endif
+
+    typedef struct
+    {
+        cutile_string* s;
+        u32            index;
+        b8             valid;
+        s32            value;
+    } cutile_string_utf8_iterator;
+
+    /* Usage:
+      for (cutile_string_utf8_iterator it = cutile_str_create_utf8_iterator(&s);
+           it.valid;
+           cutile_str_utf8_iterate(&it))
+      {
+          ...
+      }
+     */
+    CUTILE_C_API cutile_string_utf8_iterator cutile_str_create_utf8_iterator(cutile_string*);
+    CUTILE_C_API void                        cutile_str_utf8_iterate(cutile_string_utf8_iterator*);
 
     // CString Creation:
     CUTILE_C_API char* cutile_create_cstr_from_str(const cutile_string*, cutile_allocator*);
@@ -213,6 +232,10 @@
         #ifdef CUTILE_CPP
             #define str_equals(...)                     cutile_str_equals(__VA_ARGS__)
         #endif
+
+        typedef cutile_string_utf8_iterator string_utf8_iterator;
+        #define str_create_utf8_iterator(str_ptr)   cutile_str_create_utf8_iterator(str_ptr)
+        #define str_utf8_iterate(it_ptr)            cutile_str_utf8_iterate(it_ptr)
 
         #define create_cstr_from_str(str_ptr, allocator_ptr)    cutile_create_cstr_from_str(str_ptr, allocator_ptr)
         #define create_cstr_from_cstr(cstr_ptr, allocator_ptr)  cutile_create_cstr_from_cstr(cstr_ptr, allocator_ptr)
@@ -700,6 +723,79 @@
             return cutile_b8_true;
         }
     
+
+        cutile_string_utf8_iterator cutile_str_create_utf8_iterator(cutile_string* s)
+        {
+            cutile_string_utf8_iterator it = {.s = s, .index = 0, .valid = b8_false};
+
+            if (0 < s->count)
+            {
+                it.valid = b8_true;
+                if (s->data[0] <= 0x7F) // One byte long.
+                {
+                    it.value = s->data[0];
+                    it.index++;
+                }
+                else if (s->data[0] <= 0xDF) // Two bytes long.
+                {
+                    it.value = cast(s32, s->data[0]) << 8 | s->data[1];
+                    it.index += 2;
+                }
+                else if (s->data[0] <= 0xEF) // Three bytes long.
+                {
+                    it.value = (cast(s32, s->data[0]) << 16) | 
+                               (cast(s32, s->data[1]) << 8) | 
+                               s->data[2];
+                    it.index += 3;
+                }
+                else // Four bytes long.
+                {
+                    it.value = (cast(s32, s->data[0]) << 24) | 
+                               (cast(s32, s->data[1]) << 16) | 
+                               (cast(s32, s->data[2]) << 8) |
+                               s->data[3];
+                    it.index += 4;
+                }
+            }
+
+            return it;
+        }
+
+        void cutile_str_utf8_iterate(cutile_string_utf8_iterator* it)
+        {
+            if (it->index >= it->s->count) {
+                it->valid = b8_false;
+                return;
+            }
+
+            if (it->s->data[it->index] <= 0x7F) // One byte long.
+            {
+                it->value = it->s->data[it->index];
+                it->index++;
+            }
+            else if (it->s->data[0] <= 0xDF) // Two bytes long.
+            {
+                it->value = it->s->data[it->index + 1] | 
+                            (cast(s32, it->s->data[it->index]) << 8);
+                it->index += 2;
+            }
+            else if (it->s->data[it->index] <= 0xEF) // Three bytes long.
+            {
+                it->value = it->s->data[it->index + 2] | 
+                            (cast(s32, it->s->data[it->index + 1]) << 8) | 
+                            (cast(s32, it->s->data[it->index]) << 16);
+                it->index += 3;
+            }
+            else // Four bytes long.
+            {
+                it->value = it->s->data[it->index + 3] | 
+                            (cast(s32, it->s->data[it->index + 2]) << 8) | 
+                            (cast(s32, it->s->data[it->index + 1]) << 16) | 
+                            (it->s->data[it->index] << 24);
+                it->index += 4;
+            }
+        }
+
         char* cutile_create_cstr_from_str(const cutile_string* str, cutile_allocator* allocator)
         {
             char* res = (char*)cutile_allocate_m(allocator, str->count + 1);

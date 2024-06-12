@@ -29,6 +29,44 @@ int main(int ac, char** av)
         cutile_test_assert_m(str_utf8_count(&s1) == 6);
         cutile_test_assert_m(str_utf8_count(&s2) == 11);
         cutile_test_assert_m(str_utf8_count(&s3) == 12);
+
+        // 11 is the number of Japanese characters inside s2.
+        b8 s2_found[11] = {0,0,0,0,0,0,0,0,0,0,0};
+
+        for (string_utf8_iterator it = str_create_utf8_iterator(&s2);
+             it.valid;
+             str_utf8_iterate(&it))
+        {
+            switch (it.value) {
+                case 0xe38397/*'プ'*/: s2_found[0] = b8_true; break;
+                case 0xe383ad/*'ロ'*/: s2_found[1] = b8_true; break;
+                case 0xe382b0/*'グ'*/: 
+                {
+                    if (s2_found[2]) s2_found[6] = b8_true;
+                    else s2_found[2] = b8_true; 
+                    break;
+                }
+                case 0xe383a9/*'ラ'*/: s2_found[3] = b8_true; break;
+                case 0xe3839f/*'ミ'*/: s2_found[4] = b8_true; break;
+                case 0xe383b3/*'ン'*/: s2_found[5] = b8_true; break;
+                case 0xe3818c/*'が'*/: s2_found[7] = b8_true; break;
+                case 15050173/*'好'*/: s2_found[8] = b8_true; break;
+                case 0xe3818d/*'き'*/: s2_found[9] = b8_true; break;
+                case 0xe38082/*'。'*/: s2_found[10] = b8_true; break;
+            }
+        }
+
+        cutile_test_assert_m(s2_found[0]);
+        cutile_test_assert_m(s2_found[1]);
+        cutile_test_assert_m(s2_found[2]);
+        cutile_test_assert_m(s2_found[3]);
+        cutile_test_assert_m(s2_found[4]);
+        cutile_test_assert_m(s2_found[5]);
+        cutile_test_assert_m(s2_found[6]);
+        cutile_test_assert_m(s2_found[7]);
+        cutile_test_assert_m(s2_found[8]);
+        cutile_test_assert_m(s2_found[9]);
+        cutile_test_assert_m(s2_found[10]);
     }
 
     // String to number conversions tests.
