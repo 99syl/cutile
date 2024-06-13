@@ -3,6 +3,7 @@
 #include "../test.h"
 #include "../number.h"
 
+
 int main(int ac, char** av)
 {
     cutile_test_begin_m();
@@ -15,11 +16,13 @@ int main(int ac, char** av)
     {
         #ifdef CUTILE_CPP
             string s1 = create_str("こんにちは！", default_allocator);
-            cutile_string s2 = cutile_create_str("プログラミングが好き。", default_allocator);
+            cutile_string s2 = cutile_create_str("プログラングが好き", default_allocator);
         #else
             string s1 = create_str_from_cstr("こんにちは！", default_allocator);
-            cutile_string s2 = cutile_create_str_from_cstr("プログラミングが好き。", default_allocator);
+            cutile_string s2 = cutile_create_str_from_cstr("プログラングが好き", default_allocator);
         #endif
+        str_insert_utf8_cp(&s2, 4, 0xe3839f/*'ミ'*/);
+        str_push_back_utf8_cp(&s2, 0xe38082/*'。'*/);
         cutile_string s3 = cutile_create_str_from_cstr("ASCIIとUTF-8.", default_allocator);
 
         cutile_test_assert_m(str_is_valid_utf8(&s1));

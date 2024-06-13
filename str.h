@@ -1,5 +1,4 @@
 #ifndef CUTILE_STR_H
-
     #include "cutile.h"
     #include "memory.h"
 
@@ -402,33 +401,33 @@
     
         void cutile_str_push_back_utf8_cp(cutile_string* str, u32 c)
         {
-            if (c <= 0x007F) // One byte long.
+            if (c <= 0x7F) // One byte long.
             {
-                cutile_str_push_back(str, (u8)c);
+                cutile_str_push_back(str, cast(u8, c));
             }
-            else if (c <= 0x07FF) // Two bytes long.
+            else if (c <= 0xDF00) // Two bytes long.
             {
                 if (str->count + 2 >= str->size) cutile_resize_str(str, str->size + 2 + CUTILE_STR_INCREMENT_COUNT);
-                str->data[str->count++] = c & 0xFF;
                 str->data[str->count++] = (c >> 8) & 0xFF;
+                str->data[str->count++] = c & 0xFF;
             }
-            else if (c <= 0xFFFF) // Three bytes long.
+            else if (c <= 0xEF0000) // Three bytes long.
             {
                 if (str->count + 3 >= str->size) cutile_resize_str(str, str->size + 3 + CUTILE_STR_INCREMENT_COUNT);
-                str->data[str->count++] = c & 0xFF;
-                str->data[str->count++] = (c >> 8) & 0xFF;
                 str->data[str->count++] = (c >> 16) & 0xFF;
+                str->data[str->count++] = (c >> 8) & 0xFF;
+                str->data[str->count++] = c & 0xFF;
             }
             else // Four bytes long
             {
                 if (str->count + 4 >= str->size) cutile_resize_str(str, str->size + 4 + CUTILE_STR_INCREMENT_COUNT);
-                str->data[str->count++] = c & 0xFF;
-                str->data[str->count++] = (c >> 8) & 0xFF;
-                str->data[str->count++] = (c >> 16) & 0xFF;
                 str->data[str->count++] = (c >> 24) & 0xFF;
+                str->data[str->count++] = (c >> 16) & 0xFF;
+                str->data[str->count++] = (c >> 8) & 0xFF;
+                str->data[str->count++] = c & 0xFF;
             }
         }
-    
+
         void cutile_str_insert(cutile_string* str, u32 index, u8 c)
         {
             if (str->count + 1 > str->size) cutile_resize_str(str, str->size + CUTILE_STR_INCREMENT_COUNT);
@@ -443,54 +442,64 @@
     
         void cutile_str_insert_utf8_cp(cutile_string* str, u32 index, u32 c)
         {
-            if (c <= 0x007F) // One byte long.
+            u32 current_index = 0;
+            u32 byte_index = 0;
+            for (cutile_string_utf8_iterator it = cutile_str_create_utf8_iterator(str);
+                 it.valid && current_index < index;
+                 cutile_str_utf8_iterate(&it))
+            {
+                byte_index = it.index;
+                ++current_index;
+            }
+
+            if (c <= 0x7F) // One byte long.
             {
                 if (str->count + 1 >= str->size) cutile_resize_str(str, str->size + 1 + CUTILE_STR_INCREMENT_COUNT);
-                for (u32 i = index; i < str->count; ++i)
+                for (u32 i = byte_index; i < str->count; ++i)
                 {
-                    u32 j = str->count - (i - index) - 1;
+                    u32 j = str->count - (i - byte_index) - 1;
                     str->data[j + 1] = str->data[j];
                 }
-                str->data[index] = (u8)c;
+                str->data[byte_index] = (u8)c;
                 str->count++;
             }
-            else if (c <= 0x07FF) // Two bytes long.
+            else if (c <= 0xDF00) // Two bytes long.
             {
                 if (str->count + 2 >= str->size) cutile_resize_str(str, str->size + 2 + CUTILE_STR_INCREMENT_COUNT);
-                for (u32 i = index; i < str->count; ++i)
+                for (u32 i = byte_index; i < str->count; ++i)
                 {
-                    u32 j = str->count - (i - index) - 1;
+                    u32 j = str->count - (i - byte_index) - 1;
                     str->data[j + 2] = str->data[j];
                 }
-                str->data[index] = c & 0xFF;
-                str->data[index+1] = (c >> 8) & 0xFF;
+                str->data[byte_index] = (c >> 8) & 0xFF;
+                str->data[byte_index + 1] = c & 0xFF;
                 str->count += 2;
             }
-            else if (c <= 0xFFFF) // Three bytes long.
+            else if (c <= 0xEF0000) // Three bytes long.
             {
                 if (str->count + 3 >= str->size) cutile_resize_str(str, str->size + 3 + CUTILE_STR_INCREMENT_COUNT);
-                for (u32 i = index; i < str->count; ++i)
+                for (u32 i = byte_index; i < str->count; ++i)
                 {
-                    u32 j = str->count - (i - index) - 1;
+                    u32 j = str->count - (i - byte_index) - 1;
                     str->data[j + 3] = str->data[j];
                 }
-                str->data[index] = c & 0xFF;
-                str->data[index+1] = (c >> 8) & 0xFF;
-                str->data[index+2] = (c >> 16) & 0xFF;
+                str->data[byte_index] = (c >> 16) & 0xFF;
+                str->data[byte_index + 1] = (c >> 8) & 0xFF;
+                str->data[byte_index + 2] = c & 0xFF;
                 str->count += 3;
             }
             else // Four bytes long
             {
                 if (str->count + 4 >= str->size) cutile_resize_str(str, str->size + 4 + CUTILE_STR_INCREMENT_COUNT);
-                for (u32 i = index; i < str->count; ++i)
+                for (u32 i = byte_index; i < str->count; ++i)
                 {
-                    u32 j = str->count - (i - index) - 1;
+                    u32 j = str->count - (i - byte_index) - 1;
                     str->data[j + 4] = str->data[j];
                 }
-                str->data[index] = c & 0xFF;
-                str->data[index+1] = (c >> 8) & 0xFF;
-                str->data[index+2] = (c >> 16) & 0xFF;
-                str->data[index+3] = (c >> 24) & 0xFF;
+                str->data[byte_index] = (c >> 24) & 0xFF;
+                str->data[byte_index + 1] = (c >> 16) & 0xFF;
+                str->data[byte_index + 2] = (c >> 8) & 0xFF;
+                str->data[byte_index + 3] = c & 0xFF;
                 str->count += 4;
             }
         }
@@ -621,7 +630,7 @@
             u32 count = 0;
             for (u32 i = 0; i < str->count;)
             {
-                if (str->data[i] <= 0x007F) i += 1;
+                if (str->data[i] <= 0x7F) i += 1;
                 else if (str->data[i] <= 0xDF) i += 2;
                 else if (str->data[i] <= 0xEF) i += 3;
                 else i += 4;
