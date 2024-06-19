@@ -100,7 +100,7 @@
     #undef  cutile_fill_memory_m
     #define cutile_fill_memory_m(data, count, value)        \
     {                                                       \
-        for (u32 i = 0; i < count; i++) data[i] = value;    \
+        for (u32 i = 0; i < count; i++) (data)[i] = value;  \
     }                                                       \
 
     #undef  cutile_copy_memory_m
