@@ -1,3 +1,10 @@
+0.1.5 (2024/07/09 18:35 UTC+2h)
+- network.h: Add a function to connect a client socket to a listening socket via an endpoint: cutile_connect_net_socket.
+- network.h: Add a function to accept incoming connections to a listening socket: cutile_accept_net_socket.
+- network.h: Add a function to received data from sockets: cutile_receive_from_net_socket.
+- network.h: Fix errors in net_af_ipv4 and net_af_ipv6 shortcut macros.
+- network.h: Mark cutile_net_error as deprecated and progressively replace it by cutile_net_result.
+
 0.1.4 (2024/06/19 11:19 UTC+2h)
 - cutile_fill_memory_m: add the possibility to give more complex expressions in the first parameter.
 

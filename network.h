@@ -25,6 +25,15 @@
         cutile_net_udp_protocol
     } cutile_net_protocol;
 
+    typedef struct
+    {
+        b8          success;
+        const char* platform_msg;
+        int         platform_code;
+    } cutile_net_result;
+
+    // cutile_net_error is deprecated.
+    // Will be progressively removed in next versions.
     typedef enum
     {
         cutile_net_no_error = 0,
@@ -85,6 +94,7 @@
             cutile_net_linux_bind_socket_enomem,
             cutile_net_linux_bind_socket_enotdir,
             cutile_net_linux_bind_socket_erofs,
+
             cutile_net_linux_socket_listen_eaddrinuse,
             cutile_net_linux_socket_listen_ebadf,
             cutile_net_linux_socket_listen_enotsock,
@@ -121,7 +131,7 @@
         cutile_net_address_family   family;
         u8                          data[32];
     } cutile_net_endpoint;
-    
+
     typedef struct
     {
         cutile_net_address_family   family;
@@ -129,7 +139,7 @@
         u8                          bytes[4];
         u8                          zero[26];
     } cutile_ipv4_endpoint;
-    
+
     typedef struct
     {
         cutile_net_address_family   family;
@@ -141,7 +151,7 @@
         };
         u8                          zero[14];
     } cutile_ipv6_endpoint;
-    
+
     CUTILE_C_API b8                     cutile_is_ipv4_cstr_valid(const char* ip);
     CUTILE_C_API cutile_ipv4_endpoint   cutile_create_ipv4_endpoint(const char* ip, u16 port);
 
@@ -151,9 +161,24 @@
         maybe_inline cutile_net_error cutile_bind_net_socket(cutile_net_socket* socket, const cutile_ipv4_endpoint* endpoint);
         maybe_inline cutile_net_error cutile_bind_net_socket(cutile_net_socket* socket, const cutile_ipv6_endpoint* endpoint);
     #endif
+
+    CUTILE_C_API cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_net_endpoint* endpoint);
+
+    #ifdef CUTILE_CPP
+        maybe_inline cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_ipv4_endpoint* endpoint);
+        maybe_inline cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_ipv6_endpoint* endpoint);
+    #endif
     
     CUTILE_C_API cutile_net_error cutile_net_socket_listen(cutile_net_socket* socket, u32 backlog);
-    
+
+    CUTILE_C_API cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_net_endpoint* incoming_endpoint);
+
+    #ifdef CUTILE_CPP
+        maybe_inline cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_ipv4_endpoint* incoming_endpoint);
+        maybe_inline cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_ipv6_endpoint* incoming_endpoint);
+    #endif
+
+    CUTILE_C_API cutile_net_result cutile_receive_from_net_socket(cutile_net_socket* sender_socket, u8* buf, u64 size, u64* received_size);
     CUTILE_C_API cutile_net_error cutile_send_to_net_socket(cutile_net_socket* dest_socket, u8* data, u64 len);
 
     CUTILE_C_API const char* cutile_get_net_error_msg(cutile_net_error err);
@@ -166,12 +191,14 @@
         #define net_socket_datagram cutile_net_socket_datagram
 
         typedef cutile_net_address_family net_address_family;
-        #define net_af_ipv4 = cutile_net_af_ipv4
-        #define net_af_ipv6 = cutile_net_af_ipv6
+        #define net_af_ipv4 cutile_net_af_ipv4
+        #define net_af_ipv6 cutile_net_af_ipv6
 
         typedef cutile_net_protocol net_protocol;
         #define net_tcp_protocol cutile_net_tcp_protocol
         #define net_udp_protocol cutile_net_udp_protocol
+
+        typedef cutile_net_result net_result;
 
         typedef cutile_net_error net_error;
         #define net_no_error                                     cutile_net_no_error
@@ -266,14 +293,19 @@
 
         #define bind_net_socket(socket, endpoint) cutile_bind_net_socket(socket, endpoint)
 
-        #define net_socket_listen(socket, backlog)      cutile_net_socket_listen(socket, backlog)
-        #define send_to_net_socket(socket, data, len)   cutile_send_to_net_socket(socket, data, len)
+        #define connect_net_socket(socket, endpoint) cutile_connect_net_socket(socket, endpoint)
 
-        #define get_net_error_msg(err)                  cutile_get_net_error_msg(err)
+        #define net_socket_listen(socket, backlog)      cutile_net_socket_listen(socket, backlog)
+
+        #define accept_net_socket(socket, incoming_socket, incoming_endpoint) cutile_accept_net_socket(socket, incoming_socket, incoming_endpoint)
+
+        #define receive_from_net_socket(sender_socket, buffer, size, received_size) cutile_receive_from_net_socket(sender_socket, buffer, size, received_size)
+        #define send_to_net_socket(socket, data, len)                               cutile_send_to_net_socket(socket, data, len)
+
+        #define get_net_error_msg(err) cutile_get_net_error_msg(err)
     #endif
-    
+
     #ifdef CUTILE_IMPLEM
-    
         #if WINDOWS
             #include <winsock2.h>
             #include <Ws2tcpip.h>
@@ -582,6 +614,300 @@
             return cutile_net_no_error;
         }
 
+        cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_net_endpoint* endpoint)
+        {
+            s32 platform_result;
+            cutile_net_result result;
+
+            switch (endpoint->family)
+            {
+                case cutile_net_af_ipv4:
+                {
+                    struct sockaddr_in addr;
+                    ipv4_endpoint* v4_ep = (ipv4_endpoint*)endpoint;
+                    addr.sin_family = AF_INET;
+                    addr.sin_port = htons(v4_ep->port);
+                    #if WINDOWS
+                        addr.sin_addr.S_un.S_un_b.s_b1 = v4_ep->bytes[0];
+                        addr.sin_addr.S_un.S_un_b.s_b2 = v4_ep->bytes[1];
+                        addr.sin_addr.S_un.S_un_b.s_b3 = v4_ep->bytes[2];
+                        addr.sin_addr.S_un.S_un_b.s_b4 = v4_ep->bytes[3];
+                    #elif LINUX
+                        u32 ip_bytes = (u32)*v4_ep->bytes;
+                        addr.sin_addr.s_addr = ip_bytes;
+                    #endif
+                    platform_result = connect(socket->handle, (struct sockaddr*)&addr, sizeof(addr));
+                    break;
+                }
+                case cutile_net_af_ipv6:
+                {
+                    struct sockaddr_in6 addr;
+                    ipv6_endpoint* v6_ep = (ipv6_endpoint*)endpoint;
+                    addr.sin6_family = AF_INET6;
+                    addr.sin6_scope_id = 0;
+                    addr.sin6_port = htons(v6_ep->port);
+                    #if WINDOWS
+                        addr.sin6_addr.u.Byte[0] = v6_ep->bytes[0];
+                        addr.sin6_addr.u.Byte[1] = v6_ep->bytes[1];
+                        addr.sin6_addr.u.Byte[2] = v6_ep->bytes[2];
+                        addr.sin6_addr.u.Byte[3] = v6_ep->bytes[3];
+                        addr.sin6_addr.u.Byte[4] = v6_ep->bytes[4];
+                        addr.sin6_addr.u.Byte[5] = v6_ep->bytes[5];
+                        addr.sin6_addr.u.Byte[6] = v6_ep->bytes[6];
+                        addr.sin6_addr.u.Byte[7] = v6_ep->bytes[7];
+                        addr.sin6_addr.u.Byte[8] = v6_ep->bytes[8];
+                        addr.sin6_addr.u.Byte[9] = v6_ep->bytes[9];
+                        addr.sin6_addr.u.Byte[10] = v6_ep->bytes[10];
+                        addr.sin6_addr.u.Byte[11] = v6_ep->bytes[11];
+                        addr.sin6_addr.u.Byte[12] = v6_ep->bytes[12];
+                        addr.sin6_addr.u.Byte[13] = v6_ep->bytes[13];
+                        addr.sin6_addr.u.Byte[14] = v6_ep->bytes[14];
+                        addr.sin6_addr.u.Byte[15] = v6_ep->bytes[15];
+                    #elif LINUX
+                        addr.sin6_addr.s6_addr[0] = v6_ep->bytes[0];
+                        addr.sin6_addr.s6_addr[1] = v6_ep->bytes[1];
+                        addr.sin6_addr.s6_addr[2] = v6_ep->bytes[2];
+                        addr.sin6_addr.s6_addr[3] = v6_ep->bytes[3];
+                        addr.sin6_addr.s6_addr[4] = v6_ep->bytes[4];
+                        addr.sin6_addr.s6_addr[5] = v6_ep->bytes[5];
+                        addr.sin6_addr.s6_addr[6] = v6_ep->bytes[6];
+                        addr.sin6_addr.s6_addr[7] = v6_ep->bytes[7];
+                        addr.sin6_addr.s6_addr[8] = v6_ep->bytes[8];
+                        addr.sin6_addr.s6_addr[9] = v6_ep->bytes[9];
+                        addr.sin6_addr.s6_addr[10] = v6_ep->bytes[10];
+                        addr.sin6_addr.s6_addr[11] = v6_ep->bytes[11];
+                        addr.sin6_addr.s6_addr[12] = v6_ep->bytes[12];
+                        addr.sin6_addr.s6_addr[13] = v6_ep->bytes[13];
+                        addr.sin6_addr.s6_addr[14] = v6_ep->bytes[14];
+                        addr.sin6_addr.s6_addr[15] = v6_ep->bytes[15];
+                    #endif
+                    platform_result = connect(socket->handle, (struct sockaddr*)&addr, sizeof(addr));
+                    break;
+                }
+            }
+
+            #if WINDOWS
+                if (platform_result == 0)
+                {
+                    result.success = b8_true;
+                    return result;
+                }
+
+                result.success = b8_false;
+                result.platform_code = WSAGetLastError();
+
+                switch (result.platform_code)
+                {
+                    case WSANOTINITIALISED:
+                        result.platform_msg = "A successful WSAStartup call must occur before using this function.";
+                        break;
+
+                    case WSAENETDOWN:
+                        result.platform_msg = "The network subsystem has failed.";
+                        break;
+
+                    case WSAEADDRINUSE:
+                        result.platform_msg = "The socket's local address is already in use and the socket was not marked to allow address reuse with SO_REUSEADDR. This error usually occurs when executing bind, but could be delayed until the connect function if the bind was to a wildcard address (INADDR_ANY or in6addr_any) for the local IP address. A specific address needs to be implicitly bound by the connect function.";
+                        break;
+
+                    case WSAEINTR:
+                        result.platform_msg = "The blocking Windows Socket 1.1 call was canceled through WSACancelBlockingCall.";
+                        break;
+
+                    case WSAEINPROGRESS:
+                        result.platform_msg = "A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.";
+                        break;
+
+                    case WSAEALREADY:
+                        result.platform_msg = "A nonblocking connect call is in progress on the specified socket."
+                                              " Note: In order to preserve backward compatibility, this error is reported as WSAEINVAL to Windows Sockets 1.1 applications that link to either Winsock.dll or Wsock32.dll.";
+                        break;
+
+                    case WSAEADDRNOTAVAIL:
+                        result.platform_msg = "The remote address is not a valid address (such as INADDR_ANY or in6addr_any).";
+                        break;
+
+                    case WSAEAFNOSUPPORT:
+                        result.platform_msg = "Addresses in the specified family cannot be used with this socket.";
+                        break;
+
+                    case WSAECONNREFUSED:
+                        result.platform_msg = "The attempt to connect was forcefully rejected.";
+                        break;
+
+                    case WSAEFAULT:
+                        result.platform_msg = "The sockaddr structure pointed to by the name contains incorrect address format for the associated address family or the namelen parameter is too small. This error is also returned if the sockaddr structure pointed to by the name parameter with a length specified in the namelen parameter is not in a valid part of the user address space.";
+                        break;
+
+                    case WSAEINVAL:
+                        result.platform_msg = "The parameter s is a listening socket.";
+                        break;
+
+                    case WSAEISCONN:
+                        result.platform_msg = "The socket is already connected (connection-oriented sockets only).";
+                        break;
+
+                    case WSAENETUNREACH:
+                        result.platform_msg = "The network cannot be reached from this host at this time.";
+                        break;
+
+                    case WSAEHOSTUNREACH:
+                        result.platform_msg = "A socket operation was attempted to an unreachable host.";
+                        break;
+
+                    case WSAENOBUFS:
+                        result.platform_msg = "Note: No buffer space is available. The socket cannot be connected.";
+                        break;
+
+                    case WSAENOTSOCK:
+                        result.platform_msg = "The descriptor specified in the s parameter is not a socket.";
+                        break;
+
+                    case WSAETIMEDOUT:
+                        result.platform_msg = "An attempt to connect timed out without establishing a connection.";
+                        break;
+
+                    case WSAEWOULDBLOCK:
+                        result.platform_msg = "The socket is marked as nonblocking and the connection cannot be completed immediately.";
+                        break;
+
+                    case WSAEACCES:
+                        result.platform_msg = "An attempt to connect a datagram socket to broadcast address failed because setsockopt option SO_BROADCAST is not enabled.";
+                        break;
+
+                    default:
+                        result.platform_msg = "Unknown platform error.";
+                        break;
+                }
+
+            #elif LINUX
+                if (platform_result == 0)
+                {
+                    result.success = b8_true;
+                    return result;
+                }
+
+                result.platform_code = errno;
+                result.success = b8_false;
+
+                switch (result.platform_code)
+                {
+                    case EACCES: 
+                        result.platform_msg = "For UNIX domain sockets, which are identified by pathname: "
+                                              "Write permission is denied on the socket file, or search "
+                                              "permission is denied for one of the directories in the "
+                                              "path prefix.  (See also path_resolution(7).)"
+                                              "\nOR\n"
+                                              "The user tried to connect to a broadcast address without "
+                                              "having the socket broadcast flag enabled or the connection "
+                                              "request failed because of a local firewall rule."
+                                              "\nOR\n"
+                                              "It can also be returned if an SELinux policy denied a "
+                                              "connection (for example, if there is a policy saying that "
+                                              "an HTTP proxy can only connect to ports associated with "
+                                              "HTTP servers, and the proxy tries to connect to a "
+                                              "different port).";
+                        break;
+
+                    case EPERM:
+                        result.platform_msg = "The user tried to connect to a broadcast address without "
+                                              "having the socket broadcast flag enabled or the connection "
+                                              "request failed because of a local firewall rule.";
+                        break;
+
+                    case EADDRINUSE:
+                        result.platform_msg = "Local address is already in use.";
+                        break;
+
+                    case EADDRNOTAVAIL:
+                        result.platform_msg = "(Internet domain sockets) The socket referred to by sockfd "
+                                              "had not previously been bound to an address and, upon "
+                                              "attempting to bind it to an ephemeral port, it was "
+                                              "determined that all port numbers in the ephemeral port "
+                                              "range are currently in use.  See the discussion of "
+                                              "/proc/sys/net/ipv4/ip_local_port_range in ip(7).";
+                        break;
+
+                    case EAFNOSUPPORT:
+                        result.platform_msg = "The passed address didn't have the correct address family "
+                                              "in its sa_family field.";
+                        break;
+
+                    case EAGAIN:
+                        result.platform_msg = "For nonblocking UNIX domain sockets, the socket is "
+                                              "nonblocking, and the connection cannot be completed "
+                                              "immediately.  For other socket families, there are "
+                                              "insufficient entries in the routing cache.";
+                        break;
+
+                    case EALREADY:
+                        result.platform_msg = "The socket is nonblocking and a previous connection "
+                                              "attempt has not yet been completed.";
+                        break;
+
+                    case EBADF:
+                        result.platform_msg = "sockfd is not a valid open file descriptor.";
+                        break;
+
+                    case ECONNREFUSED:
+                        result.platform_msg = "A connect() on a stream socket found no one listening on "
+                                              "the remote address.";
+                        break;
+
+                    case EFAULT:
+                        result.platform_msg = "The socket structure address is outside the user's address "
+                                              "space.";
+                        break;
+
+                    case EINPROGRESS:
+                        result.platform_msg = "The socket is nonblocking and the connection cannot be "
+                                              "completed immediately.  (UNIX domain sockets failed with "
+                                              "EAGAIN instead.)  It is possible to select(2) or poll(2) "
+                                              "for completion by selecting the socket for writing.  After "
+              				                  "select(2) indicates writability, use getsockopt(2) to read "
+              				                  "the SO_ERROR option at level SOL_SOCKET to determine "
+              				                  "whether connect() completed successfully (SO_ERROR is "
+              				                  "zero) or unsuccessfully (SO_ERROR is one of the usual "
+              				                  "error codes listed here, explaining the reason for the "
+              				                  "failure).";
+                        break;
+
+                    case EINTR:
+                        result.platform_msg = "The system call was interrupted by a signal that was"
+                                              "caught; see signal(7).";
+                        break;
+
+                    case EISCONN:
+                        result.platform_msg = "The socket is already connected.";
+                        break;
+
+                    case ENETUNREACH:
+                        result.platform_msg = "Network is unreachable.";
+                        break;
+
+                    case ENOTSOCK:
+                        result.platform_msg = "The file descriptor sockfd does not refer to a socket.";
+                        break;
+
+                    case EPROTOTYPE:
+                        result.platform_msg = "The socket type does not support the requested "
+                                              "communications protocol.  This error can occur, for "
+                                              "example, on an attempt to connect a UNIX domain datagram "
+                                              "socket to a stream socket.";
+                        break;
+
+                    case ETIMEDOUT:
+                        result.platform_msg = "Timeout while attempting connection.  The server may be "
+                                              "too busy to accept new connections.  Note that for IP "
+                                              "sockets the timeout may be very long when syncookies are "
+                                              "enabled on the server.";
+                        break;
+                }
+            #endif
+
+            return result;
+        }
+
         cutile_net_error cutile_net_socket_listen(cutile_net_socket* socket, u32 backlog)
         {
             int res = listen(socket->handle, backlog);
@@ -630,6 +956,409 @@
                 }
             #endif
             return cutile_net_no_error;
+        }
+
+        cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_net_endpoint* incoming_endpoint)
+        {
+            int platform_result;
+            cutile_net_result result;
+
+            switch (incoming_endpoint->family)
+            {
+                case cutile_net_af_ipv4:
+                {
+                    struct sockaddr_in addr_in;
+
+                    #if WINDOWS
+                        int addr_in_len = sizeof(addr_in);
+                        platform_result = accept(socket->handle, (struct sockaddr*)&addr_in, &addr_in_len);
+                        if (platform_result == INVALID_SOCKET) goto error;
+                    #elif LINUX
+                        socklen_t addr_in_len = sizeof(addr_in);
+                        platform_result = accept(socket->handle, (struct sockaddr*)&addr_in, &addr_in_len);
+                        if (platform_result == -1) goto error;
+                    #endif
+
+                    incoming_socket->handle = platform_result;
+
+                    cutile_ipv4_endpoint* v4_ep = cast(cutile_ipv4_endpoint*, incoming_endpoint);
+                    #if WINDOWS
+                        v4_ep->bytes[0] = addr_in.sin_addr.S_un.S_un_b.s_b1;
+                        v4_ep->bytes[1] = addr_in.sin_addr.S_un.S_un_b.s_b2;
+                        v4_ep->bytes[2] = addr_in.sin_addr.S_un.S_un_b.s_b3;
+                        v4_ep->bytes[3] = addr_in.sin_addr.S_un.S_un_b.s_b4;
+                    #elif LINUX
+                        // TODO: I have no idea if this works...
+                        u32 bytes = ntohl(addr_in.sin_addr.s_addr);
+                        v4_ep->bytes[0] = bytes & 0xFF000000;
+                        v4_ep->bytes[1] = bytes & 0x00FF0000;
+                        v4_ep->bytes[2] = bytes & 0x0000FF00;
+                        v4_ep->bytes[3] = bytes & 0x000000FF;
+                    #endif
+                    v4_ep->port = ntohs(addr_in.sin_port);
+
+                    result.success = b8_true;
+                    return result;
+                }
+                case cutile_net_af_ipv6:
+                {
+                    struct sockaddr_in6 addr_in;
+                    #if WINDOWS
+                        int addr_in_len = sizeof(addr_in);
+                        platform_result = accept(socket->handle, (struct sockaddr*)&addr_in, &addr_in_len);
+                        if (platform_result == INVALID_SOCKET) goto error;
+                    #elif LINUX
+                            socklen_t addr_in_len = sizeof(addr_in);
+                            platform_result = accept(socket->handle, (struct sockaddr*)&addr_in, &addr_in_len);
+                        if (platform_result == -1) goto error;
+                    #endif
+
+                    incoming_socket->handle = platform_result;
+
+                    cutile_ipv6_endpoint* v6_ep = cast(cutile_ipv6_endpoint*, incoming_endpoint);
+                    #if WINDOWS
+                        v6_ep->bytes[0] = addr_in.sin6_addr.u.Byte[0];
+                        v6_ep->bytes[1] = addr_in.sin6_addr.u.Byte[1];
+                        v6_ep->bytes[2] = addr_in.sin6_addr.u.Byte[2];
+                        v6_ep->bytes[3] = addr_in.sin6_addr.u.Byte[3];
+                        v6_ep->bytes[4] = addr_in.sin6_addr.u.Byte[4];
+                        v6_ep->bytes[5] = addr_in.sin6_addr.u.Byte[5];
+                        v6_ep->bytes[6] = addr_in.sin6_addr.u.Byte[6];
+                        v6_ep->bytes[7] = addr_in.sin6_addr.u.Byte[7];
+                        v6_ep->bytes[8] = addr_in.sin6_addr.u.Byte[8];
+                        v6_ep->bytes[9] = addr_in.sin6_addr.u.Byte[9];
+                        v6_ep->bytes[10] = addr_in.sin6_addr.u.Byte[10];
+                        v6_ep->bytes[11] = addr_in.sin6_addr.u.Byte[11];
+                        v6_ep->bytes[12] = addr_in.sin6_addr.u.Byte[12];
+                        v6_ep->bytes[13] = addr_in.sin6_addr.u.Byte[13];
+                        v6_ep->bytes[14] = addr_in.sin6_addr.u.Byte[14];
+                        v6_ep->bytes[15] = addr_in.sin6_addr.u.Byte[15];
+                    #elif LINUX
+                        v6_ep->bytes[0] = addr_in.sin6_addr.s6_addr[0];
+                        v6_ep->bytes[1] = addr_in.sin6_addr.s6_addr[1];
+                        v6_ep->bytes[2] = addr_in.sin6_addr.s6_addr[2];
+                        v6_ep->bytes[3] = addr_in.sin6_addr.s6_addr[3]; 
+                        v6_ep->bytes[4] = addr_in.sin6_addr.s6_addr[4];
+                        v6_ep->bytes[5] = addr_in.sin6_addr.s6_addr[5];
+                        v6_ep->bytes[6] = addr_in.sin6_addr.s6_addr[6];
+                        v6_ep->bytes[7] = addr_in.sin6_addr.s6_addr[7];
+                        v6_ep->bytes[8] = addr_in.sin6_addr.s6_addr[8];
+                        v6_ep->bytes[9] = addr_in.sin6_addr.s6_addr[9];
+                        v6_ep->bytes[10] = addr_in.sin6_addr.s6_addr[10];
+                        v6_ep->bytes[11] = addr_in.sin6_addr.s6_addr[11];
+                        v6_ep->bytes[12] = addr_in.sin6_addr.s6_addr[12];
+                        v6_ep->bytes[13] = addr_in.sin6_addr.s6_addr[13];
+                        v6_ep->bytes[14] = addr_in.sin6_addr.s6_addr[14];
+                        v6_ep->bytes[15] = addr_in.sin6_addr.s6_addr[15];
+                    #endif
+                    v6_ep->port = ntohs(addr_in.sin6_port);
+
+                    result.success = b8_true;
+                    return result;
+                }
+            }
+
+            error:
+                result.success = b8_false;
+                #if WINDOWS
+                    result.platform_code = WSAGetLastError();
+
+                    switch (result.platform_code)
+                    {
+                        case WSANOTINITIALISED:
+                            result.platform_msg = "A successful WSAStartup call must occur before using this function.";
+                            break;
+
+                        case WSAECONNRESET:
+                            result.platform_msg = "An incoming connection was indicated, but was subsequently terminated by the remote peer prior to accepting the call.";
+                            break;
+
+                        case WSAEFAULT:
+                            result.platform_msg = "The addrlen parameter is too small or addr is not a valid part of the user address space.";
+                            break;
+
+                        case WSAEINTR:
+                            result.platform_msg = "A blocking Windows Sockets 1.1 call was canceled through WSACancelBlockingCall.";
+                            break;
+
+                        case WSAEINVAL:
+                            result.platform_msg = "The listen function was not invoked prior to accept.";
+                            break;
+
+                        case WSAEINPROGRESS:
+                            result.platform_msg = "A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.";
+                            break;
+
+                        case WSAEMFILE:
+                            result.platform_msg = "The queue is nonempty upon entry to accept and there are no descriptors available.";
+                            break;
+
+                        case WSAENETDOWN:
+                            result.platform_msg = "The network subsystem has failed.";
+                            break;
+
+                        case WSAENOBUFS:
+                            result.platform_msg = "No buffer space is available.";
+                            break;
+
+                        case WSAENOTSOCK:
+                            result.platform_msg = "The descriptor is not a socket.";
+                            break;
+
+                        case WSAEOPNOTSUPP:
+                            result.platform_msg = "The referenced socket is not a type that supports connection-oriented service.";
+                            break;
+        
+                        case WSAEWOULDBLOCK:
+                            result.platform_msg = "The socket is marked as nonblocking and no connections are present to be accepted.";
+                            break;
+
+                        default:
+                            result.platform_msg = "Unknown Window WSA error.";
+                            break;
+                    }
+                #elif LINUX
+                    result.platform_code = errno;
+
+                    switch (result.platform_code)
+                    {
+                        case EAGAIN:
+                        // EWOULDBLOCK == EAGAIN on Linux. 
+                        // case EWOULDBLOCK:
+                            result.platform_msg = "The socket is marked nonblocking and no connections are "
+                                                  "present to be accepted.  POSIX.1-2001 and POSIX.1-2008 "
+                                                  "allow either error to be returned for this case, and do "
+                                                  "not require these constants to have the same value, so a "
+                                                  "portable application should check for both possibilities.";
+                            break;
+
+                        case EBADF:
+                            result.platform_msg = "sockfd is not an open file descriptor.";
+                            break;
+
+                        case ECONNABORTED:
+                            result.platform_msg = "A connection has been aborted.";
+                            break;
+
+                        case EFAULT:
+                            result.platform_msg = "The addr argument is not in a writable part of the user "
+                                                  "address space.";
+                            break;
+
+                        case EINTR:
+                            result.platform_msg = "The system call was interrupted by a signal that was "
+                                                  "caught before a valid connection arrived; see signal(7).";
+                            break;
+
+                        case EINVAL:
+                            result.platform_msg = "Socket is not listening for connections, or addrlen is "
+                                                  "invalid (e.g., is negative)."
+                                                  "\nOR\n"
+                                                  "(accept4()) invalid value in flags.";
+                            break;
+
+                        case EMFILE:
+                            result.platform_msg = "The per-process limit on the number of open file "
+                                                  "descriptors has been reached.";
+                            break;
+
+                        case ENFILE:
+                            result.platform_msg = "The system-wide limit on the total number of open files "
+                                                  "has been reached.";
+                            break;
+
+                        case ENOBUFS:
+                        case ENOMEM:
+                            result.platform_msg = "Not enough free memory.  This often means that the memory "
+                                                  "allocation is limited by the socket buffer limits, not by "
+                                                  "the system memory.";
+                            break;
+
+                        case ENOTSOCK:
+                            result.platform_msg = "The file descriptor sockfd does not refer to a socket.";
+                            break;
+
+                        case EOPNOTSUPP:
+                            result.platform_msg = "The referenced socket is not of type SOCK_STREAM.";
+                            break;
+
+                        case EPERM:
+                            result.platform_msg = "Firewall rules forbid connection.";
+                            break;
+
+                        case EPROTO:
+                            result.platform_msg = "Protocol error.";
+                            break;
+
+                        /*
+                            In addition, network errors for the new socket and as defined for
+                            the protocol may be returned.  Various Linux kernels can return
+                            other errors such as ENOSR, ESOCKTNOSUPPORT, EPROTONOSUPPORT,
+                            ETIMEDOUT.  The value ERESTARTSYS may be seen during a trace.
+                        */
+
+                        default:
+                            result.platform_msg = "Unknown Linux error.";
+                            break;
+                    }
+                #endif
+
+                return result;
+        }
+
+        cutile_net_result cutile_receive_from_net_socket(cutile_net_socket* sender_socket, u8* buf, u64 size, u64* received_size)
+        {
+            int platform_result;
+            cutile_net_result result;
+
+            platform_result = recv(sender_socket->handle, (char*)buf, size, 0);
+
+            #if WINDOWS
+                if (platform_result >= 0)
+                {
+                    result.success = b8_true;
+                    *received_size = platform_result;
+                    return result;
+                }
+
+                result.success = b8_false;
+                result.platform_code = WSAGetLastError();
+
+                switch (result.platform_code)
+                {
+                    case WSANOTINITIALISED:
+                        result.platform_msg = "A successful WSAStartup call must occur before using this function.";
+                        break;
+
+                    case WSAENETDOWN:
+                        result.platform_msg = "The network subsystem has failed.";
+                        break;
+
+                    case WSAEFAULT:
+                        result.platform_msg = "The buf parameter is not completely contained in a valid part of the user address space.";
+                        break;
+
+                    case WSAENOTCONN:
+                        result.platform_msg = "The socket is not connected.";
+                        break;
+
+                    case WSAEINTR:
+                        result.platform_msg = "The (blocking) call was canceled through WSACancelBlockingCall.";
+                        break;
+
+                    case WSAEINPROGRESS:
+                        result.platform_msg = "A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.";
+                        break;
+
+                    case WSAENETRESET:
+                        result.platform_msg = "For a connection-oriented socket, this error indicates that the connection has been broken due to keep-alive activity that detected a failure while the operation was in progress. For a datagram socket, this error indicates that the time to live has expired.";
+                        break;
+
+                    case WSAENOTSOCK:
+                        result.platform_msg = "The descriptor is not a socket.";
+                        break;
+
+                    case WSAEOPNOTSUPP:
+                        result.platform_msg = "MSG_OOB was specified, but the socket is not stream-style such as type SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, or the socket is unidirectional and supports only send operations.";
+                        break;
+
+                    case WSAESHUTDOWN:
+                        result.platform_msg = "The socket has been shut down; it is not possible to receive on a socket after shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.";
+                        break;
+
+                    case WSAEWOULDBLOCK:
+                        result.platform_msg = "The socket is marked as nonblocking and the receive operation would block.";
+                        break;
+
+                    case WSAEMSGSIZE:
+                        result.platform_msg = "The message was too large to fit into the specified buffer and was truncated.";
+                        break;
+
+                    case WSAEINVAL:
+                        result.platform_msg = "The socket has not been bound with bind, or an unknown flag was specified, or MSG_OOB was specified for a socket with SO_OOBINLINE enabled or (for byte stream sockets only) len was zero or negative.";
+                        break;
+
+                    case WSAECONNABORTED:
+                        result.platform_msg = "The virtual circuit was terminated due to a time-out or other failure. The application should close the socket as it is no longer usable.";
+                        break;
+
+                    case WSAETIMEDOUT:
+                        result.platform_msg = "The connection has been dropped because of a network failure or because the peer system failed to respond.";
+                        break;
+
+                    case WSAECONNRESET:
+                        result.platform_msg = "The virtual circuit was reset by the remote side executing a hard or abortive close. The application should close the socket as it is no longer usable. On a UDP-datagram socket, this error would indicate that a previous send operation resulted in an ICMP \"Port Unreachable\" message.";
+                        break;
+
+                    default:
+                        result.platform_msg = "Unknown Windows WSA error.";
+                        break;
+                }
+            #elif LINUX
+                if (platform_result >= 0)
+                {
+                    result.success = b8_true;
+                    *received_size = platform_result;
+                    return result;
+                }
+
+                result.success = b8_false;
+                result.platform_code = errno;
+
+                switch (result.platform_code)
+                {
+                    case EAGAIN:
+                    // EWOULDBLOCK == EAGAIN on Linux. 
+                    // case EWOULDBLOCK:
+                        result.platform_msg = "The socket is marked nonblocking and the receive operation "
+                                              "would block, or a receive timeout had been set and the "
+                                              "timeout expired before data was received.  POSIX.1 allows "
+                                              "either error to be returned for this case, and does not "
+                                              "require these constants to have the same value, so a "
+                                              "portable application should check for both possibilities.";
+                        break;
+
+                    case EBADF:
+                        result.platform_msg = "The argument sockfd is an invalid file descriptor.";
+                        break;
+
+                    case ECONNREFUSED:
+                        result.platform_msg = "A remote host refused to allow the network connection "
+                                              "(typically because it is not running the requested "
+                                              "service).";
+                        break;
+
+                    case EFAULT:
+                        result.platform_msg = "The receive buffer pointer(s) point outside the process's "
+                                              "address space.";
+                        break;
+
+                    case EINTR:
+                        result.platform_msg = "The receive was interrupted by delivery of a signal before "
+                                              "any data was available; see signal(7).";
+                        break;
+
+                    case EINVAL:
+                        result.platform_msg = "Invalid argument passed.";
+                        break;
+
+                    case ENOMEM:
+                        result.platform_msg = "Could not allocate memory for recvmsg().";
+                        break;
+
+                    case ENOTCONN:
+                        result.platform_msg = "The socket is associated with a connection-oriented "
+                                              "protocol and has not been connected (see connect(2) and "
+                                              "accept(2)).";
+                        break;
+
+                    case ENOTSOCK:
+                        result.platform_msg = "The file descriptor sockfd does not refer to a socket.";
+                        break;
+                }
+            #endif
+
+            return result;
         }
 
         cutile_net_error cutile_send_to_net_socket(cutile_net_socket* dest_socket, u8* data, u64 len)
@@ -795,6 +1524,25 @@
         {
             return cutile_bind_net_socket(socket, (const cutile_net_endpoint*)endpoint);
         }
+
+        maybe_inline cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_ipv4_endpoint* endpoint)
+        {
+            return cutile_connect_net_socket(socket, (const cutile_net_endpoint*)endpoint);
+        }
+        maybe_inline cutile_net_result cutile_connect_net_socket(cutile_net_socket* socket, const cutile_ipv6_endpoint* endpoint)
+        {
+            return cutile_connect_net_socket(socket, (const cutile_net_endpoint*)endpoint);
+        }
+
+        maybe_inline cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_ipv4_endpoint* incoming_endpoint)
+        {
+            return cutile_accept_net_socket(socket, incoming_socket, cast(cutile_net_endpoint*, incoming_endpoint));
+        }
+        maybe_inline cutile_net_result cutile_accept_net_socket(cutile_net_socket* socket, cutile_net_socket* incoming_socket, cutile_ipv6_endpoint* incoming_endpoint)
+        {
+            return cutile_accept_net_socket(socket, incoming_socket, cast(cutile_net_endpoint*, incoming_endpoint));
+        }
+
     #endif
 
     #define CUTILE_NETWORK_H
