@@ -96,7 +96,8 @@
     maybe_inline void cutile_format_str(cutile_string* out, const char* fmt, Args ...args)
     {
         u32 i = 0;
-        u32 fmt_len = cutile_cstr_length(fmt);
+        u32 fmt_len = 0;
+        while (fmt[fmt_len]) fmt_len++;
         (cutile_format_next_arg_into_str(fmt, out, args, &i, fmt_len), ...);
         if (i < fmt_len)
         {

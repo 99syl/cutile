@@ -2,6 +2,7 @@
 #define CUTILE_IMPLEM_FILESYSTEM_STRING_API
 #include "../filesystem.h"
 #include "../test.h"
+#include "../cstr.h"
 
 int main()
 {

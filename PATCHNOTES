@@ -1,3 +1,7 @@
+0.1.6 (2024/07/29 09:45 UTC+2h)
+- cstr.h: New file only dedicated to cstring 
+- str.h: Move cstr only functions to cstr.h
+
 0.1.5 (2024/07/09 18:35 UTC+2h)
 - network.h: Add a function to connect a client socket to a listening socket via an endpoint: cutile_connect_net_socket.
 - network.h: Add a function to accept incoming connections to a listening socket: cutile_accept_net_socket.

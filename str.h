@@ -1,5 +1,4 @@
 #ifndef CUTILE_STR_H
-    #include "cutile.h"
     #include "memory.h"
 
     // String can be used to store textual data that we often refer to as "characters" or "code points".
@@ -90,22 +89,11 @@
     CUTILE_C_API cutile_string_utf8_iterator cutile_str_create_utf8_iterator(cutile_string*);
     CUTILE_C_API void                        cutile_str_utf8_iterate(cutile_string_utf8_iterator*);
 
-    // CString Creation:
+    // Conversion to cstr:
     CUTILE_C_API char* cutile_create_cstr_from_str(const cutile_string*, cutile_allocator*);
-    CUTILE_C_API char* cutile_create_cstr_from_cstr(const char*, cutile_allocator*);
-    CUTILE_C_API char* cutile_create_cstr_from_sub_cstr(const char*, u32 pos, u32 count, cutile_allocator*);
-
     #ifdef CUTILE_CPP
         maybe_inline void cutile_create_cstr(const cutile_string* str, cutile_allocator* allocator) { cutile_create_cstr_from_str(str, allocator); }
-        maybe_inline void cutile_create_cstr(const char* cstr, cutile_allocator* allocator) { cutile_create_cstr_from_cstr(cstr, allocator); }
-        maybe_inline void cutile_create_cstr(const char* cstr, u32 pos, u32 count, cutile_allocator* allocator) { cutile_create_cstr_from_sub_cstr(cstr, pos, count, allocator); }
     #endif
-
-    // CString Lookup:
-    CUTILE_C_API u32 cutile_cstr_length(const char* cstr);
-    CUTILE_C_API b8  cutile_cstr_equals(const char* lhs, const char* rhs);
-
-    CUTILE_C_API char* cutile_concat_cstrs(const char* lhs, const char* rhs, cutile_allocator*);
 
     typedef struct cutile_string_view
     {
@@ -153,15 +141,6 @@
 
     CUTILE_C_API cutile_string cutile_f32_to_str(f32, cutile_allocator* allocator);
     CUTILE_C_API cutile_string cutile_f64_to_str(f64, cutile_allocator* allocator);
-
-    CUTILE_C_API char* cutile_u8_to_cstr(u8, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_s8_to_cstr(s8, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_u16_to_cstr(u16, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_s16_to_cstr(s16, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_u32_to_cstr(u32, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_s32_to_cstr(s32, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_u64_to_cstr(u64, cutile_allocator* allocator);
-    CUTILE_C_API char* cutile_s64_to_cstr(s64, cutile_allocator* allocator);
 
     // nb_into_str: Pushes the number at the end of the string.
     CUTILE_C_API void cutile_u8_into_str(u8, cutile_string* out);
@@ -237,17 +216,6 @@
         #define str_utf8_iterate(it_ptr)            cutile_str_utf8_iterate(it_ptr)
 
         #define create_cstr_from_str(str_ptr, allocator_ptr)    cutile_create_cstr_from_str(str_ptr, allocator_ptr)
-        #define create_cstr_from_cstr(cstr_ptr, allocator_ptr)  cutile_create_cstr_from_cstr(cstr_ptr, allocator_ptr)
-        #define create_cstr_from_sub_cstr(cstr_ptr, pos, count) cutile_create_cstr_from_sub_cstr(cstr_ptr, pos, count)
-        #ifdef CUTILE_CPP
-            #define create_cstr(...)                            cutile_create_cstr(__VA_ARGS__)
-        #endif
-
-        #define cstr_length(cstr_ptr)   cutile_cstr_length(cstr_ptr)
-        #define cstr_equals(lhs, rhs)   cutile_cstr_equals(lhs, rhs)
-
-        #define concat_cstrs(lhs, rhs, allocator_ptr) cutile_concat_cstrs(lhs, rhs, allocator_ptr)
-
 
         #define sub_str_to_u8(str_ptr, offset, count)  cutile_sub_str_to_u8(str_ptr, offset, count)
         #define sub_str_to_s8(str_ptr, offset, count)  cutile_sub_str_to_s8(str_ptr, offset, count)
@@ -278,15 +246,6 @@
 
         #define f32_to_str(nb, allocator_ptr) cutile_f32_to_str(nb, allocator_ptr)
         #define f64_to_str(nb, allocator_ptr) cutile_f64_to_str(nb, allocator_ptr)
-
-        #define u8_to_cstr(nb, allocator_ptr) cutile_u8_to_cstr(nb, allocator_ptr)
-        #define s8_to_cstr(nb, allocator_ptr) cutile_s8_to_cstr(nb, allocator_ptr)
-        #define u16_to_cstr(nb, allocator_ptr) cutile_u16_to_cstr(nb, allocator_ptr)
-        #define s16_to_cstr(nb, allocator_ptr) cutile_s16_to_cstr(nb, allocator_ptr)
-        #define u32_to_cstr(nb, allocator_ptr) cutile_u32_to_cstr(nb, allocator_ptr)
-        #define s32_to_cstr(nb, allocator_ptr) cutile_s32_to_cstr(nb, allocator_ptr)
-        #define u64_to_cstr(nb, allocator_ptr) cutile_u64_to_cstr(nb, allocator_ptr)
-        #define s64_to_cstr(nb, allocator_ptr) cutile_s64_to_cstr(nb, allocator_ptr)
 
         #define u8_into_str(nb, str_out_ptr) cutile_u8_into_str(nb, str_out_ptr)
         #define s8_into_str(nb, str_out_ptr) cutile_s8_into_str(nb, str_out_ptr)
@@ -337,9 +296,19 @@
             return s;
         }
 
+        maybe_inline u32 __cutile_str_cstr_length(const char* cstr)
+        {
+            u32 i = 0;
+            while (cstr[i])
+            {
+                ++i;
+            }
+            return i;
+        }
+
         cutile_string cutile_create_str_from_cstr(const char* cstr, cutile_allocator* allocator)
         {
-            u32 count = cutile_cstr_length(cstr);
+            u32 count = __cutile_str_cstr_length(cstr);
             cutile_string s;
             s.data = (u8*)cutile_allocate_m(allocator, sizeof(u8) * count);
             cutile_copy_memory_m((s8*)s.data, cstr, count);
@@ -513,7 +482,7 @@
     
         void cutile_str_push_back_cstr(cutile_string* str, const char* rhs)
         {
-            u32 rlen = cutile_cstr_length(rhs);
+            u32 rlen = __cutile_str_cstr_length(rhs);
             if (str->count + rlen >= str->size) resize_str(str, str->size + rlen);
             copy_memory_m(str->data + str->count, (u8*)rhs, rlen);
             str->count += rlen;
@@ -562,7 +531,7 @@
       
         b8 cutile_str_equals_cstr(const cutile_string* str, const char* cstr)
         {
-            u32 clen = cutile_cstr_length(cstr);
+            u32 clen = __cutile_str_cstr_length(cstr);
             if (clen != str->count) return cutile_b8_false;
             b8 result;
             memory_equals_m(str->data, (u8*)cstr, clen, result);
@@ -576,7 +545,7 @@
     
         b8 cutile_str_begins_with(const cutile_string* str, const char* val)
         {
-            u32 count = cutile_cstr_length(val);
+            u32 count = __cutile_str_cstr_length(val);
             if (count > str->count) return cutile_b8_false;
             b8 result;
             cutile_memory_equals_m(str->data, (u8*)val, count, result);
@@ -585,7 +554,7 @@
 
         b8 cutile_str_ends_with(const cutile_string* str, const char* val)
         {
-            u32 count = cstr_length(val);
+            u32 count = __cutile_str_cstr_length(val);
             if (count > str->count) return cutile_b8_false;
             b8 result;
             cutile_memory_equals_m(str->data + str->count - count, (u8*)val, count, result);
@@ -812,52 +781,10 @@
             res[str->count] = '\0';
             return res;
         }
-    
-        char* cutile_create_cstr_from_cstr(const char* cstr, cutile_allocator* allocator)
-        {
-            u32 cstr_len = cutile_cstr_length(cstr);
-            return cutile_create_cstr_from_sub_cstr(cstr, 0, cstr_len, allocator);
-        }
-    
-        char* cutile_create_cstr_from_sub_cstr(const char* cstr, u32 pos, u32 count, cutile_allocator* allocator)
-        {
-            char* res = (char*)cutile_allocate_m(allocator, count + 1);
-            copy_memory_m(res, cstr + pos, count);
-            res[count] = '\0';
-            return res;
-        }
-    
-        u32 cutile_cstr_length(const char* cstr)
-        {
-            u32 i = 0;
-            while (*(cstr + i)) ++i;
-            return i; 
-        }
-    
-        b8 cutile_cstr_equals(const char* lhs, const char* rhs)
-        {
-            for (;;)
-            {
-                if (!(*lhs) && !(*rhs)) break;
-                if (*lhs++ != *rhs++) return cutile_b8_false;
-            }
-            return cutile_b8_true;
-        }
-    
-        char* cutile_concat_cstrs(const char* lhs, const char* rhs, cutile_allocator* allocator)
-        {
-            u32 l_length = cutile_cstr_length(lhs);
-            u32 r_length = cutile_cstr_length(rhs);
-            char* result = (char*)cutile_allocate_m(allocator, sizeof(char) * (l_length + r_length + 1));
-            copy_memory_m(result, lhs, l_length);
-            copy_memory_m(result + l_length, rhs, r_length);
-            result[l_length + r_length] = '\0';
-            return result;
-        }
-    
+
         b8 cutile_str_view_equals_cstr(cutile_string_view* lhs, const char* rhs)
         {
-            u32 rhs_length = cutile_cstr_length(rhs);
+            u32 rhs_length = __cutile_str_cstr_length(rhs);
     
             if (lhs->count != rhs_length) return cutile_b8_false;
     
@@ -1053,62 +980,6 @@
 
             return result;
         }
-
-        #define cutile_unsigned_nb_to_cstr_m(nb, digits, allocator)         \
-        {                                                                   \
-            char* out = cutile_allocate_many_T_m(allocator, char, digits+1);\
-            out[digits] = '\0';                                             \
-            for (u32 i = digits; i > 0; --i)                                \
-            {                                                               \
-                out[i - 1] = nb % 10 + '0';                                 \
-                nb /= 10;                                                   \
-            }                                                               \
-            return out;                                                     \
-        }                                                                   \
-    
-        #define cutile_signed_nb_to_cstr_m(nb, digits, allocator)           \
-        {                                                                   \
-            u32 neg;                                                        \
-            s32 mul;                                                        \
-            char* out;                                                      \
-            if (nb < 0)                                                     \
-            {                                                               \
-                out = cutile_allocate_many_T_m(allocator, char, digits+2);  \
-                out[0] = '-';                                               \
-                out[digits+1] = '\0';                                       \
-                neg = 1;                                                    \
-                mul = -1;                                                   \
-            }                                                               \
-            else                                                            \
-            {                                                               \
-                out = cutile_allocate_many_T_m(allocator, char, digits+1);  \
-                out[digits] = '\0';                                         \
-                neg = 0;                                                    \
-                mul = 1;                                                    \
-            }                                                               \
-            for (u32 i = digits; i > 0; --i)                                \
-            {                                                               \
-                out[i - 1 + neg] = ((nb % 10) * mul) + '0';                 \
-                nb /= 10;                                                   \
-            }                                                               \
-            return out;                                                     \
-        }
-    
-        char* cutile_u8_to_cstr(u8 nb, cutile_allocator* allocator) { u32 digits; cutile_get_u8_digits_m(nb, digits); cutile_unsigned_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_s8_to_cstr(s8 nb, cutile_allocator* allocator) { u32 digits; cutile_get_s8_digits_m(nb, digits); cutile_signed_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_u16_to_cstr(u16 nb, cutile_allocator* allocator) { u32 digits; cutile_get_u16_digits_m(nb, digits); cutile_unsigned_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_s16_to_cstr(s16 nb, cutile_allocator* allocator) { u32 digits; cutile_get_s16_digits_m(nb, digits); cutile_signed_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_u32_to_cstr(u32 nb, cutile_allocator* allocator) { u32 digits; cutile_get_u32_digits_m(nb, digits); cutile_unsigned_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_s32_to_cstr(s32 nb, cutile_allocator* allocator) { u32 digits; cutile_get_s32_digits_m(nb, digits); cutile_signed_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_u64_to_cstr(u64 nb, cutile_allocator* allocator) { u32 digits; cutile_get_u64_digits_m(nb, digits); cutile_unsigned_nb_to_cstr_m(nb, digits, allocator); }
-    
-        char* cutile_s64_to_cstr(s64 nb, cutile_allocator* allocator) { u32 digits; cutile_get_s64_digits_m(nb, digits); cutile_signed_nb_to_cstr_m(nb, digits, allocator); }
     
         void cutile_u8_into_str(u8 nb, cutile_string* out) { cutile_u8_into_sub_str(nb, out, out->count); }
     

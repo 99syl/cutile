@@ -11,6 +11,7 @@ declare -a TESTS=(
     [7]="shared_library"
     [8]="network"
     [9]="str"
+    [10]="cstr"
 )
 
 declare -a CPP_TESTS=(

@@ -3,7 +3,6 @@
 #include "../test.h"
 #include "../number.h"
 
-
 int main(int ac, char** av)
 {
     cutile_test_begin_m();
@@ -72,7 +71,7 @@ int main(int ac, char** av)
         cutile_test_assert_m(s2_found[10]);
     }
 
-    // String to number conversions tests.
+    // Number to string conversions tests.
     {
         u32 i = 50;
         s32 j = -12893;
@@ -92,41 +91,25 @@ int main(int ac, char** av)
         cutile_test_assert_m(str_equals_cstr2(u8_to_str(u8_min, default_allocator), "0"));
         cutile_test_assert_m(str_equals_cstr2(s8_to_str(s8_max, default_allocator), "127"));
         cutile_test_assert_m(str_equals_cstr2(s8_to_str(s8_min, default_allocator), "-128"));
-        cutile_test_assert_m(cstr_equals(u8_to_cstr(u8_max, default_allocator), "255"));
-        cutile_test_assert_m(cstr_equals(u8_to_cstr(u8_min, default_allocator), "0"));
-        cutile_test_assert_m(cstr_equals(s8_to_cstr(s8_max, default_allocator), "127"));
-        cutile_test_assert_m(cstr_equals(s8_to_cstr(s8_min, default_allocator), "-128"));
-
+ 
         cutile_test_assert_m(str_equals_cstr2(u16_to_str(u16_max, default_allocator), "65535"));
         cutile_test_assert_m(str_equals_cstr2(u16_to_str(u16_min, default_allocator), "0"));
         cutile_test_assert_m(str_equals_cstr2(s16_to_str(s16_max, default_allocator), "32767"));
         cutile_test_assert_m(str_equals_cstr2(s16_to_str(s16_min, default_allocator), "-32768"));
-        cutile_test_assert_m(cstr_equals(u16_to_cstr(u16_max, default_allocator), "65535"));
-        cutile_test_assert_m(cstr_equals(u16_to_cstr(u16_min, default_allocator), "0"));
-        cutile_test_assert_m(cstr_equals(s16_to_cstr(s16_max, default_allocator), "32767"));
-        cutile_test_assert_m(cstr_equals(s16_to_cstr(s16_min, default_allocator), "-32768"));
 
         cutile_test_assert_m(str_equals_cstr2(u32_to_str(u32_max, default_allocator), "4294967295"));
         cutile_test_assert_m(str_equals_cstr2(u32_to_str(u32_min, default_allocator), "0"));
         cutile_test_assert_m(str_equals_cstr2(s32_to_str(s32_max, default_allocator), "2147483647"));
         cutile_test_assert_m(str_equals_cstr2(s32_to_str(s32_min, default_allocator), "-2147483648"));
-        cutile_test_assert_m(cstr_equals(u32_to_cstr(u32_max, default_allocator), "4294967295"));
-        cutile_test_assert_m(cstr_equals(u32_to_cstr(u32_min, default_allocator), "0"));
-        cutile_test_assert_m(cstr_equals(s32_to_cstr(s32_max, default_allocator), "2147483647"));
-        cutile_test_assert_m(cstr_equals(s32_to_cstr(s32_min, default_allocator), "-2147483648"));
 
         string adfjk = u64_to_str(u64_max, default_allocator);
         cutile_test_assert_m(str_equals_cstr2(u64_to_str(u64_max, default_allocator), "18446744073709551615"));
         cutile_test_assert_m(str_equals_cstr2(u64_to_str(u64_min, default_allocator), "0"));
         cutile_test_assert_m(str_equals_cstr2(s64_to_str(s64_max, default_allocator), "9223372036854775807"));
         cutile_test_assert_m(str_equals_cstr2(s64_to_str(s64_min, default_allocator), "-9223372036854775808"));
-        cutile_test_assert_m(cstr_equals(u64_to_cstr(u64_max, default_allocator), "18446744073709551615"));
-        cutile_test_assert_m(cstr_equals(u64_to_cstr(u64_min, default_allocator), "0"));
-        cutile_test_assert_m(cstr_equals(s64_to_cstr(s64_max, default_allocator), "9223372036854775807"));
-        cutile_test_assert_m(cstr_equals(s64_to_cstr(s64_min, default_allocator), "-9223372036854775808"));
     }
 
-    // Number to string conversions tests.
+    // String to number conversions tests.
     {
         cutile_string s;
 
