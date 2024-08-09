@@ -166,7 +166,9 @@
             }
     
             // Section name or entry name or entry value.
-            else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))
+            else if ((ch >= 'a' && ch <= 'z') ||
+                     (ch >= 'A' && ch <= 'Z') ||
+                     (ch >= '0' && ch <= '9'))
             {
                 tok.kind = cutile_ini_parser_token_kind_name_or_value;
                 tok.start = state->data + state->index;
@@ -177,8 +179,10 @@
                     ch = state->data[state->index];
     
                     // Allowed characters:
-                    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-                        (ch == '_'))
+                    if ((ch >= 'a' && ch <= 'z') ||
+                        (ch >= 'A' && ch <= 'Z') ||
+                        (ch >= '0' && ch <= '9') ||
+                        (ch == '_') || (ch == '.'))
                     {
                         ++tok.end;
                         ++state->index;
@@ -186,25 +190,6 @@
     
                     else break;
                 }
-            }
-    
-            // Number value.
-            else if (ch >= '0' && ch <= '9')
-            {
-                tok.kind = cutile_ini_parser_token_kind_name_or_value;
-                tok.start = state->data + state->index;
-                tok.end = tok.start;
-                ++state->index;
-                while (state->index < state->data_size)
-                {
-                    ch = state->data[state->index];
-                    if (ch >= '0' && ch <= '9')
-                    {
-                        ++tok.end;
-                        ++state->index;
-                    }
-                    else break;
-                };
             }
     
             // Null terminator (C-strings)
