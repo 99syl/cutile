@@ -82,6 +82,26 @@ int main(int ac, char** av)
         cutile_test_assert_m(entry_value.found == b8_false);
     }
     cutile_destroy_ini_parsed_data(&result);
+
+    cutile_ini_field field;
+    cutile_test_require_m(cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), nullptr, "foo", &field));
+    cutile_test_assert_m(field.val_start[0] == '1');
+    cutile_test_assert_m(field.val_start[1] == '2');
+    cutile_test_assert_m(field.val_start[2] == '3');
+    cutile_test_assert_m(field.val_end[0] == '3');
+
+    cutile_test_require_m(cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), "SectionA", "oof", &field));
+    cutile_test_assert_m(field.val_start[0] == 'u');
+    cutile_test_assert_m(field.val_start[1] == 'e');
+    cutile_test_assert_m(field.val_start[2] == 'l');
+    cutile_test_assert_m(field.val_start[3] == 'a');
+    cutile_test_assert_m(field.val_start[4] == 'V');
+    cutile_test_assert_m(field.val_end[0] == 'V');
+
+    cutile_test_assert_m(!cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), nullptr, "fooasd", &field));
+    cutile_test_assert_m(!cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), "SectionA", "fooasd", &field));
+    cutile_test_assert_m(!cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), "SectionA", "bar", &field));
+    cutile_test_assert_m(!cutile_get_ini_field(cast(u8*, ini_data), sizeof(ini_data), "SectionB", "fooasd", &field));
     
     cutile_test_end_m();
 }

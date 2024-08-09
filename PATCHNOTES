@@ -1,3 +1,6 @@
+0.1.7 (2024/08/09 16:24 UTC+2h)
+- ini.h: Fixed a bug when using cutile_get_ini_field (infinite loop while calculating entry name length). Add some tests that cover this function.
+
 0.1.6 (2024/07/29 09:45 UTC+2h)
 - cstr.h: New file only dedicated to cstring 
 - str.h: Move cstr only functions to cstr.h
